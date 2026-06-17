@@ -2,16 +2,11 @@
 
 Status: Active
 
-## このフォルダの目的
-
-`github-optimization` は、**公開前リポジトリを担当 AI が自己判定するための共通レギュレーション棚**です。
-
-人間がチェックリストを手で回すための資料ではありません。  
-担当 AI にこのフォルダを渡し、対象リポジトリが規定に適合しているかを**証拠付きで判定させる**ためにあります。
-
 ## What This Folder Is For
 
 This folder is the **generic regulation shelf** for public-repository self-check.
+
+It is not a human-operated checklist. Assign the responsible AI to read this shelf, execute evidence against the target repository, and produce a scored audit report.
 
 | Use | Description |
 |---|---|
@@ -32,7 +27,7 @@ This folder is the **generic regulation shelf** for public-repository self-check
 ## One-Line Assignment
 
 ```text
-C:\Users\f_tan\project\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
+Read C:\Users\f_tan\project\github-optimization, self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
 ```
 
 Read first: `regulation/REGULATION_SELF_CHECK.md`

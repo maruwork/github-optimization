@@ -55,7 +55,7 @@ Use this file to confirm the regulation set is complete for agent self-check.
 - [x] waiver policy exists
 - [x] judgment guide exists
 - [x] all checklists map to gate IDs
-- [x] audit report template covers G/R/P全部
+- [x] audit report template covers all G/R/P gates
 - [x] evidence scripts cover G-01 G-22 baseline and hosted metadata
 - [x] no project-specific live records remain in this shelf
 - [x] accepted-risk output template exists
