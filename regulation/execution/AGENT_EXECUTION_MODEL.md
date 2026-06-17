@@ -69,7 +69,7 @@ Humans should not be the default executor for:
 
 An audit is agent-complete when:
 
-- `AUDIT_RUNBOOK.md` finished
+- `regulation/execution/AUDIT_RUNBOOK.md` finished
 - evidence is attached
 - final label is assigned
 - remaining work is expressed as fix tasks, not as instructions to a human operator

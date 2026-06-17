@@ -19,16 +19,16 @@ Walk the responsible AI through regulation self-check without mixing tiers or su
 
 ## Gate Registry
 
-All judgment item IDs: `GATE_REGISTRY.md`
+All judgment item IDs: `regulation/gates/GATE_REGISTRY.md`
 
 ## Audit Route
 
-Use `../AUDIT_RUNBOOK.md`, not ad hoc checklist reading.
+Use `../regulation/execution/AUDIT_RUNBOOK.md`, not ad hoc checklist reading.
 
 ## Gate Completion
 
 | Tier | Complete when |
 |---|---|
-| 1 | `PUBLIC_PREP_GATE.md` has no `blocked` rows |
-| 2 | `RELEASE_QUALITY_GATE.md` has no applicable `blocked` rows, or formal defer record exists |
-| 3 | `PRODUCT_READINESS_GATE.md` has no `blocked` rows |
+| 1 | `regulation/gates/PUBLIC_PREP_GATE.md` has no `blocked` rows |
+| 2 | `regulation/gates/RELEASE_QUALITY_GATE.md` has no applicable `blocked` rows, or formal defer record exists |
+| 3 | `regulation/gates/PRODUCT_READINESS_GATE.md` has no `blocked` rows |

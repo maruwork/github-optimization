@@ -34,4 +34,4 @@ Examples:
 4. regulation files stay in the parent shelf; only execution results live under `audits/`
 5. audit result files are **gitignored** — they stay local and are not pushed to GitHub
 
-Read: `OUTPUT_PATHS.md`
+Read: `regulation/shelf/OUTPUT_PATHS.md`

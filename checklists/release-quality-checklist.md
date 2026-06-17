@@ -4,7 +4,7 @@ Status: Active
 
 Tier: 2
 
-Gate mapping: `../GATE_REGISTRY.md`
+Gate mapping: `../regulation/gates/GATE_REGISTRY.md`
 Defer record: `../templates/tier2-defer-record.md.template`
 
 ## Purpose
@@ -41,7 +41,7 @@ Skip only when Tier 2 is formally deferred in `audits/<repository-slug>/tier2-de
 - [ ] quickstart evidence recorded by agent (`R-13`)
 - [ ] hosted CI evidence link or run id recorded (`R-14`)
 
-Read: `../AUDIT_MANIFEST_POLICY.md`, `../JUDGMENT_GUIDE.md`, `../EVIDENCE_COMMANDS.md`
+Read: `../regulation/reference/AUDIT_MANIFEST_POLICY.md`, `../regulation/reference/JUDGMENT_GUIDE.md`, `../regulation/reference/EVIDENCE_COMMANDS.md`
 
 ## Defer Rule
 

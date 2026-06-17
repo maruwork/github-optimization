@@ -15,7 +15,7 @@ One repository always produces one audit report.
 3. no combined Blocker list across repositories
 4. no shared waiver row across repositories
 
-Read: `AUDIT_RULES.md` section "One repository per report"
+Read: `regulation/execution/AUDIT_RULES.md` section "One repository per report"
 
 ## Assignment Format
 
@@ -34,17 +34,17 @@ Repositories:
     hosted: owner/repo
 ```
 
-If phase or mode is omitted per repository, apply defaults from `AUDIT_PHASE_POLICY.md` and `REGULATION_SELF_CHECK.md`.
+If phase or mode is omitted per repository, apply defaults from `regulation/execution/AUDIT_PHASE_POLICY.md` and `regulation/REGULATION_SELF_CHECK.md`.
 
 ## Execution Order
 
 For each repository in list order:
 
-1. resolve shelf path via `SHELF_PATH.md`
+1. resolve shelf path via `regulation/shelf/SHELF_PATH.md`
 2. determine phase and audit mode
 3. check for prior `audits/<repository-slug>/audit-report.md`
-   - if present and assigner allows delta, follow `RE_AUDIT_POLICY.md`
-   - otherwise follow `AUDIT_RUNBOOK.md` full path
+   - if present and assigner allows delta, follow `regulation/execution/RE_AUDIT_POLICY.md`
+   - otherwise follow `regulation/execution/AUDIT_RUNBOOK.md` full path
 4. write outputs under `audits/<repository-slug>/` in this shelf
 5. record completion before starting the next repository
 
@@ -80,6 +80,6 @@ If one repository audit is `BLOCKED`:
 
 ## Runnable Tool Follow-Up
 
-After the first successful audit in a batch, each runnable tool repository should receive its own `audit.manifest.yml` per `AUDIT_MANIFEST_POLICY.md`.
+After the first successful audit in a batch, each runnable tool repository should receive its own `audit.manifest.yml` per `regulation/reference/AUDIT_MANIFEST_POLICY.md`.
 
 Do not share one manifest across repositories.

@@ -2,6 +2,13 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.3 — 2026-06-17
+
+### Changed
+
+- moved all regulation markdown from repository root into `regulation/` subdirectories
+- root now shows README + standard repo files only
+
 ## 1.1.2 — 2026-06-17
 
 ### Removed from GitHub
@@ -45,13 +52,13 @@ All notable changes to the generic regulation shelf.
 
 ### Added
 
-- complete 46-gate regulation set and `REGULATION_INDEX.md`
+- complete 46-gate regulation set and `regulation/REGULATION_INDEX.md`
 - agent execution model, audit runbook, and output path contract
-- policy files: `RE_AUDIT_POLICY.md`, `AUDIT_PHASE_POLICY.md`, `MULTI_REPO_ORCHESTRATION.md`, `TOOL_REVIEW_CADENCE.md`
+- policy files: `regulation/execution/RE_AUDIT_POLICY.md`, `regulation/execution/AUDIT_PHASE_POLICY.md`, `regulation/execution/MULTI_REPO_ORCHESTRATION.md`, `regulation/reference/TOOL_REVIEW_CADENCE.md`
 - governance templates including `accepted-risk-record.md.template`
 - scripts: `validate-regulation-index.*`, `run-full-audit.*`, `collect-audit-evidence.*`, `run-audit-quickstart.*`
 - regression tests: `scripts/tests/run-regulation-tests.*`
-- distribution docs: `SHELF_DISTRIBUTION.md`, `SHELF_VERSION.md`
+- distribution docs: `regulation/shelf/SHELF_DISTRIBUTION.md`, `regulation/shelf/SHELF_VERSION.md`
 - dry-run fixture: `scripts/tests/fixtures/minimal-docs-repo/`
 
 ### Changed

@@ -14,7 +14,7 @@ This shelf may live as its own git repository.
 |---|---|
 | repository role | generic regulation shelf only |
 | not a product repo | do not ship runtime code from here |
-| version file | `SHELF_VERSION.md` |
+| version file | `regulation/shelf/SHELF_VERSION.md` |
 
 ## Clone And Resolve
 
@@ -28,7 +28,7 @@ $env:GITHUB_OPTIMIZATION_ROOT = "C:\path\to\github-optimization"
 export GITHUB_OPTIMIZATION_ROOT=/path/to/github-optimization
 ```
 
-Resolution order remains in `SHELF_PATH.md`.
+Resolution order remains in `regulation/shelf/SHELF_PATH.md`.
 
 ## Target Repository Layout
 
@@ -48,7 +48,7 @@ Audit outputs belong under `audits/<repository-slug>/` in this shelf:
 
 - `audits/<repository-slug>/audit-report.md`
 - `audits/<repository-slug>/publication-decision-record.md`
-- other paths in `OUTPUT_PATHS.md`
+- other paths in `regulation/shelf/OUTPUT_PATHS.md`
 
 Do not write audit reports into public product repositories.
 
@@ -78,14 +78,14 @@ git tag -a v1.1.0 -m "Generic regulation shelf v1.1.0"
 git push origin v1.1.0
 ```
 
-After the remote exists, re-run hosted gates `G-13`…`G-18` in `post-public` phase per `AUDIT_PHASE_POLICY.md`.
+After the remote exists, re-run hosted gates `G-13`…`G-18` in `post-public` phase per `regulation/execution/AUDIT_PHASE_POLICY.md`.
 
 ## Release Discipline
 
 When shelf regulation changes:
 
-1. update `SHELF_CHANGELOG.md`
-2. bump `SHELF_VERSION.md`
+1. update `regulation/shelf/SHELF_CHANGELOG.md`
+2. bump `regulation/shelf/SHELF_VERSION.md`
 3. run `scripts/tests/run-regulation-tests.*`
 4. run `scripts/validate-regulation-index.*`
 5. tag the shelf repository if version control is in use

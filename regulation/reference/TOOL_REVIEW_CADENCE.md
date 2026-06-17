@@ -4,7 +4,7 @@ Status: Active
 
 ## Purpose
 
-Keep `TOOL_VERIFICATION_MATRIX.md` current without manual ad hoc drift.
+Keep `regulation/reference/TOOL_VERIFICATION_MATRIX.md` current without manual ad hoc drift.
 
 This file defines review timing and the automated self-check that guards the regulation shelf.
 
@@ -12,12 +12,12 @@ This file defines review timing and the automated self-check that guards the reg
 
 | Event | Action |
 |---|---|
-| shelf file added or removed | update `REGULATION_INDEX.md` and run index validator |
+| shelf file added or removed | update `regulation/REGULATION_INDEX.md` and run index validator |
 | external tool major version change | review matrix row and evidence commands |
-| calendar quarterly review | re-read `TOOL_VERIFICATION_MATRIX.md` and `EVIDENCE_COMMANDS.md` |
+| calendar quarterly review | re-read `regulation/reference/TOOL_VERIFICATION_MATRIX.md` and `regulation/reference/EVIDENCE_COMMANDS.md` |
 | GitHub feature policy change | review hosted feature rows in matrix |
 
-Record the latest review date in `TOOL_VERIFICATION_MATRIX.md` header.
+Record the latest review date in `regulation/reference/TOOL_VERIFICATION_MATRIX.md` header.
 
 ## Automated Self-Check
 
@@ -39,10 +39,10 @@ SHELF="${GITHUB_OPTIMIZATION_ROOT:-/path/to/github-optimization}"
 
 `validate-regulation-index.*` checks:
 
-- every Required path in `REGULATION_INDEX.md` exists
+- every Required path in `regulation/REGULATION_INDEX.md` exists
 - every `templates/*.template` exists
-- `GATE_REGISTRY.md` contains expected gate ID ranges
-- regulation scripts listed in `REGULATION_INDEX.md` exist
+- `regulation/gates/GATE_REGISTRY.md` contains expected gate ID ranges
+- regulation scripts listed in `regulation/REGULATION_INDEX.md` exist
 
 It does not validate target repositories.
 
@@ -63,5 +63,5 @@ Run after shelf edits:
 If validator or regression tests fail:
 
 1. fix the shelf before auditing target repositories
-2. record the failure in `SHELF_CHANGELOG.md` if the fix changes tool recommendations
-3. update `Verified on:` date in `TOOL_VERIFICATION_MATRIX.md` when matrix content changes
+2. record the failure in `regulation/shelf/SHELF_CHANGELOG.md` if the fix changes tool recommendations
+3. update `Verified on:` date in `regulation/reference/TOOL_VERIFICATION_MATRIX.md` when matrix content changes

@@ -6,18 +6,18 @@ Status: Active
 
 Convert Tier 1, Tier 2, and Tier 3 gate results into one final label.
 
-Use after `AUDIT_RUNBOOK.md` Steps 7–10.
+Use after `regulation/execution/AUDIT_RUNBOOK.md` Steps 7–10.
 
-Gate count: 46 (`GATE_REGISTRY.md`)
-Waiver rules: `WAIVER_POLICY.md`
+Gate count: 46 (`regulation/gates/GATE_REGISTRY.md`)
+Waiver rules: `regulation/reference/WAIVER_POLICY.md`
 
 ## Gate Inputs
 
 | Tier | Source | Required for |
 |---|---|---|
-| 1 | `PUBLIC_PREP_GATE.md` | all modes |
-| 2 | `RELEASE_QUALITY_GATE.md` | `release`, `strict-product` |
-| 3 | `PRODUCT_READINESS_GATE.md` | `strict-product` only |
+| 1 | `regulation/gates/PUBLIC_PREP_GATE.md` | all modes |
+| 2 | `regulation/gates/RELEASE_QUALITY_GATE.md` | `release`, `strict-product` |
+| 3 | `regulation/gates/PRODUCT_READINESS_GATE.md` | `strict-product` only |
 
 ## Verdict Labels
 

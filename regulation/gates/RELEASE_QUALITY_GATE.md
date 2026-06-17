@@ -10,9 +10,9 @@ Provide one pass-or-block surface for release discipline after Tier 1 public-pre
 
 Required for audit modes `release` and `strict-product`.
 
-Registry: `GATE_REGISTRY.md`
-Judgment examples: `JUDGMENT_GUIDE.md`
-Waiver rules: `WAIVER_POLICY.md`
+Registry: `regulation/gates/GATE_REGISTRY.md`
+Judgment examples: `regulation/reference/JUDGMENT_GUIDE.md`
+Waiver rules: `regulation/reference/WAIVER_POLICY.md`
 Defer record: `templates/tier2-defer-record.md.template`
 
 ## Gate Rule

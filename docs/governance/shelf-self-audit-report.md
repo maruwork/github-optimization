@@ -22,9 +22,9 @@ Status: Final
 
 | Path class | Review | Notes |
 |---|---|---|
-| Required regulation files in `REGULATION_INDEX.md` | full read | authoritative set |
+| Required regulation files in `regulation/REGULATION_INDEX.md` | full read | authoritative set |
 | `checklists/`, `templates/`, `scripts/` | full read | execution surfaces |
-| `roadmap/`, `design/`, `tasks/` | excepted | excluded from regulation read per `REGULATION_INDEX.md` |
+| `roadmap/`, `design/`, `tasks/` | excepted | excluded from regulation read per `regulation/REGULATION_INDEX.md` |
 | `domain-option/` | sampled | copy templates only |
 
 ## Machine Evidence
@@ -79,7 +79,7 @@ large tracked files >512KB: none
 | G-16 | waived | remote not created yet; revisit after push |
 | G-17 | waived | Dependabot file exists locally; hosted state pending |
 | G-18 | waived | code scanning decision deferred until remote exists |
-| G-19 | pass | `CHANGELOG.md` + `SHELF_CHANGELOG.md` |
+| G-19 | pass | `CHANGELOG.md` + `regulation/shelf/SHELF_CHANGELOG.md` |
 | G-20 | pass | `docs/governance/publication-decision-record.md` |
 | G-21 | pass | required regulation set read; excluded history excepted |
 | G-22 | pass | no large tracked files |

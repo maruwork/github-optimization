@@ -31,7 +31,7 @@ Quickstart only:
 
 If `audit.manifest.yml` is missing, the agent still executes README-derived commands and should then add a manifest for the next run.
 
-Shelf path resolution: `SHELF_PATH.md`
+Shelf path resolution: `regulation/shelf/SHELF_PATH.md`
 
 ## Tracked File Inventory
 
@@ -40,7 +40,7 @@ git ls-files
 git ls-files | wc -l
 ```
 
-Review every path against `REPO_CONTENT_CLASSIFICATION.md`.
+Review every path against `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`.
 
 ## Secret Scan
 

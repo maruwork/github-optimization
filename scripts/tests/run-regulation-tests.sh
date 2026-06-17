@@ -46,10 +46,10 @@ do
 done
 
 for policy in \
-  RE_AUDIT_POLICY.md \
-  AUDIT_PHASE_POLICY.md \
-  MULTI_REPO_ORCHESTRATION.md \
-  TOOL_REVIEW_CADENCE.md
+  regulation/execution/RE_AUDIT_POLICY.md \
+  regulation/execution/AUDIT_PHASE_POLICY.md \
+  regulation/execution/MULTI_REPO_ORCHESTRATION.md \
+  regulation/reference/TOOL_REVIEW_CADENCE.md
 do
   run_pass "policy exists: $policy" test -f "$SHELF/$policy"
 done

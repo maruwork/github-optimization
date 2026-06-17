@@ -12,9 +12,9 @@ if (-not $ShelfPath) {
     }
 }
 
-$indexPath = Join-Path $ShelfPath "REGULATION_INDEX.md"
+$indexPath = Join-Path $ShelfPath "regulation/REGULATION_INDEX.md"
 if (-not (Test-Path $indexPath)) {
-    Write-Error "REGULATION_INDEX.md not found at $ShelfPath"
+    Write-Error "regulation/REGULATION_INDEX.md not found at $ShelfPath"
 }
 
 $lines = Get-Content $indexPath
@@ -46,7 +46,7 @@ foreach ($rel in $required | Select-Object -Unique) {
     }
 }
 
-$gatePath = Join-Path $ShelfPath "GATE_REGISTRY.md"
+$gatePath = Join-Path $ShelfPath "regulation/gates/GATE_REGISTRY.md"
 if (Test-Path $gatePath) {
     $gateText = Get-Content $gatePath -Raw
     foreach ($prefix in @("G", "R", "P")) {
@@ -59,7 +59,7 @@ if (Test-Path $gatePath) {
         }
     }
 } else {
-    $failures += "missing GATE_REGISTRY.md"
+    $failures += "missing regulation/gates/GATE_REGISTRY.md"
 }
 
 Write-Output "=== Regulation Index Validation ==="

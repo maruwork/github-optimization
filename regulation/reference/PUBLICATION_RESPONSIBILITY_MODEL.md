@@ -23,7 +23,7 @@ Use a split model:
 
 Default execution model: agents run audits and gather evidence. Humans approve or reject when policy requires it.
 
-Read: `AGENT_EXECUTION_MODEL.md`
+Read: `regulation/execution/AGENT_EXECUTION_MODEL.md`
 
 Do not rely on only one side for the entire flow.
 

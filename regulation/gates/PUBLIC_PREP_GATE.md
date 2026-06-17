@@ -8,7 +8,7 @@ Provide one pass-or-block decision surface for Tier 1 public preparation.
 
 Use this after the checklists are walked and evidence is collected.
 
-Registry: `GATE_REGISTRY.md`
+Registry: `regulation/gates/GATE_REGISTRY.md`
 
 ## How To Score Each Row
 
@@ -65,9 +65,9 @@ G-21 pass | G-22 pass
 Gate result: PASS | BLOCKED
 ```
 
-Store the filled summary at `audits/<repository-slug>/audit-report.md` per `OUTPUT_PATHS.md`.
+Store the filled summary at `audits/<repository-slug>/audit-report.md` per `regulation/shelf/OUTPUT_PATHS.md`.
 
-Read: `OUTPUT_PATHS.md`
+Read: `regulation/shelf/OUTPUT_PATHS.md`
 
 ## Tier 2 Extension
 

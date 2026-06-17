@@ -73,21 +73,21 @@ set -e
 
 echo
 echo "=== Agent Steps Remaining ==="
-echo "1. Read REGULATION_INDEX.md and complete G-21 full file read in target repository"
+echo "1. Read regulation/REGULATION_INDEX.md and complete G-21 full file read in target repository"
 echo "2. Paste machine evidence into $REPORT_REL"
-echo "3. Score Tier 1 gates G-01..G-22 (PUBLIC_PREP_GATE.md)"
+echo "3. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
 if [[ "$AUDIT_MODE" == "release" || "$AUDIT_MODE" == "strict-product" ]]; then
-  echo "4. Score Tier 2 gates R-01..R-14 (RELEASE_QUALITY_GATE.md)"
+  echo "4. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
 fi
 if [[ "$AUDIT_MODE" == "strict-product" ]]; then
-  echo "5. Score Tier 3 gates P-01..P-10 (PRODUCT_READINESS_GATE.md)"
+  echo "5. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
 fi
-echo "6. Apply AUDIT_PHASE_POLICY.md for phase=$AUDIT_PHASE"
+echo "6. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AUDIT_PHASE"
 echo "7. Write audits/$SLUG/publication-decision-record.md when phase=pre-public (G-20)"
 echo "8. If R-02 blocked with accepted risk, write audits/$SLUG/accepted-risk-record.md"
-echo "9. Assign final label via FULL_AUDIT_VERDICT.md"
+echo "9. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
 echo
-echo "Read: AUDIT_RUNBOOK.md, RE_AUDIT_POLICY.md, OUTPUT_PATHS.md"
+echo "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/RE_AUDIT_POLICY.md, regulation/shelf/OUTPUT_PATHS.md"
 
 if [[ "$EVIDENCE_EXIT" -ne 0 ]]; then
   echo

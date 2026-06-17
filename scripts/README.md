@@ -67,7 +67,7 @@ Run after shelf edits:
 .\tests\run-regulation-tests.ps1
 ```
 
-Read: `TOOL_REVIEW_CADENCE.md`
+Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 ## Limitation
 

@@ -35,14 +35,14 @@ This folder is the **generic regulation shelf** for public-repository self-check
 C:\Users\f_tan\project\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
 ```
 
-Read first: `REGULATION_SELF_CHECK.md`
+Read first: `regulation/REGULATION_SELF_CHECK.md`
 
 ## Responsible AI Route
 
-1. `REGULATION_INDEX.md` — required regulation files only
-2. `AUDIT_RUNBOOK.md` — execution order
-3. `AUDIT_RULES.md` — validity rules
-4. `GATE_REGISTRY.md` — all 46 judgment items
+1. `regulation/REGULATION_INDEX.md` — required regulation files only
+2. `regulation/execution/AUDIT_RUNBOOK.md` — execution order
+3. `regulation/execution/AUDIT_RULES.md` — validity rules
+4. `regulation/gates/GATE_REGISTRY.md` — all 46 judgment items
 5. `templates/audit-report.md.template` — output skeleton
 
 Orchestrator: `scripts/run-full-audit.*` (shelf validate + scaffold + evidence)
@@ -65,23 +65,32 @@ Human role: optional publication approval, not default command execution.
 | `release` | Tier 1 + 2 |
 | `strict-product` | Tier 1 + 2 + 3 |
 
-Read: `SCOPE_AND_TIERS.md`
+Read: `regulation/execution/SCOPE_AND_TIERS.md`
 
 ## Judgment Items
 
 | Tier | Gate file | Count |
 |---|---|---|
-| 1 | `PUBLIC_PREP_GATE.md` | 22 |
-| 2 | `RELEASE_QUALITY_GATE.md` | 14 |
-| 3 | `PRODUCT_READINESS_GATE.md` | 10 |
+| 1 | `regulation/gates/PUBLIC_PREP_GATE.md` | 22 |
+| 2 | `regulation/gates/RELEASE_QUALITY_GATE.md` | 14 |
+| 3 | `regulation/gates/PRODUCT_READINESS_GATE.md` | 10 |
 
-Master list: `GATE_REGISTRY.md`
+Master list: `regulation/gates/GATE_REGISTRY.md`
 
-Final label: `FULL_AUDIT_VERDICT.md`
+Final label: `regulation/gates/FULL_AUDIT_VERDICT.md`
+
+## Repository Layout
+
+```text
+README.md, LICENSE, …          # root — entry only
+regulation/                    # all regulation text
+checklists/  templates/  scripts/
+audits/                        # local audit results (gitignored)
+```
 
 ## Output Locations
 
-The responsible AI writes into the target repository:
+The responsible AI writes audit results locally under `audits/`:
 
 | Artifact | Default path |
 |---|---|
@@ -91,11 +100,11 @@ The responsible AI writes into the target repository:
 | accepted risk record | `audits/<slug>/accepted-risk-record.md` |
 | audit manifest | product repo root `audit.manifest.yml` only |
 
-Read: `OUTPUT_PATHS.md`
+Read: `regulation/shelf/OUTPUT_PATHS.md`
 
 ## Regulation Scope
 
-Required files: `REGULATION_INDEX.md`
+Required files: `regulation/REGULATION_INDEX.md`
 
 Excluded from self-check:
 
@@ -109,20 +118,20 @@ Excluded from self-check:
 
 | Area | Files |
 |---|---|
-| Classification | `REPO_CONTENT_CLASSIFICATION.md` |
-| Tool decisions | `TOOL_VERIFICATION_MATRIX.md` |
-| Hosted settings | `HOSTED_SETTINGS_BOUNDARY.md` |
-| Quickstart automation | `AUDIT_MANIFEST_POLICY.md` |
-| Waiver rules | `WAIVER_POLICY.md` |
-| Subjective gate examples | `JUDGMENT_GUIDE.md` |
-| Audit phase | `AUDIT_PHASE_POLICY.md` |
-| Re-audit / delta audit | `RE_AUDIT_POLICY.md` |
-| Multi-repository batch | `MULTI_REPO_ORCHESTRATION.md` |
-| Shelf path resolution | `SHELF_PATH.md` |
-| Tool review cadence | `TOOL_REVIEW_CADENCE.md` |
-| Completeness proof | `REGULATION_COMPLETENESS.md` |
-| Evidence commands | `EVIDENCE_COMMANDS.md` |
-| Responsibility | `PUBLICATION_RESPONSIBILITY_MODEL.md` |
+| Classification | `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` |
+| Tool decisions | `regulation/reference/TOOL_VERIFICATION_MATRIX.md` |
+| Hosted settings | `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md` |
+| Quickstart automation | `regulation/reference/AUDIT_MANIFEST_POLICY.md` |
+| Waiver rules | `regulation/reference/WAIVER_POLICY.md` |
+| Subjective gate examples | `regulation/reference/JUDGMENT_GUIDE.md` |
+| Audit phase | `regulation/execution/AUDIT_PHASE_POLICY.md` |
+| Re-audit / delta audit | `regulation/execution/RE_AUDIT_POLICY.md` |
+| Multi-repository batch | `regulation/execution/MULTI_REPO_ORCHESTRATION.md` |
+| Shelf path resolution | `regulation/shelf/SHELF_PATH.md` |
+| Tool review cadence | `regulation/reference/TOOL_REVIEW_CADENCE.md` |
+| Completeness proof | `regulation/REGULATION_COMPLETENESS.md` |
+| Evidence commands | `regulation/reference/EVIDENCE_COMMANDS.md` |
+| Responsibility | `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` |
 | Repair starters | `templates/*.template` |
 | Checklists | `checklists/*.md` |
 
@@ -130,16 +139,16 @@ Excluded from self-check:
 
 Self-check is complete when:
 
-- all required regulation files in `REGULATION_INDEX.md` were used
+- all required regulation files in `regulation/REGULATION_INDEX.md` were used
 - every `git ls-files` entry in the target repo was read or explicitly excepted (`G-21`)
 - all 46 gate tables G / R / P are filled or marked `n/a` with reason
 - evidence is attached
-- waivers follow `WAIVER_POLICY.md`
-- subjective gates follow `JUDGMENT_GUIDE.md`
+- waivers follow `regulation/reference/WAIVER_POLICY.md`
+- subjective gates follow `regulation/reference/JUDGMENT_GUIDE.md`
 - final label is assigned
 - open Blockers are listed as fix tasks
 
-Gap closure record: `REGULATION_COMPLETENESS.md`
+Gap closure record: `regulation/REGULATION_COMPLETENESS.md`
 
 ## GitHub Repository Scope
 
@@ -149,8 +158,8 @@ The GitHub remote keeps **regulation files only**:
 - not audit results (`audits/<slug>/` is gitignored)
 - not shelf build history (`design/`, `roadmap/`, `tasks/`)
 
-Review cadence for tool recommendations: `TOOL_REVIEW_CADENCE.md`
+Review cadence for tool recommendations: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 Shelf self-check: `scripts/validate-regulation-index.*`, `scripts/tests/run-regulation-tests.*`
 
-Distribution: `SHELF_DISTRIBUTION.md`, version `SHELF_VERSION.md`
+Distribution: `regulation/shelf/SHELF_DISTRIBUTION.md`, version `regulation/shelf/SHELF_VERSION.md`

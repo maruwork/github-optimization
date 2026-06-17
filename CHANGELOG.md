@@ -2,7 +2,7 @@
 
 All notable changes to this regulation shelf are documented here.
 
-The detailed shelf changelog lives in `SHELF_CHANGELOG.md`.
+The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
 ## [1.1.0] - 2026-06-17
 

@@ -11,10 +11,10 @@ If you follow this runbook to completion, the audit is done except for fixes in 
 ## Start Here
 
 1. Validate the regulation shelf with `scripts/validate-regulation-index.*` (or use `scripts/run-full-audit.*`, which runs this first)
-2. Read `REGULATION_INDEX.md`
-3. Read `AGENT_EXECUTION_MODEL.md` and `AUDIT_RULES.md`
-4. Determine audit phase with `AUDIT_PHASE_POLICY.md` (`pre-public` | `post-public`)
-5. If a prior audit report exists, read `RE_AUDIT_POLICY.md`
+2. Read `regulation/REGULATION_INDEX.md`
+3. Read `regulation/execution/AGENT_EXECUTION_MODEL.md` and `regulation/execution/AUDIT_RULES.md`
+4. Determine audit phase with `regulation/execution/AUDIT_PHASE_POLICY.md` (`pre-public` | `post-public`)
+5. If a prior audit report exists, read `regulation/execution/RE_AUDIT_POLICY.md`
 6. Determine repository slug (`adop`, `veil`, etc.) for output paths
 7. Create `audits/<repository-slug>/` under this shelf if needed
 8. Copy `templates/audit-report.md.template` to `audits/<repository-slug>/audit-report.md` unless orchestrator already scaffolded it
@@ -22,15 +22,15 @@ If you follow this runbook to completion, the audit is done except for fixes in 
 
 References:
 
-- `OUTPUT_PATHS.md`
-- `SHELF_PATH.md`
-- `HOSTED_SETTINGS_BOUNDARY.md`
-- `AUDIT_MANIFEST_POLICY.md`
-- `MULTI_REPO_ORCHESTRATION.md`
-- `TOOL_REVIEW_CADENCE.md`
-- `GATE_REGISTRY.md`
-- `JUDGMENT_GUIDE.md`
-- `WAIVER_POLICY.md`
+- `regulation/shelf/OUTPUT_PATHS.md`
+- `regulation/shelf/SHELF_PATH.md`
+- `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`
+- `regulation/reference/AUDIT_MANIFEST_POLICY.md`
+- `regulation/execution/MULTI_REPO_ORCHESTRATION.md`
+- `regulation/reference/TOOL_REVIEW_CADENCE.md`
+- `regulation/gates/GATE_REGISTRY.md`
+- `regulation/reference/JUDGMENT_GUIDE.md`
+- `regulation/reference/WAIVER_POLICY.md`
 
 ## Inputs
 
@@ -66,7 +66,7 @@ Walk `checklists/repository-file-review-checklist.md`.
 
 ## Step 3 — Machine evidence (`G-01`, `G-22`, Tier 2 baseline)
 
-Resolve shelf path per `SHELF_PATH.md`, then from repository root.
+Resolve shelf path per `regulation/shelf/SHELF_PATH.md`, then from repository root.
 
 Preferred orchestrator:
 
@@ -100,21 +100,21 @@ Quickstart (`R-08`, `R-09`):
 
 ## Step 4 — Tier 1 local checks (`G-01`…`G-12`, `G-22`)
 
-Walk `REPO_CONTENT_CLASSIFICATION.md` and `checklists/local-public-prep-checklist.md`.
+Walk `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` and `checklists/local-public-prep-checklist.md`.
 
 ## Step 5 — Tier 1 hosted checks (`G-13`…`G-19`)
 
-Walk `TOOL_VERIFICATION_MATRIX.md`, `HOSTED_SETTINGS_BOUNDARY.md`, and `checklists/github-settings-checklist.md`.
+Walk `regulation/reference/TOOL_VERIFICATION_MATRIX.md`, `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`, and `checklists/github-settings-checklist.md`.
 
 ## Step 6 — Publication responsibility (`G-20`)
 
-Walk `PUBLICATION_RESPONSIBILITY_MODEL.md` and `checklists/publication-decision-checklist.md`.
+Walk `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` and `checklists/publication-decision-checklist.md`.
 
 Write or verify `audits/<repository-slug>/publication-decision-record.md`.
 
 ## Step 7 — Tier 1 verdict
 
-Score all Tier 1 rows in `PUBLIC_PREP_GATE.md`.
+Score all Tier 1 rows in `regulation/gates/PUBLIC_PREP_GATE.md`.
 
 If any row is `blocked`, final verdict cannot exceed `PUBLIC_PREP_BLOCKED`.
 
@@ -122,7 +122,7 @@ If any row is `blocked`, final verdict cannot exceed `PUBLIC_PREP_BLOCKED`.
 
 Required when audit mode is `release` or `strict-product`.
 
-Walk `checklists/release-quality-checklist.md` and score `RELEASE_QUALITY_GATE.md`.
+Walk `checklists/release-quality-checklist.md` and score `regulation/gates/RELEASE_QUALITY_GATE.md`.
 
 If entire Tier 2 is deferred, write `audits/<repository-slug>/tier2-defer-record.md`.
 
@@ -132,11 +132,11 @@ Whole Tier 2 defer is invalid for `strict-product`.
 
 Required only when audit mode is `strict-product`.
 
-Walk `checklists/product-readiness-checklist.md`, `JUDGMENT_GUIDE.md`, and score `PRODUCT_READINESS_GATE.md`.
+Walk `checklists/product-readiness-checklist.md`, `regulation/reference/JUDGMENT_GUIDE.md`, and score `regulation/gates/PRODUCT_READINESS_GATE.md`.
 
 ## Step 10 — Final verdict
 
-Apply `FULL_AUDIT_VERDICT.md` and `WAIVER_POLICY.md`.
+Apply `regulation/gates/FULL_AUDIT_VERDICT.md` and `regulation/reference/WAIVER_POLICY.md`.
 
 Write facts, gate tables, evaluation, final label, and fix tasks.
 
@@ -150,7 +150,7 @@ Write facts, gate tables, evaluation, final label, and fix tasks.
 - [ ] final label assigned
 - [ ] every `blocked` row has a fix task
 
-Completeness reference: `REGULATION_COMPLETENESS.md`
+Completeness reference: `regulation/REGULATION_COMPLETENESS.md`
 
 ## What This Runbook Does Not Do
 

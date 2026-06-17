@@ -8,7 +8,7 @@ Record one repository's GitHub-side execution results without turning project-sp
 
 Copy this file to `audits/<repository-slug>/github-execution-packet.md` in this shelf.
 
-Read: `../OUTPUT_PATHS.md`
+Read: `../regulation/shelf/OUTPUT_PATHS.md`
 
 ## Repository
 
@@ -18,7 +18,7 @@ Read: `../OUTPUT_PATHS.md`
 
 ## Tier 1 Result
 
-- `PUBLIC_PREP_GATE.md` result: PASS | BLOCKED
+- `regulation/gates/PUBLIC_PREP_GATE.md` result: PASS | BLOCKED
 - blocked items:
 - waivers:
 

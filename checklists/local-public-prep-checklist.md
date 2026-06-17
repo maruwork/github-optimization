@@ -4,9 +4,9 @@ Status: Active
 
 Tier: 1
 
-Evidence: `../EVIDENCE_COMMANDS.md`
-Gate mapping: `../GATE_REGISTRY.md`
-Judgment guide: `../JUDGMENT_GUIDE.md`
+Evidence: `../regulation/reference/EVIDENCE_COMMANDS.md`
+Gate mapping: `../regulation/gates/GATE_REGISTRY.md`
+Judgment guide: `../regulation/reference/JUDGMENT_GUIDE.md`
 
 ## Minimum
 

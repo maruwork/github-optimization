@@ -4,9 +4,9 @@ Status: Active
 
 Tier: 1
 
-Evidence: `../EVIDENCE_COMMANDS.md`
-Hosted boundary: `../HOSTED_SETTINGS_BOUNDARY.md`
-Gate mapping: `../GATE_REGISTRY.md`
+Evidence: `../regulation/reference/EVIDENCE_COMMANDS.md`
+Hosted boundary: `../regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`
+Gate mapping: `../regulation/gates/GATE_REGISTRY.md`
 
 ## Repository Metadata
 
@@ -27,7 +27,7 @@ Gate mapping: `../GATE_REGISTRY.md`
 - [ ] Dependabot decision is explicit (`G-17`)
 - [ ] secret scanning decision is explicit (`G-16`)
 - [ ] code scanning decision is explicit (`G-18`)
-- [ ] every `conditional` item in `TOOL_VERIFICATION_MATRIX.md` has an explicit enabled/disabled/waived decision
+- [ ] every `conditional` item in `regulation/reference/TOOL_VERIFICATION_MATRIX.md` has an explicit enabled/disabled/waived decision
 
 ## Release Surface
 

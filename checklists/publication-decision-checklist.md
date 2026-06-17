@@ -8,7 +8,7 @@ Output path: `audits/<repository-slug>/publication-decision-record.md`
 
 ## Purpose
 
-Turn `PUBLICATION_RESPONSIBILITY_MODEL.md` into a walkable gate.
+Turn `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` into a walkable gate.
 
 Use before any repository becomes public or before a major re-publication.
 
@@ -35,7 +35,7 @@ Stop public release when:
 
 - publication execution mode is still implicit
 - no filled decision record exists
-- a Tier 1 `blocked` item remains in `PUBLIC_PREP_GATE.md`
+- a Tier 1 `blocked` item remains in `regulation/gates/PUBLIC_PREP_GATE.md`
 - both sides assume the other side will publish or maintain the repository
 
 ## Template

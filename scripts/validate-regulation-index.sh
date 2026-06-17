@@ -2,10 +2,10 @@
 set -euo pipefail
 
 SHELF_PATH="${1:-${GITHUB_OPTIMIZATION_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}}"
-INDEX="$SHELF_PATH/REGULATION_INDEX.md"
+INDEX="$SHELF_PATH/regulation/REGULATION_INDEX.md"
 
 if [[ ! -f "$INDEX" ]]; then
-  echo "REGULATION_INDEX.md not found at $SHELF_PATH" >&2
+  echo "regulation/REGULATION_INDEX.md not found at $SHELF_PATH" >&2
   exit 1
 fi
 
@@ -43,7 +43,7 @@ for rel in "${REQUIRED[@]}"; do
   fi
 done
 
-GATE_FILE="$SHELF_PATH/GATE_REGISTRY.md"
+GATE_FILE="$SHELF_PATH/regulation/gates/GATE_REGISTRY.md"
 if [[ -f "$GATE_FILE" ]]; then
   for prefix in G R P; do
     max=22
@@ -58,7 +58,7 @@ if [[ -f "$GATE_FILE" ]]; then
     done
   done
 else
-  echo "FAIL: missing GATE_REGISTRY.md"
+  echo "FAIL: missing regulation/gates/GATE_REGISTRY.md"
   failures=$((failures + 1))
 fi
 

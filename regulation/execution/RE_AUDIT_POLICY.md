@@ -6,7 +6,7 @@ Status: Active
 
 Define when and how to repeat regulation self-check on a repository that was audited before.
 
-Use with `AUDIT_MANIFEST_POLICY.md` and `OUTPUT_PATHS.md`.
+Use with `regulation/reference/AUDIT_MANIFEST_POLICY.md` and `regulation/shelf/OUTPUT_PATHS.md`.
 
 ## Triggers
 
@@ -31,7 +31,7 @@ Otherwise default to full re-audit.
 
 ## Full Re-Audit
 
-Follow `AUDIT_RUNBOOK.md` without shortcut.
+Follow `regulation/execution/AUDIT_RUNBOOK.md` without shortcut.
 
 Required outputs:
 
@@ -109,6 +109,6 @@ After a successful re-audit of a runnable tool:
 
 ## Output Rule
 
-Re-audit outputs stay under `audits/<repository-slug>/` in this shelf per `OUTPUT_PATHS.md`.
+Re-audit outputs stay under `audits/<repository-slug>/` in this shelf per `regulation/shelf/OUTPUT_PATHS.md`.
 
 Do not write re-audit results into public product repositories.

@@ -6,7 +6,7 @@ Status: Active
 
 Reduce subjective drift for gates that are not simple file-existence checks.
 
-Use with `GATE_REGISTRY.md`. Facts still require evidence.
+Use with `regulation/gates/GATE_REGISTRY.md`. Facts still require evidence.
 
 ## G-02 vs G-21
 

@@ -10,9 +10,9 @@ Provide a strict product verdict without mixing it into Tier 1 public-prep.
 
 Required only for audit mode `strict-product`.
 
-Registry: `GATE_REGISTRY.md`
-Judgment examples: `JUDGMENT_GUIDE.md`
-Waiver rules: `WAIVER_POLICY.md`
+Registry: `regulation/gates/GATE_REGISTRY.md`
+Judgment examples: `regulation/reference/JUDGMENT_GUIDE.md`
+Waiver rules: `regulation/reference/WAIVER_POLICY.md`
 
 ## Gate Rule
 

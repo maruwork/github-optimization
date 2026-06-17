@@ -8,7 +8,7 @@ Gate: `G-21`
 
 ## Purpose
 
-Enforce the read-before-assert rule from `AUDIT_RULES.md`.
+Enforce the read-before-assert rule from `regulation/execution/AUDIT_RULES.md`.
 
 ## Minimum
 
@@ -32,12 +32,12 @@ Use this table in `audits/<repository-slug>/audit-report.md`:
 | Value | Meaning |
 |---|---|
 | `read` | full file read |
-| `classified-without-read` | only allowed for explicit exceptions in `AUDIT_RULES.md` |
+| `classified-without-read` | only allowed for explicit exceptions in `regulation/execution/AUDIT_RULES.md` |
 | `deferred-with-reason` | temporarily not read; reason and owner recorded |
 
 ## Classification Reference
 
-Use `REPO_CONTENT_CLASSIFICATION.md` classes:
+Use `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` classes:
 
 - user-facing
 - github-standard

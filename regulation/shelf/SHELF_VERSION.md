@@ -5,7 +5,7 @@ Status: Active
 ## Current
 
 ```text
-1.1.2
+1.1.3
 ```
 
 ## Meaning
@@ -18,4 +18,4 @@ Status: Active
 
 ## Change Log
 
-Read: `SHELF_CHANGELOG.md`
+Read: `regulation/shelf/SHELF_CHANGELOG.md`

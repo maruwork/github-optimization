@@ -6,8 +6,8 @@ Tier: 3
 
 Required only for audit mode `strict-product`.
 
-Gate mapping: `../GATE_REGISTRY.md`
-Judgment guide: `../JUDGMENT_GUIDE.md`
+Gate mapping: `../regulation/gates/GATE_REGISTRY.md`
+Judgment guide: `../regulation/reference/JUDGMENT_GUIDE.md`
 
 ## Distribution And First Run
 
@@ -34,6 +34,6 @@ Judgment guide: `../JUDGMENT_GUIDE.md`
 
 ## Gate
 
-Score `PRODUCT_READINESS_GATE.md` after this checklist.
+Score `regulation/gates/PRODUCT_READINESS_GATE.md` after this checklist.
 
-Evaluation wording: `FULL_AUDIT_VERDICT.md`
+Evaluation wording: `regulation/gates/FULL_AUDIT_VERDICT.md`

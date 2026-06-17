@@ -4,7 +4,7 @@ Status: Active
 
 ## Purpose
 
-One waiver rule for every gate in `GATE_REGISTRY.md`.
+One waiver rule for every gate in `regulation/gates/GATE_REGISTRY.md`.
 
 ## Valid Waiver
 

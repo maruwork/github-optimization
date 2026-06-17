@@ -74,21 +74,21 @@ $evidenceExit = $LASTEXITCODE
 
 Write-Output ""
 Write-Output "=== Agent Steps Remaining ==="
-Write-Output "1. Read REGULATION_INDEX.md and complete G-21 full file read in target repository"
+Write-Output "1. Read regulation/REGULATION_INDEX.md and complete G-21 full file read in target repository"
 Write-Output "2. Paste machine evidence into $reportRel"
-Write-Output "3. Score Tier 1 gates G-01..G-22 (PUBLIC_PREP_GATE.md)"
+Write-Output "3. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
 if ($AuditMode -in @("release", "strict-product")) {
-    Write-Output "4. Score Tier 2 gates R-01..R-14 (RELEASE_QUALITY_GATE.md)"
+    Write-Output "4. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
 }
 if ($AuditMode -eq "strict-product") {
-    Write-Output "5. Score Tier 3 gates P-01..P-10 (PRODUCT_READINESS_GATE.md)"
+    Write-Output "5. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
 }
-Write-Output "6. Apply AUDIT_PHASE_POLICY.md for phase=$AuditPhase"
+Write-Output "6. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AuditPhase"
 Write-Output "7. Write audits/$slug/publication-decision-record.md when phase=pre-public (G-20)"
 Write-Output "8. If R-02 blocked with accepted risk, write audits/$slug/accepted-risk-record.md"
-Write-Output "9. Assign final label via FULL_AUDIT_VERDICT.md"
+Write-Output "9. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
 Write-Output ""
-Write-Output "Read: AUDIT_RUNBOOK.md, RE_AUDIT_POLICY.md, OUTPUT_PATHS.md"
+Write-Output "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/RE_AUDIT_POLICY.md, regulation/shelf/OUTPUT_PATHS.md"
 
 if ($evidenceExit -ne 0) {
     Write-Output ""

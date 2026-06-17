@@ -4,7 +4,7 @@ Status: Active
 
 Verified on: 2026-06-17
 
-Review cadence: `TOOL_REVIEW_CADENCE.md`
+Review cadence: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 ## External Tools
 

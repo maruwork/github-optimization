@@ -25,7 +25,7 @@ Read:
 - `checklists/local-public-prep-checklist.md`
 - `checklists/github-settings-checklist.md`
 - `checklists/publication-decision-checklist.md`
-- `PUBLIC_PREP_GATE.md`
+- `regulation/gates/PUBLIC_PREP_GATE.md`
 
 ## Tier 2 — Release Quality
 
@@ -57,7 +57,7 @@ This tier is part of the generic regulation shelf, but it is not required for ev
 Read:
 
 - `checklists/product-readiness-checklist.md`
-- `PRODUCT_READINESS_GATE.md`
+- `regulation/gates/PRODUCT_READINESS_GATE.md`
 
 Tier 3 does not replace Tier 1. It adds a strict market-ready verdict on top.
 

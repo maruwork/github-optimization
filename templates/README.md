@@ -39,7 +39,7 @@ Reusable file starters and output skeletons for regulation self-check.
 | `accepted-risk-record.md.template` | `audits/<repository-slug>/accepted-risk-record.md` |
 | `audit.manifest.yml.template` | repository root `audit.manifest.yml` |
 
-Read: `OUTPUT_PATHS.md`
+Read: `regulation/shelf/OUTPUT_PATHS.md`
 
 ## Installation Rule
 

@@ -8,7 +8,7 @@ Separate **pre-public** and **post-public** self-check expectations without chan
 
 Phase affects default audit mode, waiver strictness, and required supporting records.
 
-Gate IDs remain defined in `GATE_REGISTRY.md`.
+Gate IDs remain defined in `regulation/gates/GATE_REGISTRY.md`.
 
 ## Phases
 
@@ -41,7 +41,7 @@ Pre-public audits must produce:
 Pre-public waivers:
 
 - `G-18` code scanning may be `waived` with owner and revisit trigger
-- hosted settings may be `verify` or `recommend-fix` per `HOSTED_SETTINGS_BOUNDARY.md`
+- hosted settings may be `verify` or `recommend-fix` per `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`
 
 Pre-public audits may defer entire Tier 2 only when:
 
@@ -61,7 +61,7 @@ Post-public waivers:
 - `G-18` waiver must include revisit date not later than next release
 - `R-02` cannot be waived in `release` or `strict-product` modes
 
-Post-public audits should follow `RE_AUDIT_POLICY.md` when a prior report exists.
+Post-public audits should follow `regulation/execution/RE_AUDIT_POLICY.md` when a prior report exists.
 
 ## Phase Transitions
 
@@ -85,4 +85,4 @@ Phase does not remove Tier 1 gates.
 
 ## Orchestration
 
-For multiple repositories, read `MULTI_REPO_ORCHESTRATION.md`.
+For multiple repositories, read `regulation/execution/MULTI_REPO_ORCHESTRATION.md`.

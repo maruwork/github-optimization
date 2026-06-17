@@ -18,7 +18,7 @@ The responsible AI uses the first path that exists:
 
 1. environment variable `GITHUB_OPTIMIZATION_ROOT`
 2. `../github-optimization` relative to target repository root
-3. standalone clone path documented in `SHELF_DISTRIBUTION.md`
+3. standalone clone path documented in `regulation/shelf/SHELF_DISTRIBUTION.md`
 4. `C:\Users\f_tan\project\github-optimization`
 
 Standalone clone users should set `GITHUB_OPTIMIZATION_ROOT` explicitly.

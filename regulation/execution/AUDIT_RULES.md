@@ -8,7 +8,7 @@ Make audits finish from evidence, not inference.
 
 These rules apply whenever this shelf is used to audit a repository before or after public release.
 
-Default executor: **agent**. Read `AGENT_EXECUTION_MODEL.md`.
+Default executor: **agent**. Read `regulation/execution/AGENT_EXECUTION_MODEL.md`.
 
 ## Mandatory Rules
 
@@ -34,7 +34,7 @@ Everything else requires full read.
 
 Never present evaluation as fact.
 
-Subjective gates must follow `JUDGMENT_GUIDE.md`.
+Subjective gates must follow `regulation/reference/JUDGMENT_GUIDE.md`.
 
 ### 3. Execute before recommend
 
@@ -44,7 +44,7 @@ Primary routes:
 
 - `scripts/collect-audit-evidence.*`
 - `scripts/run-audit-quickstart.*`
-- `EVIDENCE_COMMANDS.md`
+- `regulation/reference/EVIDENCE_COMMANDS.md`
 
 Forbidden default behavior:
 
@@ -59,7 +59,7 @@ Do not mix findings from multiple repositories in one verdict block.
 
 ### 5. Record waivers explicitly
 
-Read: `WAIVER_POLICY.md`
+Read: `regulation/reference/WAIVER_POLICY.md`
 
 `waived` is valid only when the waiver policy is satisfied.
 
@@ -67,9 +67,9 @@ Read: `WAIVER_POLICY.md`
 
 Mark findings against:
 
-- Tier 1: `G-01` … `G-20` in `PUBLIC_PREP_GATE.md`
-- Tier 2: `R-01` … `R-14` in `RELEASE_QUALITY_GATE.md`
-- Tier 3: `P-01` … `P-10` in `PRODUCT_READINESS_GATE.md`
+- Tier 1: `G-01` … `G-20` in `regulation/gates/PUBLIC_PREP_GATE.md`
+- Tier 2: `R-01` … `R-14` in `regulation/gates/RELEASE_QUALITY_GATE.md`
+- Tier 3: `P-01` … `P-10` in `regulation/gates/PRODUCT_READINESS_GATE.md`
 
 ## Invalid Audit
 
@@ -83,11 +83,11 @@ An audit is invalid when any of the following is true:
 - README quickstart was scored without agent execution evidence
 - `G-21` was scored `pass` without a completed read log
 
-If invalid, restart from `AUDIT_RUNBOOK.md` Step 1.
+If invalid, restart from `regulation/execution/AUDIT_RUNBOOK.md` Step 1.
 
 ## Output Rule
 
-Self-check outputs belong under `audits/<repository-slug>/` in this shelf per `OUTPUT_PATHS.md`. Do not write audit reports into public product repositories.
+Self-check outputs belong under `audits/<repository-slug>/` in this shelf per `regulation/shelf/OUTPUT_PATHS.md`. Do not write audit reports into public product repositories.
 
 ## Severity Labels
 
