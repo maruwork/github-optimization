@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.13] - 2026-06-17
+
+### Changed
+
+- `README.md` rewritten to match `OUTPUT_PATHS.md`, `REGULATION_INDEX.md`, and full script pipeline (v1.1.6–1.1.12 scope)
+
 ## [1.1.12] - 2026-06-17
 
 ### Fixed

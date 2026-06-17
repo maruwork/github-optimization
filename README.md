@@ -2,63 +2,75 @@
 
 Status: Active
 
-## What This Folder Is For
+Shelf version: `1.1.13` (`regulation/shelf/SHELF_VERSION.md`)
 
-This folder is the **generic regulation shelf** for public-repository self-check.
+## What This Repository Is
 
-It is not a human-operated checklist. Assign the responsible AI to read this shelf, execute evidence against the target repository, and produce a scored audit report.
+Generic **regulation shelf** for public-repository self-check.
 
-| Use | Description |
+The responsible AI reads this shelf, executes evidence against a target repository, scores 46 gates, and writes results under `audits/<repository-slug>/` on disk. This is not a human-operated checklist.
+
+| Role | Action |
 |---|---|
-| Primary consumer | responsible AI for the target repository |
-| Primary action | regulation self-check with executed evidence |
-| Primary output | `audits/<repository-slug>/audit-report.md` in this shelf |
-| Judgment surface | 46 gate items across Tier 1 / 2 / 3 |
+| Responsible AI | read regulation, run scripts, score gates, write audit artifacts |
+| Human | optional publication approval; not default command execution |
 
-## What This Folder Is Not
+## What This Repository Is Not
 
 | Not for | Reason |
 |---|---|
-| public audit reports in product repos | audit results belong in `audits/<slug>/` here |
-| live examples such as `VEIL_*` or `ADOP_*` | generic shelf only |
-| human-operated checklist labor | agent executes evidence |
+| audit reports in product repos | scored artifacts belong in `audits/<slug>/` here |
+| live project examples (`VEIL_*`, `ADOP_*`, …) | generic shelf only; see `domain-option/` templates |
 | copying this folder into public product repos | unless the product documents shared governance |
+| filled records under `docs/governance/` | pointer only; canonical path is `audits/<slug>/` |
 
-## One-Line Assignment
+## Start Here
+
+1. `regulation/REGULATION_SELF_CHECK.md` — assignment to the responsible AI
+2. `regulation/REGULATION_INDEX.md` — required regulation files
+3. `regulation/execution/AUDIT_RUNBOOK.md` — execution order
+4. `regulation/gates/GATE_REGISTRY.md` — all 46 judgment items
+5. `templates/audit-report.md.template` — output skeleton
+
+One-line assignment:
 
 ```text
 Read $GITHUB_OPTIMIZATION_ROOT (or ../github-optimization relative to the target repo), self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
 ```
 
-Read first: `regulation/REGULATION_SELF_CHECK.md`
+## Execution Pipeline
 
-## Responsible AI Route
+Run in this order unless `RE_AUDIT_POLICY.md` limits scope to a delta.
 
-1. `regulation/REGULATION_INDEX.md` — required regulation files only
-2. `regulation/execution/AUDIT_RUNBOOK.md` — execution order
-3. `regulation/execution/AUDIT_RULES.md` — validity rules
-4. `regulation/gates/GATE_REGISTRY.md` — all 46 judgment items
-5. `templates/audit-report.md.template` — output skeleton
-
-Orchestrator: `scripts/run-full-audit.*` (shelf validate + scaffold + evidence)
-
-Tracked-file screening: `scripts/check-tracked-files.*` (flags unnecessary `git ls-files` entries)
-
-Gitignore consistency: `scripts/check-gitignore-consistency.*` (tracked vs ignore rules)
-
-Delta re-audit: `scripts/run-delta-audit.*` (changed-file scope per `RE_AUDIT_POLICY.md`)
-
-Optional accelerators: `scripts/`, `audit.manifest.yml` in target repo
-
-Human role: optional publication approval, not default command execution.
-
-## Three Tiers
-
-| Tier | Name | When required |
+| Step | Script | Purpose |
 |---|---|---|
-| 1 | Public-prep baseline | always |
-| 2 | Release quality | `release` and `strict-product` audit modes |
-| 3 | Product readiness | `strict-product` audit mode only |
+| 1 | `scripts/run-full-audit.*` | shelf validate + scaffold + evidence (orchestrator) |
+| 2 | `scripts/validate-regulation-index.*` | required-file index check (shelf self-proof) |
+| 3 | `scripts/collect-audit-evidence.*` | machine evidence bundle |
+| 4 | `scripts/check-tracked-files.*` | unnecessary tracked-file screening (`G-03`, `G-21`) |
+| 5 | `scripts/check-gitignore-consistency.*` | tracked vs `.gitignore` consistency (`G-04`) |
+| 6 | `scripts/run-audit-quickstart.*` | `audit.manifest.yml` quickstart (`R-08`, `R-09`) |
+| 7 | `scripts/run-delta-audit.*` | delta re-audit when prior report exists |
+
+Script reference and usage examples: `scripts/README.md`
+
+Regression tests after shelf edits:
+
+```powershell
+.\scripts\tests\run-regulation-tests.ps1
+```
+
+```bash
+./scripts/tests/run-regulation-tests.sh
+```
+
+## Audit Modes And Tiers
+
+| Tier | Gate file | Count | When required |
+|---|---|---|---|
+| 1 | `regulation/gates/PUBLIC_PREP_GATE.md` | 22 | always |
+| 2 | `regulation/gates/RELEASE_QUALITY_GATE.md` | 14 | `release`, `strict-product` |
+| 3 | `regulation/gates/PRODUCT_READINESS_GATE.md` | 10 | `strict-product` only |
 
 | Audit mode | Tiers evaluated |
 |---|---|
@@ -68,99 +80,104 @@ Human role: optional publication approval, not default command execution.
 
 Read: `regulation/execution/SCOPE_AND_TIERS.md`
 
-## Judgment Items
-
-| Tier | Gate file | Count |
-|---|---|---|
-| 1 | `regulation/gates/PUBLIC_PREP_GATE.md` | 22 |
-| 2 | `regulation/gates/RELEASE_QUALITY_GATE.md` | 14 |
-| 3 | `regulation/gates/PRODUCT_READINESS_GATE.md` | 10 |
-
-Master list: `regulation/gates/GATE_REGISTRY.md`
-
 Final label: `regulation/gates/FULL_AUDIT_VERDICT.md`
 
 ## Repository Layout
 
 ```text
-README.md, LICENSE, …          # root — entry only
-regulation/                    # all regulation text
+README.md, LICENSE, SECURITY.md, CHANGELOG.md, …   # entry and shelf metadata
+audit.manifest.yml                                 # shelf self-check quickstart only
+regulation/                                        # all regulation text
 checklists/  templates/  scripts/
-audits/                        # local audit results (gitignored)
+docs/governance/README.md                          # pointer; no filled records
+audits/                                            # local audit results (gitignored)
+.github/workflows/regulation-tests.yml           # shelf CI
+domain-option/                                     # copy templates only (excluded from regulation)
 ```
 
 ## Output Locations
 
-The responsible AI writes audit results locally under `audits/`:
+The responsible AI writes audit artifacts under `audits/<slug>/` in this shelf. Do not write scored audit reports into public product repositories.
 
-| Artifact | Default path |
+| Artifact | Path |
 |---|---|
 | audit report | `audits/<slug>/audit-report.md` |
+| delta audit record | `audits/<slug>/delta-audit-record.md` |
 | publication decision record | `audits/<slug>/publication-decision-record.md` |
 | Tier 2 defer record | `audits/<slug>/tier2-defer-record.md` |
 | accepted risk record | `audits/<slug>/accepted-risk-record.md` |
-| audit manifest | product repo root `audit.manifest.yml` only |
+| GitHub execution packet | `audits/<slug>/github-execution-packet.md` |
+| audit quickstart manifest | `<product-repo-root>/audit.manifest.yml` (product repos only) |
+| governance pointer | `docs/governance/README.md` (this shelf; not a filled record) |
 
-Read: `regulation/shelf/OUTPUT_PATHS.md`
+Read: `regulation/shelf/OUTPUT_PATHS.md`, `audits/README.md`
+
+## Quickstart Contract (`R-08`, `R-09`)
+
+| Target | Quickstart source |
+|---|---|
+| Product repository | `audit.manifest.yml` at product root (`templates/audit.manifest.yml.template`) |
+| No manifest | agent derives commands from product `README.md` and records transcript |
+| This shelf (self-check) | root `audit.manifest.yml` runs validate-index, tracked-file screening, gitignore consistency |
+
+Manifest fields: `run_windows` / `run_unix` per `regulation/reference/AUDIT_MANIFEST_POLICY.md`
 
 ## Regulation Scope
 
 Required files: `regulation/REGULATION_INDEX.md`
 
-Excluded from self-check:
+Excluded from self-check unless explicitly assigned:
 
-- `domain-option/**` except when explicitly assigned
+- `domain-option/**`
 - `roadmap/**`, `design/**`, `tasks/**`
 - project-specific execution records
 
-`domain-option/` contains copy templates only. No live project examples belong here.
+## Reference Map
 
-## Supporting Surfaces
-
-| Area | Files |
+| Topic | File |
 |---|---|
-| Classification | `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` |
-| Tool decisions | `regulation/reference/TOOL_VERIFICATION_MATRIX.md` |
-| Hosted settings | `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md` |
-| Quickstart automation | `regulation/reference/AUDIT_MANIFEST_POLICY.md` |
-| Waiver rules | `regulation/reference/WAIVER_POLICY.md` |
-| Subjective gate examples | `regulation/reference/JUDGMENT_GUIDE.md` |
+| Agent execution model | `regulation/execution/AGENT_EXECUTION_MODEL.md` |
+| Validity rules | `regulation/execution/AUDIT_RULES.md` |
 | Audit phase | `regulation/execution/AUDIT_PHASE_POLICY.md` |
-| Re-audit / delta audit | `regulation/execution/RE_AUDIT_POLICY.md` |
-| Multi-repository batch | `regulation/execution/MULTI_REPO_ORCHESTRATION.md` |
-| Shelf path resolution | `regulation/shelf/SHELF_PATH.md` |
+| Re-audit / delta | `regulation/execution/RE_AUDIT_POLICY.md` |
+| Multi-repo batch | `regulation/execution/MULTI_REPO_ORCHESTRATION.md` |
+| Repo classification | `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` |
+| Tracked-file screening | `regulation/reference/TRACKED_FILE_SCREENING.md` |
+| Gitignore consistency | `regulation/reference/GITIGNORE_CONSISTENCY.md` |
+| Tool decisions | `regulation/reference/TOOL_VERIFICATION_MATRIX.md` |
 | Tool review cadence | `regulation/reference/TOOL_REVIEW_CADENCE.md` |
-| Completeness proof | `regulation/REGULATION_COMPLETENESS.md` |
 | Evidence commands | `regulation/reference/EVIDENCE_COMMANDS.md` |
-| Responsibility | `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` |
-| Repair starters | `templates/*.template` |
-| Checklists | `checklists/*.md` |
+| Hosted settings | `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md` |
+| Quickstart policy | `regulation/reference/AUDIT_MANIFEST_POLICY.md` |
+| Waivers | `regulation/reference/WAIVER_POLICY.md` |
+| Subjective gates | `regulation/reference/JUDGMENT_GUIDE.md` |
+| Publication responsibility | `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` |
+| Shelf path | `regulation/shelf/SHELF_PATH.md` |
+| Distribution | `regulation/shelf/SHELF_DISTRIBUTION.md` |
+| Completeness proof | `regulation/REGULATION_COMPLETENESS.md` |
+| Repair starters | `templates/*.template`, `checklists/*.md` |
 
 ## Completion Standard
 
 Self-check is complete when:
 
-- all required regulation files in `regulation/REGULATION_INDEX.md` were used
+- every file in `regulation/REGULATION_INDEX.md` Required set was used
 - every `git ls-files` entry in the target repo was read or explicitly excepted (`G-21`)
-- all 46 gate tables G / R / P are filled or marked `n/a` with reason
-- evidence is attached
+- all 46 gate tables (`G` / `R` / `P`) are filled or marked `n/a` with reason
+- machine evidence is attached
 - waivers follow `regulation/reference/WAIVER_POLICY.md`
 - subjective gates follow `regulation/reference/JUDGMENT_GUIDE.md`
-- final label is assigned
+- final label is assigned via `FULL_AUDIT_VERDICT.md`
 - open Blockers are listed as fix tasks
 
-Gap closure record: `regulation/REGULATION_COMPLETENESS.md`
+## GitHub Remote Scope
 
-## GitHub Repository Scope
-
-The GitHub remote keeps **regulation files only**:
+The public remote keeps **regulation files only**:
 
 - gates, policies, checklists, templates, scripts, CI
-- not audit results (`audits/<slug>/` is gitignored)
+- not audit results (`audits/**` is gitignored except `audits/README.md`)
 - not shelf build history (`design/`, `roadmap/`, `tasks/`)
-
-Review cadence for tool recommendations: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 Shelf self-check: `scripts/validate-regulation-index.*`, `scripts/tests/run-regulation-tests.*`
 
-Distribution: `regulation/shelf/SHELF_DISTRIBUTION.md`, version `regulation/shelf/SHELF_VERSION.md`
+Distribution and versioning: `regulation/shelf/SHELF_DISTRIBUTION.md`, `regulation/shelf/SHELF_CHANGELOG.md`

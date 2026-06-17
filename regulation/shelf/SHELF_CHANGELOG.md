@@ -2,6 +2,12 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.13 — 2026-06-17
+
+### Changed
+
+- root README aligned with output paths, script pipeline, quickstart contract, and reference map
+
 ## 1.1.12 — 2026-06-17
 
 ### Fixed
