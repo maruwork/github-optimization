@@ -16,6 +16,8 @@ Output is designed to paste into `templates/audit-report.md.template`.
 | `run-full-audit.sh` | Linux/macOS bash — shelf validate + scaffold + evidence |
 | `validate-regulation-index.ps1` | Windows PowerShell — shelf self-check |
 | `validate-regulation-index.sh` | Linux/macOS bash — shelf self-check |
+| `check-tracked-files.ps1` | Windows PowerShell — unnecessary tracked-file scan |
+| `check-tracked-files.sh` | Linux/macOS bash — unnecessary tracked-file scan |
 | `collect-audit-evidence.ps1` | Windows PowerShell |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
@@ -34,6 +36,10 @@ Output is designed to paste into `templates/audit-report.md.template`.
 ```
 
 ```powershell
+.\check-tracked-files.ps1 -RepoPath C:\path\to\repo
+```
+
+```powershell
 .\collect-audit-evidence.ps1 -RepoPath C:\path\to\repo -HostedRepo owner/repo
 ```
 
@@ -44,6 +50,7 @@ Output is designed to paste into `templates/audit-report.md.template`.
 ## What They Collect
 
 - `git ls-files` count
+- tracked-file screening for developer-only, internal-management, cache, and misplaced audit paths
 - HEAD and describe
 - root/github file presence
 - latest CI run summary when `gh` is available

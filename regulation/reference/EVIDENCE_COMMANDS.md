@@ -40,7 +40,18 @@ git ls-files
 git ls-files | wc -l
 ```
 
-Review every path against `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`.
+Screen for files that should not be downloaded:
+
+```powershell
+& "$Shelf/scripts/check-tracked-files.ps1" -RepoPath <repo>
+```
+
+```bash
+"$Shelf/scripts/check-tracked-files.sh" <repo>
+```
+
+Review every path against `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`.  
+Screening rules: `regulation/reference/TRACKED_FILE_SCREENING.md`.
 
 ## Secret Scan
 

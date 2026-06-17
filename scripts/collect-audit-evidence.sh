@@ -22,6 +22,11 @@ git rev-parse HEAD
 git describe --tags --always 2>/dev/null || true
 echo "Tracked files: $(git ls-files | wc -l | tr -d ' ')"
 
+SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
+if [[ -f "$SCREEN_SCRIPT" ]]; then
+  bash "$SCREEN_SCRIPT" "$REPO_PATH"
+fi
+
 section "Large Tracked Files (>512KB)"
 found=0
 while IFS= read -r f; do

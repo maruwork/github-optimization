@@ -36,11 +36,19 @@ function Assert-ExitCode([string]$name, [int]$expected, [scriptblock]$block) {
     }
 }
 
+$fixture = Join-Path $Shelf "scripts\tests\fixtures\minimal-docs-repo"
+
 Assert-ExitCode "validate-regulation-index" 0 {
     & (Join-Path $Shelf "scripts\validate-regulation-index.ps1") -ShelfPath $Shelf
 }
 
-$fixture = Join-Path $Shelf "scripts\tests\fixtures\minimal-docs-repo"
+Assert-ExitCode "check-tracked-files on shelf" 0 {
+    & (Join-Path $Shelf "scripts\check-tracked-files.ps1") -RepoPath $Shelf
+}
+
+Assert-ExitCode "check-tracked-files on fixture" 0 {
+    & (Join-Path $Shelf "scripts\check-tracked-files.ps1") -RepoPath $fixture
+}
 
 Assert-ExitCode "run-audit-quickstart missing manifest exits 2" 2 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $fixture

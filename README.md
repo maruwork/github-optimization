@@ -42,6 +42,8 @@ Read first: `regulation/REGULATION_SELF_CHECK.md`
 
 Orchestrator: `scripts/run-full-audit.*` (shelf validate + scaffold + evidence)
 
+Tracked-file screening: `scripts/check-tracked-files.*` (flags unnecessary `git ls-files` entries)
+
 Optional accelerators: `scripts/`, `audit.manifest.yml` in target repo
 
 Human role: optional publication approval, not default command execution.

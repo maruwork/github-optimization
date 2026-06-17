@@ -39,6 +39,7 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 ### Classification, tools, boundaries, and judgment
 
 - `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`
+- `regulation/reference/TRACKED_FILE_SCREENING.md`
 - `regulation/reference/TOOL_VERIFICATION_MATRIX.md`
 - `regulation/reference/TOOL_REVIEW_CADENCE.md`
 - `regulation/reference/EVIDENCE_COMMANDS.md`
@@ -88,6 +89,8 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 
 ### Automation scripts
 
+- `scripts/check-tracked-files.ps1`
+- `scripts/check-tracked-files.sh`
 - `scripts/collect-audit-evidence.ps1`
 - `scripts/collect-audit-evidence.sh`
 - `scripts/run-audit-quickstart.ps1`

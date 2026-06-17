@@ -13,6 +13,15 @@ Check command:
 git ls-files
 ```
 
+Machine screening (supports `G-03`, `G-04`, `G-21`):
+
+```bash
+# from regulation shelf scripts/
+./scripts/check-tracked-files.sh <target-repo>
+```
+
+Read: `regulation/reference/TRACKED_FILE_SCREENING.md`
+
 ## Four Classes
 
 | Class | Keep in repository | Examples |

@@ -2,6 +2,17 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.5 — 2026-06-17
+
+### Added
+
+- `scripts/check-tracked-files.*` for unnecessary tracked-file detection
+- `regulation/reference/TRACKED_FILE_SCREENING.md`
+
+### Changed
+
+- evidence bundle and shelf quickstart include screening output
+
 ## 1.1.4 — 2026-06-17
 
 ### Added

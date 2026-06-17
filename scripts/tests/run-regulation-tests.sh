@@ -36,6 +36,8 @@ run_exit() {
 FIXTURE="$SHELF/scripts/tests/fixtures/minimal-docs-repo"
 
 run_pass "validate-regulation-index" bash "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
+run_exit "check-tracked-files on shelf" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$SHELF"
+run_exit "check-tracked-files on fixture" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$FIXTURE"
 run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
 
 for tpl in \

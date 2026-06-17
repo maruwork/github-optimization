@@ -4,6 +4,18 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.5] - 2026-06-17
+
+### Added
+
+- `scripts/check-tracked-files.*` to screen unnecessary tracked files (`G-03`, `G-04`, `G-21`)
+- `regulation/reference/TRACKED_FILE_SCREENING.md`
+
+### Changed
+
+- `collect-audit-evidence.*` includes tracked-file screening output
+- `audit.manifest.yml` runs screening on shelf quickstart
+
 ## [1.1.4] - 2026-06-17
 
 ### Added

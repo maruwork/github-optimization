@@ -24,6 +24,11 @@ $files = git ls-files
 $count = ($files | Measure-Object).Count
 Write-Output "Tracked files: $count"
 
+$screenScript = Join-Path $PSScriptRoot "check-tracked-files.ps1"
+if (Test-Path $screenScript) {
+    & $screenScript -RepoPath $RepoPath
+}
+
 Write-Section "Large Tracked Files (>512KB)"
 $large = @()
 foreach ($f in $files) {

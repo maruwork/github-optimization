@@ -6,3 +6,7 @@ commands:
     run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-regulation-index.ps1
     expect_exit: 0
 
+  - id: check-tracked-files
+    run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-tracked-files.ps1 -RepoPath .
+    expect_exit: 0
+
