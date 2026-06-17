@@ -4,6 +4,20 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.14] - 2026-06-17
+
+### Added
+
+- `CODE_OF_CONDUCT.md`, `SUPPORT.md`
+- `.github/ISSUE_TEMPLATE/*`, `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/workflows/ci.yml` (canonical shelf CI; replaces `regulation-tests.yml`)
+- `.github/workflows/codeql.yml` (G-18 code scanning)
+
+### Changed
+
+- `collect-audit-evidence.*` checks `ci.yml` and `codeql.yml`
+- `SECURITY.md` supported versions include `1.1.x`
+
 ## [1.1.13] - 2026-06-17
 
 ### Changed

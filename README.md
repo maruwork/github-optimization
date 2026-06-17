@@ -2,7 +2,7 @@
 
 Status: Active
 
-Shelf version: `1.1.13` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.1.14` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
@@ -91,7 +91,8 @@ regulation/                                        # all regulation text
 checklists/  templates/  scripts/
 docs/governance/README.md                          # pointer; no filled records
 audits/                                            # local audit results (gitignored)
-.github/workflows/regulation-tests.yml           # shelf CI
+.github/workflows/ci.yml                         # shelf CI
+.github/workflows/codeql.yml                     # code scanning (G-18)
 domain-option/                                     # copy templates only (excluded from regulation)
 ```
 

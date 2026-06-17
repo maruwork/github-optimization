@@ -2,6 +2,13 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.14 — 2026-06-17
+
+### Added
+
+- public-prep GitHub surface files (CoC, support, issue/PR templates)
+- `ci.yml` + `codeql.yml`; retired `regulation-tests.yml` duplicate
+
 ## 1.1.13 — 2026-06-17
 
 ### Changed

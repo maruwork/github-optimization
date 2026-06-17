@@ -57,7 +57,7 @@ Write-Section "GitHub Files"
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
     ".github/workflows/ci.yml",
-    ".github/workflows/regulation-tests.yml"
+    ".github/workflows/codeql.yml"
 ) | ForEach-Object {
     Write-Output "$_`: $(Test-Path $_)"
 }

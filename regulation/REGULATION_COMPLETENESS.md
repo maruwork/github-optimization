@@ -39,7 +39,7 @@ Use this file to confirm the regulation set is complete for agent self-check.
 | shelf version untracked | version and changelog files | `regulation/shelf/SHELF_VERSION.md`, `regulation/shelf/SHELF_CHANGELOG.md` |
 | orchestrator not dry-run tested | fixture + shelf dry-run tests | `scripts/tests/fixtures/minimal-docs-repo/` |
 | shelf root policy files missing | LICENSE SECURITY CHANGELOG CONTRIBUTING | root policy files |
-| shelf CI missing | regulation-tests workflow | `.github/workflows/regulation-tests.yml` |
+| shelf CI missing | CI workflow | `.github/workflows/ci.yml` |
 | shelf meta-audit missing | self-audit report | `audits/github-optimization/audit-report.md` (local, gitignored) |
 | gitleaks stderr noise on PowerShell | normalized native stderr lines | `collect-audit-evidence.ps1` |
 

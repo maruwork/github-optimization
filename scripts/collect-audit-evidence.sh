@@ -62,7 +62,7 @@ for f in \
   .github/PULL_REQUEST_TEMPLATE.md \
   .github/dependabot.yml \
   .github/workflows/ci.yml \
-  .github/workflows/regulation-tests.yml
+  .github/workflows/codeql.yml
 do
   if [[ -f "$f" ]]; then echo "$f: true"; else echo "$f: false"; fi
 done
