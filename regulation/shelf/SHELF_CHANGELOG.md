@@ -2,6 +2,12 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.12 — 2026-06-17
+
+### Fixed
+
+- tracked-ignored fixture gitlink removed; runtime-generated `local-only.secret`
+
 ## 1.1.11 — 2026-06-17
 
 ### Fixed

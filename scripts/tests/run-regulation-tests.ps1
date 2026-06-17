@@ -61,6 +61,7 @@ Assert-ExitCode "check-gitignore-consistency on fixture" 0 {
 $trackedIgnoredFixture = Join-Path $Shelf "scripts\tests\fixtures\tracked-ignored-repo"
 if (-not (Test-Path (Join-Path $trackedIgnoredFixture ".git"))) {
     Push-Location $trackedIgnoredFixture
+    Set-Content -Path "local-only.secret" -Value "fixture-secret=tracked-but-ignored" -NoNewline
     git init | Out-Null
     git add README.md LICENSE SECURITY.md .gitignore
     git add -f local-only.secret

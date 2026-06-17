@@ -42,6 +42,7 @@ run_exit "check-gitignore-consistency on shelf" 0 bash "$SHELF/scripts/check-git
 run_exit "check-gitignore-consistency on fixture" 0 bash "$SHELF/scripts/check-gitignore-consistency.sh" "$FIXTURE"
 TRACKED_IGNORED="$SHELF/scripts/tests/fixtures/tracked-ignored-repo"
 if [[ ! -d "$TRACKED_IGNORED/.git" ]]; then
+  printf '%s' 'fixture-secret=tracked-but-ignored' >"$TRACKED_IGNORED/local-only.secret"
   git -C "$TRACKED_IGNORED" init
   git -C "$TRACKED_IGNORED" add README.md LICENSE SECURITY.md .gitignore
   git -C "$TRACKED_IGNORED" add -f local-only.secret

@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.12] - 2026-06-17
+
+### Fixed
+
+- tracked-ignored-repo fixture stored as normal files (not gitlink); secret file generated at test runtime
+
 ## [1.1.11] - 2026-06-17
 
 ### Fixed
