@@ -44,6 +44,10 @@ Orchestrator: `scripts/run-full-audit.*` (shelf validate + scaffold + evidence)
 
 Tracked-file screening: `scripts/check-tracked-files.*` (flags unnecessary `git ls-files` entries)
 
+Gitignore consistency: `scripts/check-gitignore-consistency.*` (tracked vs ignore rules)
+
+Delta re-audit: `scripts/run-delta-audit.*` (changed-file scope per `RE_AUDIT_POLICY.md`)
+
 Optional accelerators: `scripts/`, `audit.manifest.yml` in target repo
 
 Human role: optional publication approval, not default command execution.

@@ -2,6 +2,21 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.6 — 2026-06-17
+
+### Added
+
+- gitignore consistency checker (`git ls-files -ci --exclude-standard`)
+- delta re-audit orchestrator and `delta-audit-record.md.template`
+
+### Changed
+
+- evidence bundle includes gitignore consistency screening
+
+### Fixed
+
+- delta orchestrator: Windows name-status parse, Open Blockers count parse
+
 ## 1.1.5 — 2026-06-17
 
 ### Added

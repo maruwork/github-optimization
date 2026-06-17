@@ -27,6 +27,11 @@ if [[ -f "$SCREEN_SCRIPT" ]]; then
   bash "$SCREEN_SCRIPT" "$REPO_PATH"
 fi
 
+GITIGNORE_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-gitignore-consistency.sh"
+if [[ -f "$GITIGNORE_SCRIPT" ]]; then
+  bash "$GITIGNORE_SCRIPT" "$REPO_PATH"
+fi
+
 section "Large Tracked Files (>512KB)"
 found=0
 while IFS= read -r f; do

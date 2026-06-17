@@ -40,6 +40,7 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 
 - `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`
 - `regulation/reference/TRACKED_FILE_SCREENING.md`
+- `regulation/reference/GITIGNORE_CONSISTENCY.md`
 - `regulation/reference/TOOL_VERIFICATION_MATRIX.md`
 - `regulation/reference/TOOL_REVIEW_CADENCE.md`
 - `regulation/reference/EVIDENCE_COMMANDS.md`
@@ -86,11 +87,16 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 - `templates/tier2-defer-record.md.template`
 - `templates/accepted-risk-record.md.template`
 - `templates/audit.manifest.yml.template`
+- `templates/delta-audit-record.md.template`
 
 ### Automation scripts
 
 - `scripts/check-tracked-files.ps1`
 - `scripts/check-tracked-files.sh`
+- `scripts/check-gitignore-consistency.ps1`
+- `scripts/check-gitignore-consistency.sh`
+- `scripts/run-delta-audit.ps1`
+- `scripts/run-delta-audit.sh`
 - `scripts/collect-audit-evidence.ps1`
 - `scripts/collect-audit-evidence.sh`
 - `scripts/run-audit-quickstart.ps1`

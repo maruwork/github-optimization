@@ -17,6 +17,7 @@ Replace `<slug>` with the audited repository slug (`adop`, `veil`, etc.):
 | Artifact | Path |
 |---|---|
 | audit report | `audits/<slug>/audit-report.md` |
+| delta audit record | `audits/<slug>/delta-audit-record.md` |
 | publication decision record | `audits/<slug>/publication-decision-record.md` |
 | Tier 2 defer record | `audits/<slug>/tier2-defer-record.md` |
 | accepted risk record | `audits/<slug>/accepted-risk-record.md` |

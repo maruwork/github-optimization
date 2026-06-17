@@ -29,6 +29,11 @@ if (Test-Path $screenScript) {
     & $screenScript -RepoPath $RepoPath
 }
 
+$gitignoreScript = Join-Path $PSScriptRoot "check-gitignore-consistency.ps1"
+if (Test-Path $gitignoreScript) {
+    & $gitignoreScript -RepoPath $RepoPath
+}
+
 Write-Section "Large Tracked Files (>512KB)"
 $large = @()
 foreach ($f in $files) {

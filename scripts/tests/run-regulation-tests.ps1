@@ -50,6 +50,34 @@ Assert-ExitCode "check-tracked-files on fixture" 0 {
     & (Join-Path $Shelf "scripts\check-tracked-files.ps1") -RepoPath $fixture
 }
 
+Assert-ExitCode "check-gitignore-consistency on shelf" 0 {
+    & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $Shelf
+}
+
+Assert-ExitCode "check-gitignore-consistency on fixture" 0 {
+    & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $fixture
+}
+
+$presentHead = (git -C $Shelf rev-parse HEAD)
+# v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
+$manifestPriorHead = (git -C $Shelf rev-parse 'v1.1.4^{commit}')
+
+Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {
+    & (Join-Path $Shelf "scripts\run-delta-audit.ps1") `
+        -RepoPath $Shelf `
+        -AuditSlug "github-optimization" `
+        -PriorHead $presentHead `
+        -SkipShelfValidation
+}
+
+Assert-ExitCode "run-delta-audit invalidates manifest change" 2 {
+    & (Join-Path $Shelf "scripts\run-delta-audit.ps1") `
+        -RepoPath $Shelf `
+        -AuditSlug "github-optimization" `
+        -PriorHead $manifestPriorHead `
+        -SkipShelfValidation
+}
+
 Assert-ExitCode "run-audit-quickstart missing manifest exits 2" 2 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $fixture
 }
@@ -58,7 +86,8 @@ $requiredTemplates = @(
     "accepted-risk-record.md.template",
     "audit-report.md.template",
     "tier2-defer-record.md.template",
-    "audit.manifest.yml.template"
+    "audit.manifest.yml.template",
+    "delta-audit-record.md.template"
 )
 
 foreach ($tpl in $requiredTemplates) {

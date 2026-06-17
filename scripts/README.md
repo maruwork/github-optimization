@@ -18,6 +18,10 @@ Output is designed to paste into `templates/audit-report.md.template`.
 | `validate-regulation-index.sh` | Linux/macOS bash — shelf self-check |
 | `check-tracked-files.ps1` | Windows PowerShell — unnecessary tracked-file scan |
 | `check-tracked-files.sh` | Linux/macOS bash — unnecessary tracked-file scan |
+| `check-gitignore-consistency.ps1` | Windows PowerShell — `.gitignore` vs index consistency |
+| `check-gitignore-consistency.sh` | Linux/macOS bash — `.gitignore` vs index consistency |
+| `run-delta-audit.ps1` | Windows PowerShell — delta re-audit orchestrator |
+| `run-delta-audit.sh` | Linux/macOS bash — delta re-audit orchestrator |
 | `collect-audit-evidence.ps1` | Windows PowerShell |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
@@ -51,6 +55,7 @@ Output is designed to paste into `templates/audit-report.md.template`.
 
 - `git ls-files` count
 - tracked-file screening for developer-only, internal-management, cache, and misplaced audit paths
+- gitignore consistency (`git ls-files -ci --exclude-standard`)
 - HEAD and describe
 - root/github file presence
 - latest CI run summary when `gh` is available

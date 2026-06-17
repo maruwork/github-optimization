@@ -1,0 +1,69 @@
+# Delta Audit Record
+
+Status: Draft
+
+Output path: `audits/<repository-slug>/delta-audit-record.md`
+
+## Target
+
+- repository:
+- local path:
+- hosted URL:
+- audited at:
+- executor:
+- audit mode:
+- prior HEAD:
+- present HEAD:
+- delta mode: allowed | upgraded-to-full
+
+## Change Summary
+
+- prior tracked file count:
+- present tracked file count:
+- count delta percent:
+- changed tracked paths:
+- new untracked paths (non-ignored):
+
+## Delta Invalidation
+
+| Rule | Result | Notes |
+|---|---|---|
+| >20% inventory change | pass | blocked |
+| license/security/ci/release path changed | pass | blocked |
+| prior open Blocker | pass | blocked |
+| audit.manifest.yml changed | pass | blocked |
+
+## Machine Evidence
+
+Paste output from `scripts/run-delta-audit.*` and `scripts/collect-audit-evidence.*`.
+
+```text
+
+```
+
+## G-21 Delta Read Scope
+
+| Path | Change | Review | Notes |
+|---|---|---|---|
+| | added | read | |
+
+## Gates To Rescore
+
+List gate IDs affected by the change set. Copy forward only rows that meet `regulation/execution/RE_AUDIT_POLICY.md` carry-forward rules.
+
+-
+
+## Carry-Forward Rows
+
+| Gate ID | Carried | Reason |
+|---|---|---|
+| | yes | |
+
+## Final Recommendation
+
+```text
+Continue delta: yes | no — upgrade to full re-audit
+Open Blockers from prior audit:
+Gates rescored:
+Facts confidence: high | medium | low
+```

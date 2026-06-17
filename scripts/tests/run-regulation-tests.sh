@@ -38,13 +38,23 @@ FIXTURE="$SHELF/scripts/tests/fixtures/minimal-docs-repo"
 run_pass "validate-regulation-index" bash "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
 run_exit "check-tracked-files on shelf" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$SHELF"
 run_exit "check-tracked-files on fixture" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$FIXTURE"
+run_exit "check-gitignore-consistency on shelf" 0 bash "$SHELF/scripts/check-gitignore-consistency.sh" "$SHELF"
+run_exit "check-gitignore-consistency on fixture" 0 bash "$SHELF/scripts/check-gitignore-consistency.sh" "$FIXTURE"
+PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"
+# v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
+MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" rev-parse "v1.1.4^{commit}")"
+SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit allowed (no changes)" 0 \
+  bash "$SHELF/scripts/run-delta-audit.sh" "$SHELF" "" release github-optimization "$PRESENT_HEAD"
+SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit invalidates manifest change" 2 \
+  bash "$SHELF/scripts/run-delta-audit.sh" "$SHELF" "" release github-optimization "$MANIFEST_PRIOR_HEAD"
 run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
 
 for tpl in \
   accepted-risk-record.md.template \
   audit-report.md.template \
   tier2-defer-record.md.template \
-  audit.manifest.yml.template
+  audit.manifest.yml.template \
+  delta-audit-record.md.template
 do
   run_pass "template exists: $tpl" test -f "$SHELF/templates/$tpl"
 done

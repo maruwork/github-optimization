@@ -67,7 +67,19 @@ git ls-files --others --exclude-standard
 - every file referenced by changed gates in the prior report
 - every file in the dependency cone of changed runtime or workflow paths
 
-5. Re-run machine evidence (`scripts/collect-audit-evidence.*`)
+Preferred orchestrator:
+
+```powershell
+& "$Shelf/scripts/run-delta-audit.ps1" -RepoPath <repo> -HostedRepo owner/repo -AuditSlug <slug> -AuditMode release
+```
+
+```bash
+"$Shelf/scripts/run-delta-audit.sh" <repo> owner/repo release <slug>
+```
+
+The orchestrator writes `audits/<slug>/delta-audit-record.md` and runs machine evidence.
+
+5. Re-run machine evidence (`scripts/collect-audit-evidence.*`) when not using `run-delta-audit.*`
 6. Re-score every gate row affected by the change set
 7. Copy forward unchanged gate rows only when evidence still applies and assigner allows carry-forward
 

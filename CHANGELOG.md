@@ -4,6 +4,25 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.6] - 2026-06-17
+
+### Added
+
+- `scripts/check-gitignore-consistency.*` — tracked vs `.gitignore` index checks (`G-04`)
+- `scripts/run-delta-audit.*` — delta re-audit orchestrator per `RE_AUDIT_POLICY.md`
+- `regulation/reference/GITIGNORE_CONSISTENCY.md`
+- `templates/delta-audit-record.md.template`
+
+### Changed
+
+- `collect-audit-evidence.*` includes gitignore consistency output
+- `OUTPUT_PATHS.md` documents `delta-audit-record.md`
+
+### Fixed
+
+- `run-delta-audit.*` sensitive-path detection uses `--name-only` (Windows `Mpath` format)
+- `run-delta-audit.*` `Open Blockers: 0` no longer false-positive invalidates delta
+
 ## [1.1.5] - 2026-06-17
 
 ### Added
