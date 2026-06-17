@@ -68,11 +68,12 @@ run_exit "run-full-audit dry-run on fixture" 0 \
   bash "$SHELF/scripts/run-full-audit.sh" "$FIXTURE" "" public-prep pre-public "$FIXTURE_SLUG"
 run_pass "fixture audit-report scaffolded" test -f "$SHELF/audits/$FIXTURE_SLUG/audit-report.md"
 
-SHELF_SLUG="github-optimization"
-rm -f "$SHELF/audits/$SHELF_SLUG/audit-report.md"
+# Dedicated dry-run slug — never delete audits/github-optimization/ (real dogfood output).
+SHELF_DRY_RUN_SLUG="shelf-orchestrator-dry-run"
+rm -f "$SHELF/audits/$SHELF_DRY_RUN_SLUG/audit-report.md"
 run_exit "run-full-audit dry-run on shelf root" 0 \
-  bash "$SHELF/scripts/run-full-audit.sh" "$SHELF" "" public-prep pre-public "$SHELF_SLUG"
-run_pass "shelf audit-report scaffolded" test -f "$SHELF/audits/$SHELF_SLUG/audit-report.md"
+  bash "$SHELF/scripts/run-full-audit.sh" "$SHELF" "" public-prep pre-public "$SHELF_DRY_RUN_SLUG"
+run_pass "shelf orchestrator dry-run report scaffolded" test -f "$SHELF/audits/$SHELF_DRY_RUN_SLUG/audit-report.md"
 
 echo
 if [[ "$failures" -eq 0 ]]; then

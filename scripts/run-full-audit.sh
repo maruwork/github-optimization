@@ -57,6 +57,16 @@ fi
 mkdir -p "$AUDIT_DIR"
 TEMPLATE_PATH="$SHELF/templates/audit-report.md.template"
 
+REPORT_IS_FINAL=0
+if [[ -f "$REPORT_PATH" ]] && grep -qE '^Status:[[:space:]]*Final[[:space:]]*$' "$REPORT_PATH"; then
+  REPORT_IS_FINAL=1
+fi
+
+if [[ "${FORCE_SCAFFOLD:-0}" == "1" && "$REPORT_IS_FINAL" == "1" ]]; then
+  echo "Refusing to overwrite Final audit report: $REPORT_REL (back up first or edit in place)" >&2
+  exit 1
+fi
+
 if [[ ! -f "$REPORT_PATH" || "${FORCE_SCAFFOLD:-0}" == "1" ]]; then
   cp "$TEMPLATE_PATH" "$REPORT_PATH"
   echo "Scaffolded: $REPORT_REL"

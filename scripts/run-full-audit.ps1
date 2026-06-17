@@ -59,7 +59,17 @@ if (-not (Test-Path $auditDir)) {
 }
 
 $templatePath = Join-Path $Shelf "templates\audit-report.md.template"
-if ((-not (Test-Path $reportPath)) -or $ForceScaffold) {
+$reportExists = Test-Path $reportPath
+$reportIsFinal = $false
+if ($reportExists) {
+    $reportIsFinal = (Get-Content $reportPath -Raw) -match '(?m)^Status:\s*Final\s*$'
+}
+
+if ($ForceScaffold -and $reportIsFinal) {
+    Write-Error "Refusing to overwrite Final audit report: $reportRel (back up first or edit in place)"
+}
+
+if ((-not $reportExists) -or $ForceScaffold) {
     Copy-Item -Path $templatePath -Destination $reportPath -Force
     Write-Output "Scaffolded: $reportRel"
 } else {

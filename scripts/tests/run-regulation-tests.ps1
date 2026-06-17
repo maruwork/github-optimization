@@ -102,21 +102,22 @@ Assert-Pass "fixture audit-report scaffolded" {
     }
 }
 
-$shelfSlug = "github-optimization"
-$shelfReport = Join-Path $Shelf "audits\$shelfSlug\audit-report.md"
-if (Test-Path $shelfReport) { Remove-Item $shelfReport -Force }
+# Use a dedicated dry-run slug — never delete audits/github-optimization/ (real dogfood output).
+$shelfDryRunSlug = "shelf-orchestrator-dry-run"
+$shelfDryRunReport = Join-Path $Shelf "audits\$shelfDryRunSlug\audit-report.md"
+if (Test-Path $shelfDryRunReport) { Remove-Item $shelfDryRunReport -Force }
 
 Assert-ExitCode "run-full-audit dry-run on shelf root" 0 {
     & (Join-Path $Shelf "scripts\run-full-audit.ps1") `
         -RepoPath $Shelf `
-        -AuditSlug $shelfSlug `
+        -AuditSlug $shelfDryRunSlug `
         -AuditMode public-prep `
         -AuditPhase pre-public
 }
 
-Assert-Pass "shelf audit-report scaffolded" {
-    if (-not (Test-Path $shelfReport)) {
-        throw "missing $shelfReport"
+Assert-Pass "shelf orchestrator dry-run report scaffolded" {
+    if (-not (Test-Path $shelfDryRunReport)) {
+        throw "missing $shelfDryRunReport"
     }
 }
 

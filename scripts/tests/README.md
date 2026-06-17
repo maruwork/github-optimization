@@ -28,4 +28,5 @@ Dry-run outputs may appear under `audits/minimal-docs-repo/`. They are safe to d
 
 The regression suite also runs `run-full-audit` against the shelf root to verify orchestration on a real tracked tree.
 
-Dry-run scaffolds may appear under `audits/github-optimization/`. Delete them after tests unless intentionally retained.
+Shelf orchestrator dry-run scaffolds go under `audits/shelf-orchestrator-dry-run/` only.  
+Tests must **not** delete or overwrite `audits/github-optimization/` (real dogfood output).

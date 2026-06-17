@@ -13,6 +13,8 @@ The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 ### Fixed
 
 - `run-regulation-tests.*` quickstart missing-manifest test now uses fixture repo (avoids infinite recursion when shelf has `audit.manifest.yml`)
+- `run-regulation-tests.*` shelf dry-run no longer deletes `audits/github-optimization/` (uses `shelf-orchestrator-dry-run` slug instead)
+- `run-full-audit.*` refuses to overwrite audit reports with `Status: Final`
 
 ## [1.1.3] - 2026-06-17
 
