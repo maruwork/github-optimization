@@ -72,7 +72,7 @@ if ($findings.Count -eq 0) {
 
 Write-Output "Findings: $($findings.Count) (blocked: $($blocked.Count), review: $($review.Count))"
 foreach ($item in $findings) {
-    Write-Output "[$($item.Severity)/$($item.Category)] $($item.Path) — $($item.Reason)"
+    Write-Output "[$($item.Severity)/$($item.Category)] $($item.Path) - $($item.Reason)"
 }
 
 if ($blocked.Count -gt 0) {

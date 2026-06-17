@@ -154,7 +154,7 @@ try {
     Write-Output ""
     Write-Output "=== Agent Steps Remaining ==="
     if ($deltaMode -eq "upgrade-to-full") {
-        Write-Output "1. Delta invalid — run scripts/run-full-audit.* for full re-audit"
+        Write-Output "1. Delta invalid - run scripts/run-full-audit.* for full re-audit"
     } else {
         Write-Output "1. Read regulation/execution/RE_AUDIT_POLICY.md delta rules"
         Write-Output "2. G-21 full read only changed paths + dependency cone listed above"

@@ -109,7 +109,7 @@ if ($findings.Count -eq 0) {
 
 Write-Output "Suspicious tracked files: $($findings.Count) (blocked: $($blocked.Count), review: $($review.Count))"
 foreach ($item in $findings) {
-    Write-Output "[$($item.Severity)/$($item.Category)] $($item.Path) — $($item.Reason)"
+    Write-Output "[$($item.Severity)/$($item.Category)] $($item.Path) - $($item.Reason)"
 }
 
 if ($ShowAll) {

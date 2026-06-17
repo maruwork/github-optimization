@@ -12,6 +12,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Run regulation regression tests
         shell: pwsh
         run: ./scripts/tests/run-regulation-tests.ps1
@@ -20,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Run regulation regression tests
         run: |
           chmod +x scripts/*.sh scripts/tests/*.sh

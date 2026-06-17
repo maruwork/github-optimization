@@ -12,7 +12,7 @@ if (-not $ManifestPath) {
 
 if (-not (Test-Path $ManifestPath)) {
     Write-Output "audit.manifest.yml: missing"
-    Write-Output "quickstart automation: skipped — agent must derive commands from README.md and execute them"
+    Write-Output "quickstart automation: skipped - agent must derive commands from README.md and execute them"
     exit 2
 }
 
