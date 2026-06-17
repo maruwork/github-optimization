@@ -8,7 +8,8 @@ REPO_PATH="$(pwd)"
 declare -a findings=()
 
 add_finding() {
-  findings+=("$2|$3|$1|$4")
+  local path="$1" category="$2" severity="$3" reason="$4"
+  findings+=("$severity|$category|$path|$reason")
 }
 
 recommended=(

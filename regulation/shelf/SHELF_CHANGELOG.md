@@ -2,6 +2,15 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.10 — 2026-06-17
+
+### Fixed
+
+- bash gitignore consistency severity field order; blocked exit parity with PowerShell
+- bash evidence collector no longer aborts on screening/gitignore non-zero
+- delta-audit bash: no python dependency; empty diff list output
+- quickstart isolated copy includes dotfiles on Windows
+
 ## 1.1.9 — 2026-06-17
 
 ### Fixed

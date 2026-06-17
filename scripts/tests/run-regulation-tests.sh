@@ -40,6 +40,26 @@ run_exit "check-tracked-files on shelf" 0 bash "$SHELF/scripts/check-tracked-fil
 run_exit "check-tracked-files on fixture" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$FIXTURE"
 run_exit "check-gitignore-consistency on shelf" 0 bash "$SHELF/scripts/check-gitignore-consistency.sh" "$SHELF"
 run_exit "check-gitignore-consistency on fixture" 0 bash "$SHELF/scripts/check-gitignore-consistency.sh" "$FIXTURE"
+TRACKED_IGNORED="$SHELF/scripts/tests/fixtures/tracked-ignored-repo"
+if [[ ! -d "$TRACKED_IGNORED/.git" ]]; then
+  git -C "$TRACKED_IGNORED" init
+  git -C "$TRACKED_IGNORED" add README.md LICENSE SECURITY.md .gitignore
+  git -C "$TRACKED_IGNORED" add -f AGENTS.md
+  git -C "$TRACKED_IGNORED" -c user.email=fixture@test -c user.name=fixture commit -m "init tracked-ignored fixture"
+fi
+run_exit "check-gitignore-consistency blocked tracked-ignored fixture" 1 \
+  bash "$SHELF/scripts/check-gitignore-consistency.sh" "$TRACKED_IGNORED"
+echo "TEST: collect-audit-evidence completes after blocked gitignore"
+set +e
+evidence_out="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$TRACKED_IGNORED" 2>&1)"
+evidence_code=$?
+set -e
+if [[ "$evidence_code" -eq 0 ]] && echo "$evidence_out" | grep -q "=== Root Files ==="; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected exit 0 and Root Files section, got exit $evidence_code"
+  failures=$((failures + 1))
+fi
 PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"
 # v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" rev-parse "v1.1.4^{commit}")"

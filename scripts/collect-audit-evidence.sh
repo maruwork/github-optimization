@@ -24,12 +24,16 @@ echo "Tracked files: $(git ls-files | wc -l | tr -d ' ')"
 
 SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
 if [[ -f "$SCREEN_SCRIPT" ]]; then
+  set +e
   bash "$SCREEN_SCRIPT" "$REPO_PATH"
+  set -e
 fi
 
 GITIGNORE_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-gitignore-consistency.sh"
 if [[ -f "$GITIGNORE_SCRIPT" ]]; then
+  set +e
   bash "$GITIGNORE_SCRIPT" "$REPO_PATH"
+  set -e
 fi
 
 section "Large Tracked Files (>512KB)"
@@ -65,23 +69,35 @@ done
 
 section "Gitleaks"
 if command -v gitleaks >/dev/null 2>&1; then
+  set +e
   gitleaks detect --source . --no-banner 2>&1 | tail -n 3
+  set -e
 else
   echo "gitleaks: not installed"
 fi
 
 if [[ -f pytest.ini || -d tests ]]; then
   section "Pytest"
-  python -m pytest -q 2>&1 | tail -n 5
+  set +e
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -m pytest -q 2>&1 | tail -n 5
+  elif command -v python >/dev/null 2>&1; then
+    python -m pytest -q 2>&1 | tail -n 5
+  else
+    echo "python: not installed"
+  fi
+  set -e
 fi
 
 if [[ -n "$HOSTED_REPO" ]] && command -v gh >/dev/null 2>&1; then
   section "Hosted Metadata"
+  set +e
   gh api "repos/$HOSTED_REPO" --jq '{description, topics: .topics, homepage, visibility}'
   gh api "repos/$HOSTED_REPO/community/profile" --jq '{health_percentage}'
   gh api "repos/$HOSTED_REPO" --jq '.security_and_analysis'
   section "Latest CI"
   gh run list -R "$HOSTED_REPO" --limit 3
+  set -e
 fi
 
 MANIFEST_PATH="$REPO_PATH/audit.manifest.yml"

@@ -38,7 +38,11 @@ $tempRoot = $null
 if ($workdir -eq "isolated") {
     $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("audit-quickstart-" + [guid]::NewGuid().ToString("n"))
     New-Item -ItemType Directory -Path $tempRoot | Out-Null
-    Copy-Item -Path (Join-Path $RepoPath "*") -Destination $tempRoot -Recurse -Force
+    Get-ChildItem -LiteralPath $RepoPath -Force |
+        Where-Object { $_.Name -notin '.', '..' } |
+        ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $tempRoot $_.Name) -Recurse -Force
+        }
     $runRoot = $tempRoot
     Write-Output "Isolated workdir: $runRoot"
 } else {

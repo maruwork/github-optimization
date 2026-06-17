@@ -4,6 +4,19 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.10] - 2026-06-17
+
+### Fixed
+
+- `check-gitignore-consistency.sh` stores finding fields as `severity|category|path|reason` (blocked findings now exit 1 on bash)
+- `collect-audit-evidence.sh` collects full transcript under `set -e` (screening/gitignore/gitleaks/pytest/gh no longer abort early)
+- `run-delta-audit.sh` uses `awk` instead of `python`; empty changed-path list no longer prints spurious `M` line
+- `run-audit-quickstart.ps1` isolated workdir copies dotfiles (`.gitignore`, `.github/`, etc.)
+
+### Added
+
+- regulation tests for tracked-but-ignored fixture and evidence transcript continuity
+
 ## [1.1.9] - 2026-06-17
 
 ### Fixed

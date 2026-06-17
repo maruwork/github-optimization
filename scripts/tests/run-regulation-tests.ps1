@@ -58,6 +58,26 @@ Assert-ExitCode "check-gitignore-consistency on fixture" 0 {
     & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $fixture
 }
 
+$trackedIgnoredFixture = Join-Path $Shelf "scripts\tests\fixtures\tracked-ignored-repo"
+if (-not (Test-Path (Join-Path $trackedIgnoredFixture ".git"))) {
+    Push-Location $trackedIgnoredFixture
+    git init | Out-Null
+    git add README.md LICENSE SECURITY.md .gitignore
+    git add -f AGENTS.md
+    git -c user.email="fixture@test" -c user.name="fixture" commit -m "init tracked-ignored fixture" | Out-Null
+    Pop-Location
+}
+
+Assert-ExitCode "check-gitignore-consistency blocked tracked-ignored fixture" 1 {
+    & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $trackedIgnoredFixture
+}
+
+Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
+    $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $trackedIgnoredFixture 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE" }
+    if ($out -notmatch "=== Root Files ===") { throw "evidence transcript truncated before Root Files" }
+}
+
 $presentHead = (git -C $Shelf rev-parse HEAD)
 # v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (git -C $Shelf rev-parse 'v1.1.4^{commit}')
