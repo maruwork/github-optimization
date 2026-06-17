@@ -4,17 +4,22 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
-## [Unreleased]
+## [1.1.4] - 2026-06-17
 
 ### Added
 
-- `audit.manifest.yml` for shelf quickstart automation (dogfood audit)
+- `audit.manifest.yml` for shelf quickstart automation
 
 ### Fixed
 
-- `run-regulation-tests.*` quickstart missing-manifest test now uses fixture repo (avoids infinite recursion when shelf has `audit.manifest.yml`)
-- `run-regulation-tests.*` shelf dry-run no longer deletes `audits/github-optimization/` (uses `shelf-orchestrator-dry-run` slug instead)
-- `run-full-audit.*` refuses to overwrite audit reports with `Status: Final`
+- dogfood audit findings: CHANGELOG drift, quickstart recursion, audit-report clobber
+- `run-full-audit.*` refuses to overwrite `Status: Final` audit reports
+- `run-regulation-tests.*` shelf dry-run uses `shelf-orchestrator-dry-run` slug only
+- removed hardcoded user workspace paths from README and regulation entry files
+
+### Changed
+
+- `docs/governance/` self-audit summary updated to release dogfood verdict
 
 ## [1.1.3] - 2026-06-17
 

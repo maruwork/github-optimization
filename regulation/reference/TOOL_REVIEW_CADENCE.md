@@ -24,12 +24,12 @@ Record the latest review date in `regulation/reference/TOOL_VERIFICATION_MATRIX.
 Before relying on the shelf for a target-repository audit, run:
 
 ```powershell
-$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } else { "C:\Users\f_tan\project\github-optimization" }
+$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\github-optimization") { (Resolve-Path "..\github-optimization").Path } else { throw "Set GITHUB_OPTIMIZATION_ROOT" }
 & "$Shelf\scripts\validate-regulation-index.ps1" -ShelfPath $Shelf
 ```
 
 ```bash
-SHELF="${GITHUB_OPTIMIZATION_ROOT:-/path/to/github-optimization}"
+SHELF="${GITHUB_OPTIMIZATION_ROOT:-../github-optimization}"
 "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
 ```
 
@@ -51,11 +51,13 @@ It does not validate target repositories.
 Run after shelf edits:
 
 ```powershell
-& "C:\Users\f_tan\project\github-optimization\scripts\tests\run-regulation-tests.ps1"
+# From shelf root
+./scripts/tests/run-regulation-tests.ps1
 ```
 
 ```bash
-/path/to/github-optimization/scripts/tests/run-regulation-tests.sh
+# From shelf root
+./scripts/tests/run-regulation-tests.sh
 ```
 
 ## Escalation

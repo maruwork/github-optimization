@@ -27,7 +27,7 @@ It is not a human-operated checklist. Assign the responsible AI to read this she
 ## One-Line Assignment
 
 ```text
-Read C:\Users\f_tan\project\github-optimization, self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
+Read $GITHUB_OPTIMIZATION_ROOT (or ../github-optimization relative to the target repo), self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
 ```
 
 Read first: `regulation/REGULATION_SELF_CHECK.md`

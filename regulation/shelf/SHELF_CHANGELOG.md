@@ -2,6 +2,25 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.4 — 2026-06-17
+
+### Added
+
+- `audit.manifest.yml` for shelf quickstart automation
+
+### Fixed
+
+- dogfood audit: `CHANGELOG.md` synced through 1.1.3
+- dogfood audit: quickstart test infinite recursion when shelf has `audit.manifest.yml`
+- dogfood audit: `regulation-tests` no longer deletes `audits/github-optimization/`
+- `run-full-audit.*` refuses to overwrite `Status: Final` audit reports
+- shelf dry-run test uses `shelf-orchestrator-dry-run` slug only
+- removed hardcoded user workspace paths from README and regulation entry files
+
+### Changed
+
+- `docs/governance/` self-audit summary updated to release dogfood verdict
+
 ## 1.1.3 — 2026-06-17
 
 ### Changed
@@ -19,7 +38,7 @@ All notable changes to the generic regulation shelf.
 
 ### Changed
 
-- shelf moved to `C:\Users\f_tan\project\github-optimization` (project root)
+- shelf moved to project root (`github-optimization/`)
 - GitHub remote scope: regulation files only
 
 ## 1.1.1 — 2026-06-17

@@ -13,33 +13,30 @@ Status: Active
 
 Publish this shelf as a reusable governance repository so responsible AIs can clone or reference it outside the original workspace.
 
-Publication does not turn this shelf into a product runtime.
-
 ## Decision
 
 | Item | Decision |
 |---|---|
-| visibility | private first; public after hosted settings review |
+| visibility | private first; public when maintainer approves |
 | audience | maintainers and responsible AIs |
 | contribution | limited; regulation changes only |
 | remote | `https://github.com/maruwork/github-optimization` |
 
-## Preconditions
+## Preconditions (local release readiness)
 
 - [x] regulation index self-validation passes
-- [x] regression tests pass locally (including dogfood fixes on HEAD `86ae86e`)
+- [x] regression tests pass locally
 - [x] CI workflow exists
 - [x] `LICENSE`, `SECURITY.md`, `CHANGELOG.md` exist
-- [x] remote created and initial push completed
+- [x] remote created
 - [x] hosted About description and Topics set
-- [x] community profile reviewed (71%; waivers recorded)
-- [x] release dogfood audit completed (`audits/github-optimization/audit-report.md`)
-- [ ] `v1.1.4` tag at HEAD to clear R-07
-- [ ] dogfood commits pushed to remote
+- [x] release dogfood audit: `RELEASE_READY` at tag `v1.1.4`
+- [x] dogfood bugs fixed (CHANGELOG, recursion, report clobber, path portability)
+- [ ] push `v1.1.4` to remote (deferred by maintainer)
+- [ ] public visibility (deferred by maintainer)
 
 ## Execution Notes
 
-Release dogfood audit (`release` mode) found and fixed three shelf bugs (CHANGELOG drift, quickstart recursion, audit-report clobber).  
-Tier 2 remains blocked on R-07 until `v1.1.4` tag after push.
+Local shelf is release-ready at `v1.1.4`. Push and public promotion remain maintainer decisions.
 
 Detailed waivers: `audits/github-optimization/publication-decision-record.md`

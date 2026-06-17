@@ -71,7 +71,7 @@ Resolve shelf path per `regulation/shelf/SHELF_PATH.md`, then from repository ro
 Preferred orchestrator:
 
 ```powershell
-$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\github-optimization") { (Resolve-Path "..\github-optimization").Path } else { "C:\Users\f_tan\project\github-optimization" }
+$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\github-optimization") { (Resolve-Path "..\github-optimization").Path } else { throw "Set GITHUB_OPTIMIZATION_ROOT or clone github-optimization next to the target repo" }
 & "$Shelf\scripts\run-full-audit.ps1" -RepoPath (Get-Location) -HostedRepo owner/repo -AuditMode release -AuditPhase pre-public
 ```
 
