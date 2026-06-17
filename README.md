@@ -4,7 +4,7 @@ Status: Active
 
 ## このフォルダの目的
 
-`common/github-optimization` は、**公開前リポジトリを担当 AI が自己判定するための共通レギュレーション棚**です。
+`github-optimization` は、**公開前リポジトリを担当 AI が自己判定するための共通レギュレーション棚**です。
 
 人間がチェックリストを手で回すための資料ではありません。  
 担当 AI にこのフォルダを渡し、対象リポジトリが規定に適合しているかを**証拠付きで判定させる**ためにあります。
@@ -32,7 +32,7 @@ This folder is the **generic regulation shelf** for public-repository self-check
 ## One-Line Assignment
 
 ```text
-C:\Users\f_tan\project\common\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
+C:\Users\f_tan\project\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
 ```
 
 Read first: `REGULATION_SELF_CHECK.md`
@@ -141,12 +141,15 @@ Self-check is complete when:
 
 Gap closure record: `REGULATION_COMPLETENESS.md`
 
-## Shelf History
+## GitHub Repository Scope
 
-`roadmap/`, `design/`, `tasks/`, and `GITHUB_OPTIMIZATION_*_SUMMARY.md` record how this shelf was built.  
-They are not part of the regulation itself.
+The GitHub remote keeps **regulation files only**:
 
-Review cadence for tool recommendations: `TOOL_REVIEW_CADENCE.md`, `GITHUB_OPTIMIZATION_TOOL_VERIFICATION_SUMMARY.md`
+- gates, policies, checklists, templates, scripts, CI
+- not audit results (`audits/<slug>/` is gitignored)
+- not shelf build history (`design/`, `roadmap/`, `tasks/`)
+
+Review cadence for tool recommendations: `TOOL_REVIEW_CADENCE.md`
 
 Shelf self-check: `scripts/validate-regulation-index.*`, `scripts/tests/run-regulation-tests.*`
 

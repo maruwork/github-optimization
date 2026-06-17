@@ -22,7 +22,7 @@ Read: `AUDIT_RULES.md` section "One repository per report"
 When an assigner names multiple repositories, use this structure:
 
 ```text
-Shelf: <path to common/github-optimization>
+Shelf: <path to github-optimization>
 Phase: pre-public | post-public
 Mode: public-prep | release | strict-product
 Repositories:

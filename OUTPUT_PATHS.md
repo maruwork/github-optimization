@@ -6,7 +6,7 @@ Status: Active
 
 Fix where self-check outputs live so audits do not drift.
 
-The responsible AI writes audit artifacts into **`common/github-optimization/audits/<repository-slug>/`**.
+The responsible AI writes audit artifacts into **`github-optimization/audits/<repository-slug>/`**.
 
 Do **not** write audit reports into public product repositories.
 
@@ -38,8 +38,10 @@ If `audits/<slug>/` does not exist, the responsible AI creates it under this she
 
 | File | Tracking |
 |---|---|
-| `audits/<slug>/audit-report.md` | tracked in `maruwork/github-optimization` (private) |
-| `audits/<slug>/publication-decision-record.md` | tracked in `maruwork/github-optimization` (private) |
+| `audits/<slug>/audit-report.md` | local workspace only (gitignored) |
+| `audits/<slug>/publication-decision-record.md` | local workspace only (gitignored) |
 | `audit.manifest.yml` in product repo | optional; automation contract only |
+
+GitHub remote keeps **regulation files only**. Audit results stay on disk under `audits/` but are not pushed.
 
 Read: `audits/README.md`

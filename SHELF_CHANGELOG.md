@@ -2,6 +2,19 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.2 — 2026-06-17
+
+### Removed from GitHub
+
+- shelf build history: `design/`, `roadmap/`, `tasks/`
+- deprecated meta files: `APPLICATION_GUIDE.md`, `GITHUB_OPTIMIZATION_*_SUMMARY.md`
+- product audit results from remote tracking (`audits/<slug>/` now gitignored)
+
+### Changed
+
+- shelf moved to `C:\Users\f_tan\project\github-optimization` (project root)
+- GitHub remote scope: regulation files only
+
 ## 1.1.1 — 2026-06-17
 
 ### Added

@@ -71,12 +71,12 @@ Resolve shelf path per `SHELF_PATH.md`, then from repository root.
 Preferred orchestrator:
 
 ```powershell
-$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\common\github-optimization") { (Resolve-Path "..\common\github-optimization").Path } else { "C:\Users\f_tan\project\common\github-optimization" }
+$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\github-optimization") { (Resolve-Path "..\github-optimization").Path } else { "C:\Users\f_tan\project\github-optimization" }
 & "$Shelf\scripts\run-full-audit.ps1" -RepoPath (Get-Location) -HostedRepo owner/repo -AuditMode release -AuditPhase pre-public
 ```
 
 ```bash
-SHELF="${GITHUB_OPTIMIZATION_ROOT:-../common/github-optimization}"
+SHELF="${GITHUB_OPTIMIZATION_ROOT:-../github-optimization}"
 "$SHELF/scripts/run-full-audit.sh" . owner/repo release pre-public
 ```
 

@@ -19,8 +19,8 @@ if (-not (Test-Path -LiteralPath $RepoPath)) {
 
 if ($env:GITHUB_OPTIMIZATION_ROOT) {
     $Shelf = $env:GITHUB_OPTIMIZATION_ROOT
-} elseif (Test-Path (Join-Path $RepoPath "..\common\github-optimization")) {
-    $Shelf = (Resolve-Path (Join-Path $RepoPath "..\common\github-optimization")).Path
+} elseif (Test-Path (Join-Path $RepoPath "..\github-optimization")) {
+    $Shelf = (Resolve-Path (Join-Path $RepoPath "..\github-optimization")).Path
 } else {
     $Shelf = Split-Path $PSScriptRoot -Parent
 }

@@ -36,7 +36,7 @@ Typical workspace:
 
 ```text
 workspace/
-  common/github-optimization/   # or cloned shelf path
+  github-optimization/          # or cloned shelf path
   my-product/                   # audit target
 ```
 

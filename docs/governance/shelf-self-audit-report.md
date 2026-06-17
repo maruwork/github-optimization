@@ -5,7 +5,7 @@ Status: Final
 ## Target
 
 - repository: github-optimization
-- local path: `C:\Users\f_tan\project\common\github-optimization`
+- local path: `C:\Users\f_tan\project\github-optimization`
 - hosted URL: https://github.com/maruwork/github-optimization
 - audited at: 2026-06-17
 - executor: agent:grok

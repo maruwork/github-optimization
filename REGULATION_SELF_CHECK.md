@@ -17,13 +17,13 @@ You are the responsible AI for the target repository.
 ## One-Line Assignment
 
 ```text
-C:\Users\f_tan\project\common\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
+C:\Users\f_tan\project\github-optimization を読み、対象リポジトリがこのレギュレーションに適合しているか自己判定せよ。証拠を実行し、audit-report を完成させよ。
 ```
 
 English equivalent:
 
 ```text
-Read C:\Users\f_tan\project\common\github-optimization, self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
+Read C:\Users\f_tan\project\github-optimization, self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
 ```
 
 ## What "Self-Check" Means

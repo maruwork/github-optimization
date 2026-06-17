@@ -14,7 +14,7 @@ This file defines review timing and the automated self-check that guards the reg
 |---|---|
 | shelf file added or removed | update `REGULATION_INDEX.md` and run index validator |
 | external tool major version change | review matrix row and evidence commands |
-| calendar quarterly review | re-read `GITHUB_OPTIMIZATION_TOOL_VERIFICATION_SUMMARY.md` |
+| calendar quarterly review | re-read `TOOL_VERIFICATION_MATRIX.md` and `EVIDENCE_COMMANDS.md` |
 | GitHub feature policy change | review hosted feature rows in matrix |
 
 Record the latest review date in `TOOL_VERIFICATION_MATRIX.md` header.
@@ -24,12 +24,12 @@ Record the latest review date in `TOOL_VERIFICATION_MATRIX.md` header.
 Before relying on the shelf for a target-repository audit, run:
 
 ```powershell
-$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } else { "C:\Users\f_tan\project\common\github-optimization" }
+$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } else { "C:\Users\f_tan\project\github-optimization" }
 & "$Shelf\scripts\validate-regulation-index.ps1" -ShelfPath $Shelf
 ```
 
 ```bash
-SHELF="${GITHUB_OPTIMIZATION_ROOT:-/path/to/common/github-optimization}"
+SHELF="${GITHUB_OPTIMIZATION_ROOT:-/path/to/github-optimization}"
 "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
 ```
 
@@ -51,11 +51,11 @@ It does not validate target repositories.
 Run after shelf edits:
 
 ```powershell
-& "C:\Users\f_tan\project\common\github-optimization\scripts\tests\run-regulation-tests.ps1"
+& "C:\Users\f_tan\project\github-optimization\scripts\tests\run-regulation-tests.ps1"
 ```
 
 ```bash
-/path/to/common/github-optimization/scripts/tests/run-regulation-tests.sh
+/path/to/github-optimization/scripts/tests/run-regulation-tests.sh
 ```
 
 ## Escalation
@@ -63,5 +63,5 @@ Run after shelf edits:
 If validator or regression tests fail:
 
 1. fix the shelf before auditing target repositories
-2. record the failure in shelf history (`roadmap/` or summary file) if the fix changes tool recommendations
+2. record the failure in `SHELF_CHANGELOG.md` if the fix changes tool recommendations
 3. update `Verified on:` date in `TOOL_VERIFICATION_MATRIX.md` when matrix content changes

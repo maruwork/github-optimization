@@ -23,8 +23,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [[ -n "${GITHUB_OPTIMIZATION_ROOT:-}" ]]; then
   SHELF="$GITHUB_OPTIMIZATION_ROOT"
-elif [[ -d "$REPO_PATH/../common/github-optimization" ]]; then
-  SHELF="$(cd "$REPO_PATH/../common/github-optimization" && pwd)"
+elif [[ -d "$REPO_PATH/../github-optimization" ]]; then
+  SHELF="$(cd "$REPO_PATH/../github-optimization" && pwd)"
 else
   SHELF="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi

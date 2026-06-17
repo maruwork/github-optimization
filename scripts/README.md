@@ -30,7 +30,7 @@ Output is designed to paste into `templates/audit-report.md.template`.
 ```
 
 ```powershell
-.\validate-regulation-index.ps1 -ShelfPath C:\path\to\common\github-optimization
+.\validate-regulation-index.ps1 -ShelfPath C:\path\to\github-optimization
 ```
 
 ```powershell

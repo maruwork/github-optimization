@@ -15,18 +15,18 @@ Adapt paths and repository names to the target project.
 Preferred single pass:
 
 ```powershell
-& ".../common/github-optimization/scripts/collect-audit-evidence.ps1" `
+& ".../github-optimization/scripts/collect-audit-evidence.ps1" `
   -RepoPath <repo> -HostedRepo <owner/repo>
 ```
 
 ```bash
-.../common/github-optimization/scripts/collect-audit-evidence.sh <repo> <owner/repo>
+.../github-optimization/scripts/collect-audit-evidence.sh <repo> <owner/repo>
 ```
 
 Quickstart only:
 
 ```powershell
-& ".../common/github-optimization/scripts/run-audit-quickstart.ps1" -RepoPath <repo>
+& ".../github-optimization/scripts/run-audit-quickstart.ps1" -RepoPath <repo>
 ```
 
 If `audit.manifest.yml` is missing, the agent still executes README-derived commands and should then add a manifest for the next run.
