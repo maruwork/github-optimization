@@ -4,37 +4,42 @@ Status: Active
 
 ## Purpose
 
-Fix where self-check outputs live so audits do not drift by repository.
+Fix where self-check outputs live so audits do not drift.
 
-The responsible AI writes outputs into the **target repository**, never into `common/github-optimization`.
+The responsible AI writes audit artifacts into **`common/github-optimization/audits/<repository-slug>/`**.
+
+Do **not** write audit reports into public product repositories.
 
 ## Default Paths
 
-Use these unless the target project shelf defines a different management surface:
+Replace `<slug>` with the audited repository slug (`adop`, `veil`, etc.):
 
-| Artifact | Default path in target repo |
+| Artifact | Path |
 |---|---|
-| audit report | `docs/governance/audit-report.md` |
-| publication decision record | `docs/governance/publication-decision-record.md` |
-| Tier 2 defer record | `docs/governance/tier2-defer-record.md` |
-| accepted risk record | `docs/governance/accepted-risk-record.md` |
-| GitHub execution packet | `docs/governance/github-execution-packet.md` |
-| audit quickstart manifest | `audit.manifest.yml` (repository root) |
+| audit report | `audits/<slug>/audit-report.md` |
+| publication decision record | `audits/<slug>/publication-decision-record.md` |
+| Tier 2 defer record | `audits/<slug>/tier2-defer-record.md` |
+| accepted risk record | `audits/<slug>/accepted-risk-record.md` |
+| GitHub execution packet | `audits/<slug>/github-execution-packet.md` |
+| audit quickstart manifest | `<product-repo-root>/audit.manifest.yml` only |
+
+## Why Not Inside Product Repositories
+
+Audited repositories such as `maruwork/adop` and `maruwork/veil` are public on GitHub.
+
+Audit reports contain internal gate results, blockers, and waivers.  
+Those files must not be committed to public product surfaces.
 
 ## Creation Rule
 
-If `docs/governance/` does not exist, the responsible AI creates it in the target repository.
-
-Do not commit governance docs to `common/`.
+If `audits/<slug>/` does not exist, the responsible AI creates it under this shelf.
 
 ## Git Tracking Policy
 
-| File | Typical tracking |
+| File | Tracking |
 |---|---|
-| `audit-report.md` | usually untracked or tracked per project policy |
-| `publication-decision-record.md` | usually untracked or tracked per project policy |
-| `accepted-risk-record.md` | tracked when R-02 failure is temporarily accepted |
-| `audit.manifest.yml` | tracked when the repository expects repeat audits |
-| `github-execution-packet.md` | usually untracked |
+| `audits/<slug>/audit-report.md` | tracked in `maruwork/github-optimization` (private) |
+| `audits/<slug>/publication-decision-record.md` | tracked in `maruwork/github-optimization` (private) |
+| `audit.manifest.yml` in product repo | optional; automation contract only |
 
-Follow the target project's governance policy when it exists.
+Read: `audits/README.md`

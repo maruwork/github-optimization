@@ -42,15 +42,17 @@ workspace/
 
 The responsible AI audits `my-product`, not the shelf.
 
-## Outputs Never Live In The Shelf
+## Audit Outputs Live Under `audits/`
 
-Audit outputs belong only in the target repository:
+Audit outputs belong under `audits/<repository-slug>/` in this shelf:
 
-- `docs/governance/audit-report.md`
-- `docs/governance/publication-decision-record.md`
+- `audits/<repository-slug>/audit-report.md`
+- `audits/<repository-slug>/publication-decision-record.md`
 - other paths in `OUTPUT_PATHS.md`
 
-The shelf `.gitignore` excludes `docs/governance/` to prevent accidental dry-run commits.
+Do not write audit reports into public product repositories.
+
+The shelf `.gitignore` excludes dry-run `docs/governance/` scaffolds at the shelf root; tracked audit results live under `audits/`.
 
 ## Dry-Run Contract
 
@@ -59,6 +61,7 @@ Use dry-run only to verify orchestration:
 ```powershell
 & "$env:GITHUB_OPTIMIZATION_ROOT\scripts\run-full-audit.ps1" `
   -RepoPath "$env:GITHUB_OPTIMIZATION_ROOT\scripts\tests\fixtures\minimal-docs-repo" `
+  -AuditSlug minimal-docs-repo `
   -AuditMode public-prep -AuditPhase pre-public
 ```
 

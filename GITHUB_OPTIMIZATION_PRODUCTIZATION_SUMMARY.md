@@ -13,7 +13,7 @@ It is complete when a responsible AI can:
 1. read `REGULATION_INDEX.md`
 2. follow `AUDIT_RUNBOOK.md`
 3. score all 46 gate items
-4. write outputs to target `docs/governance/`
+4. write outputs to `audits/<repository-slug>/` in this shelf
 5. finish without human command execution
 
 ## Final Structure

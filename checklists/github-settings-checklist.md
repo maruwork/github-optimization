@@ -33,4 +33,4 @@ Gate mapping: `../GATE_REGISTRY.md`
 
 - [ ] Releases strategy is decided
 - [ ] changelog route is explicit (`G-19`)
-- [ ] publication decision record exists (`G-20`) at `docs/governance/publication-decision-record.md`
+- [ ] publication decision record exists (`G-20`) at `audits/<repository-slug>/publication-decision-record.md`

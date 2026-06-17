@@ -1,3 +1,7 @@
+# Dry-run test scaffolds must not be committed
+audits/minimal-docs-repo/
+audits/github-optimization/
+
 # Dry-run outputs must not be committed; tracked self-audit artifacts are allowed
 docs/governance/*
 !docs/governance/shelf-self-audit-report.md

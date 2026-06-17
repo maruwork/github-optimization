@@ -6,7 +6,7 @@ Status: Template
 
 Record one repository's GitHub-side execution results without turning project-specific facts into generic rules.
 
-Copy this file to `docs/governance/github-execution-packet.md` in the target repository.
+Copy this file to `audits/<repository-slug>/github-execution-packet.md` in this shelf.
 
 Read: `../OUTPUT_PATHS.md`
 

@@ -11,7 +11,7 @@ Defer record: `../templates/tier2-defer-record.md.template`
 
 Add release discipline for repositories that ship runnable code, CLIs, installers, or versioned artifacts.
 
-Skip only when Tier 2 is formally deferred in `docs/governance/tier2-defer-record.md`.
+Skip only when Tier 2 is formally deferred in `audits/<repository-slug>/tier2-defer-record.md`.
 
 ## CI And Automation
 
@@ -45,6 +45,6 @@ Read: `../AUDIT_MANIFEST_POLICY.md`, `../JUDGMENT_GUIDE.md`, `../EVIDENCE_COMMAN
 
 ## Defer Rule
 
-If this checklist is deferred, write `docs/governance/tier2-defer-record.md`.
+If this checklist is deferred, write `audits/<repository-slug>/tier2-defer-record.md`.
 
 Whole Tier 2 defer is invalid for `strict-product` audit mode.

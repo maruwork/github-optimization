@@ -11,8 +11,8 @@ You are the responsible AI for the target repository.
 3. Follow `AUDIT_RUNBOOK.md`.
 4. Execute evidence yourself. Do not ask a human to run commands you can run.
 5. Decide whether the target repository complies with this regulation.
-6. Write the result to `docs/governance/audit-report.md` using `templates/audit-report.md.template`.
-7. Write supporting records to paths in `OUTPUT_PATHS.md`.
+6. Write the result to `audits/<repository-slug>/audit-report.md` using `templates/audit-report.md.template`.
+7. Write supporting records to paths in `OUTPUT_PATHS.md`. Do not write audit reports into public product repositories.
 
 ## One-Line Assignment
 
@@ -50,9 +50,9 @@ If the assigner does not specify mode, default to `release` for runnable tools a
 
 The self-check is complete only when all of the following exist:
 
-- filled `docs/governance/audit-report.md` in the target repository
+- filled `audits/<repository-slug>/audit-report.md` in this shelf
 - Tier 1 gate table scored (`G-01` … `G-22`)
-- Tier 2 gate table scored or formally deferred with `docs/governance/tier2-defer-record.md`
+- Tier 2 gate table scored or formally deferred with `audits/<repository-slug>/tier2-defer-record.md`
 - Tier 3 gate table scored when mode is `strict-product`
 - final label from `FULL_AUDIT_VERDICT.md`
 - fix task list for every `blocked` row

@@ -33,10 +33,10 @@ Reusable file starters and output skeletons for regulation self-check.
 
 | Template | Default target |
 |---|---|
-| `audit-report.md.template` | `docs/governance/audit-report.md` |
-| `publication-decision-record.md.template` | `docs/governance/publication-decision-record.md` |
-| `tier2-defer-record.md.template` | `docs/governance/tier2-defer-record.md` |
-| `accepted-risk-record.md.template` | `docs/governance/accepted-risk-record.md` |
+| `audit-report.md.template` | `audits/<repository-slug>/audit-report.md` |
+| `publication-decision-record.md.template` | `audits/<repository-slug>/publication-decision-record.md` |
+| `tier2-defer-record.md.template` | `audits/<repository-slug>/tier2-defer-record.md` |
+| `accepted-risk-record.md.template` | `audits/<repository-slug>/accepted-risk-record.md` |
 | `audit.manifest.yml.template` | repository root `audit.manifest.yml` |
 
 Read: `OUTPUT_PATHS.md`
@@ -45,4 +45,4 @@ Read: `OUTPUT_PATHS.md`
 
 Do not copy repair starters into a project until that project defines where root files and `.github/` files are allowed to live.
 
-Governance outputs always belong in the target repository, never in `common/github-optimization`.
+Governance outputs belong under `audits/<repository-slug>/` in this shelf. Do not write audit reports into public product repositories.

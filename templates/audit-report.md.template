@@ -2,7 +2,7 @@
 
 Status: Draft
 
-Output path default: `docs/governance/audit-report.md`
+Output path default: `audits/<repository-slug>/audit-report.md`
 
 ## Target
 
@@ -97,9 +97,9 @@ Tier 1 result: PASS | BLOCKED
 
 Tier 2 result: PASS | BLOCKED | DEFERRED | n/a
 
-Tier 2 defer record path: `docs/governance/tier2-defer-record.md`
+Tier 2 defer record path: `audits/<repository-slug>/tier2-defer-record.md`
 
-Accepted risk record path: `docs/governance/accepted-risk-record.md`
+Accepted risk record path: `audits/<repository-slug>/accepted-risk-record.md`
 
 ## Tier 3 — Product Readiness Gate
 

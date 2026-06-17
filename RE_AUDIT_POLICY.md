@@ -23,7 +23,7 @@ Run a full re-audit when any of the following is true:
 
 Run a delta re-audit only when all of the following are true:
 
-1. a prior `docs/governance/audit-report.md` exists with `HEAD` recorded
+1. a prior `audits/<repository-slug>/audit-report.md` exists with `HEAD` recorded
 2. assigner explicitly allows delta mode
 3. changes are limited to docs, config, or a bounded file set named in the assignment
 
@@ -35,7 +35,7 @@ Follow `AUDIT_RUNBOOK.md` without shortcut.
 
 Required outputs:
 
-- new `docs/governance/audit-report.md` replaces or supersedes the prior report
+- new `audits/<repository-slug>/audit-report.md` replaces or supersedes the prior report
 - all 46 gate rows rescored for the active audit mode
 - `G-21` read log covers every present `git ls-files` entry
 
@@ -52,7 +52,7 @@ Delta mode reduces read scope; it does not reduce gate accountability.
 
 ### Required steps
 
-1. Read prior `docs/governance/audit-report.md`
+1. Read prior `audits/<repository-slug>/audit-report.md`
 2. Capture present inventory (`G-02`)
 3. Compute changed tracked files:
 
@@ -109,6 +109,6 @@ After a successful re-audit of a runnable tool:
 
 ## Output Rule
 
-Re-audit outputs stay in the target repository under `docs/governance/`.
+Re-audit outputs stay under `audits/<repository-slug>/` in this shelf per `OUTPUT_PATHS.md`.
 
-Never store re-audit results in `common/github-optimization`.
+Do not write re-audit results into public product repositories.

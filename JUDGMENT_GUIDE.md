@@ -35,7 +35,7 @@ Listing files is not the same as reading them.
 
 Accepted-risk record must name owner, reason, and fix deadline.
 
-Write `docs/governance/accepted-risk-record.md` from `templates/accepted-risk-record.md.template` and cite it in the audit report Evaluation section.
+Write `audits/<repository-slug>/accepted-risk-record.md` from `templates/accepted-risk-record.md.template` and cite it in the audit report Evaluation section.
 
 ## R-09 Quickstart
 

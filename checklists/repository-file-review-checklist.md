@@ -20,7 +20,7 @@ Enforce the read-before-assert rule from `AUDIT_RULES.md`.
 
 ## Per-File Log
 
-Use this table in `docs/governance/audit-report.md`:
+Use this table in `audits/<repository-slug>/audit-report.md`:
 
 | Path | Class | Review | Notes |
 |---|---|---|---|

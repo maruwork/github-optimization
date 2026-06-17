@@ -17,7 +17,7 @@ Gate IDs remain defined in `GATE_REGISTRY.md`.
 | `pre-public` | repository is private, unpublished, or publication decision is not yet executed |
 | `post-public` | repository is publicly visible on GitHub or publication execution has started |
 
-Record the phase at the top of `docs/governance/audit-report.md`.
+Record the phase at the top of `audits/<repository-slug>/audit-report.md`.
 
 ## Default Audit Mode By Phase
 
@@ -35,8 +35,8 @@ Assigner may override mode explicitly.
 
 Pre-public audits must produce:
 
-- `docs/governance/audit-report.md`
-- `docs/governance/publication-decision-record.md` before publication execution (`G-20`)
+- `audits/<repository-slug>/audit-report.md`
+- `audits/<repository-slug>/publication-decision-record.md` before publication execution (`G-20`)
 
 Pre-public waivers:
 
@@ -46,13 +46,13 @@ Pre-public waivers:
 Pre-public audits may defer entire Tier 2 only when:
 
 - repository is docs-only, or
-- `docs/governance/tier2-defer-record.md` exists and audit mode is not `strict-product`
+- `audits/<repository-slug>/tier2-defer-record.md` exists and audit mode is not `strict-product`
 
 ## Post-Public Requirements
 
 Post-public audits must produce:
 
-- `docs/governance/audit-report.md`
+- `audits/<repository-slug>/audit-report.md`
 - refreshed machine evidence for `R-02`, `R-09`, and hosted gates `G-13`…`G-19`
 
 Post-public waivers:

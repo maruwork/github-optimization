@@ -87,7 +87,7 @@ If invalid, restart from `AUDIT_RUNBOOK.md` Step 1.
 
 ## Output Rule
 
-Self-check outputs belong in the target repository per `OUTPUT_PATHS.md`, never in this common shelf.
+Self-check outputs belong under `audits/<repository-slug>/` in this shelf per `OUTPUT_PATHS.md`. Do not write audit reports into public product repositories.
 
 ## Severity Labels
 

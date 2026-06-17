@@ -15,9 +15,10 @@ If you follow this runbook to completion, the audit is done except for fixes in 
 3. Read `AGENT_EXECUTION_MODEL.md` and `AUDIT_RULES.md`
 4. Determine audit phase with `AUDIT_PHASE_POLICY.md` (`pre-public` | `post-public`)
 5. If a prior audit report exists, read `RE_AUDIT_POLICY.md`
-6. Create `docs/governance/` in the target repository if needed
-7. Copy `templates/audit-report.md.template` to `docs/governance/audit-report.md` unless orchestrator already scaffolded it
-8. Fill the report as the agent completes each step below
+6. Determine repository slug (`adop`, `veil`, etc.) for output paths
+7. Create `audits/<repository-slug>/` under this shelf if needed
+8. Copy `templates/audit-report.md.template` to `audits/<repository-slug>/audit-report.md` unless orchestrator already scaffolded it
+9. Fill the report as the agent completes each step below
 
 References:
 
@@ -109,7 +110,7 @@ Walk `TOOL_VERIFICATION_MATRIX.md`, `HOSTED_SETTINGS_BOUNDARY.md`, and `checklis
 
 Walk `PUBLICATION_RESPONSIBILITY_MODEL.md` and `checklists/publication-decision-checklist.md`.
 
-Write or verify `docs/governance/publication-decision-record.md`.
+Write or verify `audits/<repository-slug>/publication-decision-record.md`.
 
 ## Step 7 — Tier 1 verdict
 
@@ -123,7 +124,7 @@ Required when audit mode is `release` or `strict-product`.
 
 Walk `checklists/release-quality-checklist.md` and score `RELEASE_QUALITY_GATE.md`.
 
-If entire Tier 2 is deferred, write `docs/governance/tier2-defer-record.md`.
+If entire Tier 2 is deferred, write `audits/<repository-slug>/tier2-defer-record.md`.
 
 Whole Tier 2 defer is invalid for `strict-product`.
 

@@ -65,7 +65,7 @@ G-21 pass | G-22 pass
 Gate result: PASS | BLOCKED
 ```
 
-Store the filled summary at `docs/governance/audit-report.md` unless the target project defines another path.
+Store the filled summary at `audits/<repository-slug>/audit-report.md` per `OUTPUT_PATHS.md`.
 
 Read: `OUTPUT_PATHS.md`
 

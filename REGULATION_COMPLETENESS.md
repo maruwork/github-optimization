@@ -16,7 +16,7 @@ Use this file to confirm the regulation set is complete for agent self-check.
 | ambiguous read scope | excluded history and domain examples | `REGULATION_INDEX.md` |
 | G-02 confused with full read | split inventory vs read | `G-21`, `JUDGMENT_GUIDE.md` |
 | large-file check not gated | added gate | `G-22`, `EVIDENCE_COMMANDS.md` |
-| output path undefined | default governance paths | `OUTPUT_PATHS.md` |
+| output path undefined | shelf `audits/<slug>/` paths | `OUTPUT_PATHS.md`, `audits/README.md` |
 | Tier 2 defer undefined | defer record template | `templates/tier2-defer-record.md.template` |
 | hosted settings boundary unclear | verify/recommend/waive model | `HOSTED_SETTINGS_BOUNDARY.md` |
 | audit.manifest policy weak | repeat-audit contract | `AUDIT_MANIFEST_POLICY.md` |

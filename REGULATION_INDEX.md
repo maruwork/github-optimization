@@ -57,6 +57,11 @@ Completeness proof: `REGULATION_COMPLETENESS.md`
 
 - `PUBLICATION_RESPONSIBILITY_MODEL.md`
 
+### Audit results (per audited repository)
+
+- `audits/README.md`
+- `OUTPUT_PATHS.md` (defines `audits/<repository-slug>/` layout)
+
 ### Shelf self-proof (this repository only)
 
 - `docs/governance/shelf-self-audit-report.md`
@@ -113,7 +118,7 @@ Completeness proof: `REGULATION_COMPLETENESS.md`
 
 ## Hard Rules
 
-1. project-specific execution results never live in this shelf
-2. self-check outputs never live in this shelf
+1. regulation text stays generic; scored audit artifacts live under `audits/<repository-slug>/`
+2. never write audit reports into public product repositories
 3. all 46 gate IDs in `GATE_REGISTRY.md` must be scored or marked `n/a` with reason
-4. if a fact is about one repository only, it belongs in that repository under `docs/governance/`
+4. `audit.manifest.yml` may remain in a product repository root for quickstart automation only

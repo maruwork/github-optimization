@@ -4,7 +4,7 @@ Status: Active
 
 Gate: `G-20`
 
-Output path: `docs/governance/publication-decision-record.md`
+Output path: `audits/<repository-slug>/publication-decision-record.md`
 
 ## Purpose
 
@@ -19,7 +19,7 @@ Use before any repository becomes public or before a major re-publication.
 - [ ] publication execution mode is explicit: `publish-by-common` or `publish-by-project`
 - [ ] post-release repository-local owner is named
 - [ ] post-release shared-surface owner is named when common templates or policies are in scope
-- [ ] filled decision record exists at `docs/governance/publication-decision-record.md`
+- [ ] filled decision record exists at `audits/<repository-slug>/publication-decision-record.md`
 - [ ] Tier 1 waivers are listed in the decision record or linked from it
 
 ## Review Questions

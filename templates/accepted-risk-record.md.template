@@ -2,7 +2,7 @@
 
 Status: Active
 
-Output path default: `docs/governance/accepted-risk-record.md`
+Output path default: `audits/<repository-slug>/accepted-risk-record.md`
 
 ## Repository
 
@@ -50,4 +50,4 @@ Re-audit required when any of the following occurs:
 
 Reference path to the audit report that cites this record:
 
-- `docs/governance/audit-report.md`
+- `audits/<repository-slug>/audit-report.md`

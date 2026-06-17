@@ -2,6 +2,19 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.1 — 2026-06-17
+
+### Added
+
+- `audits/` layout and `audits/README.md` for per-repository audit results
+- tracked ADOP and VEIL audit reports under `audits/adop/` and `audits/veil/`
+
+### Changed
+
+- output contract: audit reports belong in `audits/<repository-slug>/`, not public product repos
+- `run-full-audit.*` scaffolds shelf `audits/<slug>/` with optional `-AuditSlug`
+- regulation tests, templates, policies, and checklists updated to new paths
+
 ## 1.1.0 — 2026-06-17
 
 ### Added

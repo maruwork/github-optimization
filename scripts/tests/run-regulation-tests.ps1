@@ -83,12 +83,14 @@ if (-not (Test-Path (Join-Path $fixture ".git"))) {
     Pop-Location
 }
 
-$fixtureReport = Join-Path $fixture "docs\governance\audit-report.md"
+$fixtureSlug = "minimal-docs-repo"
+$fixtureReport = Join-Path $Shelf "audits\$fixtureSlug\audit-report.md"
 if (Test-Path $fixtureReport) { Remove-Item $fixtureReport -Force }
 
 Assert-ExitCode "run-full-audit dry-run on fixture" 0 {
     & (Join-Path $Shelf "scripts\run-full-audit.ps1") `
         -RepoPath $fixture `
+        -AuditSlug $fixtureSlug `
         -AuditMode public-prep `
         -AuditPhase pre-public
 }
@@ -99,12 +101,14 @@ Assert-Pass "fixture audit-report scaffolded" {
     }
 }
 
-$shelfReport = Join-Path $Shelf "docs\governance\audit-report.md"
+$shelfSlug = "github-optimization"
+$shelfReport = Join-Path $Shelf "audits\$shelfSlug\audit-report.md"
 if (Test-Path $shelfReport) { Remove-Item $shelfReport -Force }
 
 Assert-ExitCode "run-full-audit dry-run on shelf root" 0 {
     & (Join-Path $Shelf "scripts\run-full-audit.ps1") `
         -RepoPath $Shelf `
+        -AuditSlug $shelfSlug `
         -AuditMode public-prep `
         -AuditPhase pre-public
 }

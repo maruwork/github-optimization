@@ -10,7 +10,7 @@ One repository always produces one audit report.
 
 ## Hard Rules
 
-1. one `docs/governance/audit-report.md` per repository
+1. one `audits/<repository-slug>/audit-report.md` per repository
 2. one final label per repository
 3. no combined Blocker list across repositories
 4. no shared waiver row across repositories
@@ -42,10 +42,10 @@ For each repository in list order:
 
 1. resolve shelf path via `SHELF_PATH.md`
 2. determine phase and audit mode
-3. check for prior `docs/governance/audit-report.md`
+3. check for prior `audits/<repository-slug>/audit-report.md`
    - if present and assigner allows delta, follow `RE_AUDIT_POLICY.md`
    - otherwise follow `AUDIT_RUNBOOK.md` full path
-4. write outputs only inside that repository
+4. write outputs under `audits/<repository-slug>/` in this shelf
 5. record completion before starting the next repository
 
 Parallel execution is allowed only when repositories are independent and the executor can keep evidence separated.

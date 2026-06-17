@@ -2,7 +2,7 @@
 
 Status: Draft
 
-Default path: `docs/governance/publication-decision-record.md`
+Default path: `audits/<repository-slug>/publication-decision-record.md`
 
 ## Repository
 

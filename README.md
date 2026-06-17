@@ -17,14 +17,14 @@ This folder is the **generic regulation shelf** for public-repository self-check
 |---|---|
 | Primary consumer | responsible AI for the target repository |
 | Primary action | regulation self-check with executed evidence |
-| Primary output | `docs/governance/audit-report.md` in the target repository |
+| Primary output | `audits/<repository-slug>/audit-report.md` in this shelf |
 | Judgment surface | 46 gate items across Tier 1 / 2 / 3 |
 
 ## What This Folder Is Not
 
 | Not for | Reason |
 |---|---|
-| project-specific records | those belong in the target repository |
+| public audit reports in product repos | audit results belong in `audits/<slug>/` here |
 | live examples such as `VEIL_*` or `ADOP_*` | generic shelf only |
 | human-operated checklist labor | agent executes evidence |
 | copying this folder into public product repos | unless the product documents shared governance |
@@ -85,11 +85,11 @@ The responsible AI writes into the target repository:
 
 | Artifact | Default path |
 |---|---|
-| audit report | `docs/governance/audit-report.md` |
-| publication decision record | `docs/governance/publication-decision-record.md` |
-| Tier 2 defer record | `docs/governance/tier2-defer-record.md` |
-| accepted risk record | `docs/governance/accepted-risk-record.md` |
-| audit manifest | `audit.manifest.yml` |
+| audit report | `audits/<slug>/audit-report.md` |
+| publication decision record | `audits/<slug>/publication-decision-record.md` |
+| Tier 2 defer record | `audits/<slug>/tier2-defer-record.md` |
+| accepted risk record | `audits/<slug>/accepted-risk-record.md` |
+| audit manifest | product repo root `audit.manifest.yml` only |
 
 Read: `OUTPUT_PATHS.md`
 

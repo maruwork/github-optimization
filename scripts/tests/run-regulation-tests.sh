@@ -61,15 +61,17 @@ if [[ ! -d "$FIXTURE/.git" ]]; then
   git -C "$FIXTURE" -c user.email=fixture@test -c user.name=fixture commit -m "init minimal docs fixture"
 fi
 
-rm -f "$FIXTURE/docs/governance/audit-report.md"
+FIXTURE_SLUG="minimal-docs-repo"
+rm -f "$SHELF/audits/$FIXTURE_SLUG/audit-report.md"
 run_exit "run-full-audit dry-run on fixture" 0 \
-  bash "$SHELF/scripts/run-full-audit.sh" "$FIXTURE" "" public-prep pre-public
-run_pass "fixture audit-report scaffolded" test -f "$FIXTURE/docs/governance/audit-report.md"
+  bash "$SHELF/scripts/run-full-audit.sh" "$FIXTURE" "" public-prep pre-public "$FIXTURE_SLUG"
+run_pass "fixture audit-report scaffolded" test -f "$SHELF/audits/$FIXTURE_SLUG/audit-report.md"
 
-rm -f "$SHELF/docs/governance/audit-report.md"
+SHELF_SLUG="github-optimization"
+rm -f "$SHELF/audits/$SHELF_SLUG/audit-report.md"
 run_exit "run-full-audit dry-run on shelf root" 0 \
-  bash "$SHELF/scripts/run-full-audit.sh" "$SHELF" "" public-prep pre-public
-run_pass "shelf audit-report scaffolded" test -f "$SHELF/docs/governance/audit-report.md"
+  bash "$SHELF/scripts/run-full-audit.sh" "$SHELF" "" public-prep pre-public "$SHELF_SLUG"
+run_pass "shelf audit-report scaffolded" test -f "$SHELF/audits/$SHELF_SLUG/audit-report.md"
 
 echo
 if [[ "$failures" -eq 0 ]]; then

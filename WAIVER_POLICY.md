@@ -14,8 +14,8 @@ A gate may be scored `waived` only when all four are true:
 2. reason is explicit
 3. owner or reviewer is named
 4. waiver is recorded in:
-   - `docs/governance/audit-report.md` Waivers table, and
-   - `docs/governance/publication-decision-record.md` when Tier 1 is involved
+   - `audits/<repository-slug>/audit-report.md` Waivers table, and
+   - `audits/<repository-slug>/publication-decision-record.md` when Tier 1 is involved
 
 ## Invalid Waiver
 
@@ -40,6 +40,6 @@ A gate may be scored `waived` only when all four are true:
 
 ## Tier 2 Whole Defer
 
-Deferring all of Tier 2 requires `docs/governance/tier2-defer-record.md` from `templates/tier2-defer-record.md.template`.
+Deferring all of Tier 2 requires `audits/<repository-slug>/tier2-defer-record.md` from `templates/tier2-defer-record.md.template`.
 
 Whole Tier 2 defer is invalid for `strict-product` audit mode.
