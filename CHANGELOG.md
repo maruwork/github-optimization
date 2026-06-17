@@ -4,6 +4,19 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.7] - 2026-06-17
+
+### Fixed
+
+- publication-decision-record path unified to `audits/<slug>/` in `EVIDENCE_COMMANDS.md`, `PUBLICATION_RESPONSIBILITY_MODEL.md`, `SCOPE_AND_TIERS.md`
+- `run-audit-quickstart.sh` parses `- id:` / indented `run:` blocks correctly (bash quickstart no longer exits 2 with valid manifest)
+- `collect-audit-evidence.sh` propagates quickstart failure (aligned with PowerShell)
+- `AUDIT_RULES.md` Tier 1 range corrected to `G-01..G-22`
+
+### Added
+
+- regulation test fixture for bash quickstart manifest parsing
+
 ## [1.1.6] - 2026-06-17
 
 ### Added

@@ -6,7 +6,7 @@ MANIFEST_PATH="${2:-$REPO_PATH/audit.manifest.yml}"
 
 if [[ ! -f "$MANIFEST_PATH" ]]; then
   echo "audit.manifest.yml: missing"
-  echo "quickstart automation: skipped — agent must derive commands from README.md and execute them"
+  echo "quickstart automation: skipped - agent must derive commands from README.md and execute them"
   exit 2
 fi
 
@@ -31,9 +31,9 @@ failures=0
 ran=0
 
 while IFS= read -r block; do
-  id="$(printf '%s\n' "$block" | awk -F': *' '/^  id:/{print $2; exit}')"
-  cmd="$(printf '%s\n' "$block" | awk -F': *' '/^  run:/{print $2; exit}')"
-  expect_exit="$(printf '%s\n' "$block" | awk -F': *' '/^  expect_exit:/{print $2; exit}')"
+  id="$(printf '%s\n' "$block" | sed -n '1s/^- id: *//p')"
+  cmd="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+run:/{print $2; exit}')"
+  expect_exit="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+expect_exit:/{print $2; exit}')"
   expect_exit="${expect_exit:-0}"
 
   [[ -z "$id" || -z "$cmd" ]] && continue

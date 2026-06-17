@@ -87,5 +87,11 @@ fi
 QUICKSTART_SCRIPT="$(cd "$(dirname "$0")" && pwd)/run-audit-quickstart.sh"
 if [[ -f "$QUICKSTART_SCRIPT" ]]; then
   section "Quickstart"
-  bash "$QUICKSTART_SCRIPT" "$REPO_PATH" || true
+  set +e
+  bash "$QUICKSTART_SCRIPT" "$REPO_PATH"
+  qs_code=$?
+  set -e
+  if [[ "$qs_code" -eq 1 ]]; then
+    exit 1
+  fi
 fi

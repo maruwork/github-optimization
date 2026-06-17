@@ -48,6 +48,8 @@ SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit allowed (no changes)" 0 \
 SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit invalidates manifest change" 2 \
   bash "$SHELF/scripts/run-delta-audit.sh" "$SHELF" "" release github-optimization "$MANIFEST_PRIOR_HEAD"
 run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
+QUICKSTART_FIXTURE="$SHELF/scripts/tests/fixtures/quickstart-manifest-repo"
+run_exit "run-audit-quickstart with manifest exits 0" 0 bash "$SHELF/scripts/run-audit-quickstart.sh" "$QUICKSTART_FIXTURE"
 
 for tpl in \
   accepted-risk-record.md.template \

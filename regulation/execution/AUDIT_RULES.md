@@ -67,7 +67,7 @@ Read: `regulation/reference/WAIVER_POLICY.md`
 
 Mark findings against:
 
-- Tier 1: `G-01` … `G-20` in `regulation/gates/PUBLIC_PREP_GATE.md`
+- Tier 1: `G-01` … `G-22` in `regulation/gates/PUBLIC_PREP_GATE.md`
 - Tier 2: `R-01` … `R-14` in `regulation/gates/RELEASE_QUALITY_GATE.md`
 - Tier 3: `P-01` … `P-10` in `regulation/gates/PRODUCT_READINESS_GATE.md`
 

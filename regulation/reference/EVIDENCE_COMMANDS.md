@@ -123,13 +123,19 @@ gh api repos/<owner>/<repo> --jq '.security_and_analysis'
 
 ## Publication Decision Record
 
-Do not store the filled record in this common shelf.
+Copy `templates/publication-decision-record.md.template` to:
 
-Copy `templates/publication-decision-record.md.template` into the target project's management surface and fill it there.
+```text
+audits/<repository-slug>/publication-decision-record.md
+```
+
+Read: `regulation/shelf/OUTPUT_PATHS.md`
+
+Do **not** store the filled record in a public product repository or in `docs/governance/` on the product side.
 
 ## Evidence Storage Rule
 
-Store in the target project:
+Store command transcripts in `audits/<repository-slug>/audit-report.md` on this shelf:
 
 - command used
 - date and reviewer

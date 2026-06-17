@@ -118,4 +118,6 @@ Walkable gate: `checklists/publication-decision-checklist.md`
 
 Template: `templates/publication-decision-record.md.template`
 
-Store the filled record in the target project management surface, not in this common shelf.
+Store the filled record at `audits/<repository-slug>/publication-decision-record.md` on this shelf.
+
+Read: `regulation/shelf/OUTPUT_PATHS.md`. Do not commit it to a public product repository.

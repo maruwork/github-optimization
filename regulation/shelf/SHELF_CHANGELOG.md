@@ -2,6 +2,14 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.7 — 2026-06-17
+
+### Fixed
+
+- publication-decision-record output path drift across regulation files
+- bash quickstart manifest id parse; collect-audit-evidence quickstart exit propagation
+- AUDIT_RULES Tier 1 gate range G-21/G-22
+
 ## 1.1.6 — 2026-06-17
 
 ### Added

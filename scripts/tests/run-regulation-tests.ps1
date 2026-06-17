@@ -82,6 +82,11 @@ Assert-ExitCode "run-audit-quickstart missing manifest exits 2" 2 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $fixture
 }
 
+$quickstartFixture = Join-Path $Shelf "scripts\tests\fixtures\quickstart-manifest-repo"
+Assert-ExitCode "run-audit-quickstart with manifest exits 0" 0 {
+    & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $quickstartFixture
+}
+
 $requiredTemplates = @(
     "accepted-risk-record.md.template",
     "audit-report.md.template",

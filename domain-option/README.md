@@ -28,4 +28,4 @@ It does not hold live project examples, execution results, or domain-specific re
 - filled publication decision records
 - hosted-state snapshots that go stale
 
-Those belong in the target project's management surface.
+Filled audit reports and publication decision records belong in `audits/<repository-slug>/` on this shelf (`regulation/shelf/OUTPUT_PATHS.md`). GitHub execution packets may be copied into the target repository when explicitly assigned.

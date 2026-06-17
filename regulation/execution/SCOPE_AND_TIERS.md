@@ -67,7 +67,7 @@ A Tier 1 item may be waived only when all of the following are true:
 
 1. the reason is explicit
 2. the replacement route is explicit
-3. the waiver is recorded in the publication decision record or project-local management surface
+3. the waiver is recorded in `audits/<repository-slug>/publication-decision-record.md` or `audits/<repository-slug>/accepted-risk-record.md`
 
 Silent omission is not a waiver.
 
