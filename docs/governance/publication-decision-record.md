@@ -27,13 +27,19 @@ Publication does not turn this shelf into a product runtime.
 ## Preconditions
 
 - [x] regulation index self-validation passes
-- [x] regression tests pass locally
+- [x] regression tests pass locally (including dogfood fixes on HEAD `86ae86e`)
 - [x] CI workflow exists
 - [x] `LICENSE`, `SECURITY.md`, `CHANGELOG.md` exist
 - [x] remote created and initial push completed
-- [ ] hosted About/Topics/Community Profile reviewed
-- [ ] secret scanning and Dependabot hosted state recorded
+- [x] hosted About description and Topics set
+- [x] community profile reviewed (71%; waivers recorded)
+- [x] release dogfood audit completed (`audits/github-optimization/audit-report.md`)
+- [ ] `v1.1.4` tag at HEAD to clear R-07
+- [ ] dogfood commits pushed to remote
 
 ## Execution Notes
 
-Hosted settings gates `G-13`…`G-18` remain `waived` until the remote repository exists and is reviewed.
+Release dogfood audit (`release` mode) found and fixed three shelf bugs (CHANGELOG drift, quickstart recursion, audit-report clobber).  
+Tier 2 remains blocked on R-07 until `v1.1.4` tag after push.
+
+Detailed waivers: `audits/github-optimization/publication-decision-record.md`
