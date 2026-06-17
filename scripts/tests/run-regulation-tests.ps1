@@ -63,7 +63,7 @@ if (-not (Test-Path (Join-Path $trackedIgnoredFixture ".git"))) {
     Push-Location $trackedIgnoredFixture
     git init | Out-Null
     git add README.md LICENSE SECURITY.md .gitignore
-    git add -f AGENTS.md
+    git add -f local-only.secret
     git -c user.email="fixture@test" -c user.name="fixture" commit -m "init tracked-ignored fixture" | Out-Null
     Pop-Location
 }

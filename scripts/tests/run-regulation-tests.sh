@@ -44,7 +44,7 @@ TRACKED_IGNORED="$SHELF/scripts/tests/fixtures/tracked-ignored-repo"
 if [[ ! -d "$TRACKED_IGNORED/.git" ]]; then
   git -C "$TRACKED_IGNORED" init
   git -C "$TRACKED_IGNORED" add README.md LICENSE SECURITY.md .gitignore
-  git -C "$TRACKED_IGNORED" add -f AGENTS.md
+  git -C "$TRACKED_IGNORED" add -f local-only.secret
   git -C "$TRACKED_IGNORED" -c user.email=fixture@test -c user.name=fixture commit -m "init tracked-ignored fixture"
 fi
 run_exit "check-gitignore-consistency blocked tracked-ignored fixture" 1 \

@@ -2,6 +2,12 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.11 — 2026-06-17
+
+### Fixed
+
+- tracked-ignored-repo fixture shipped in repo (CI path missing on v1.1.10)
+
 ## 1.1.10 — 2026-06-17
 
 ### Fixed

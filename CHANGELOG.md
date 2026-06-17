@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.11] - 2026-06-17
+
+### Fixed
+
+- tracked-ignored regression fixture committed (`local-only.secret`; avoids root `AGENTS.md` gitignore)
+
 ## [1.1.10] - 2026-06-17
 
 ### Fixed
