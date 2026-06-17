@@ -67,8 +67,7 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 
 ### Shelf self-proof (this repository only)
 
-- `docs/governance/shelf-self-audit-report.md`
-- `docs/governance/publication-decision-record.md`
+- `docs/governance/README.md` (pointer only; filled records live in `audits/github-optimization/` per `OUTPUT_PATHS.md`)
 
 ### Checklists
 

@@ -23,6 +23,7 @@ Replace `<slug>` with the audited repository slug (`adop`, `veil`, etc.):
 | accepted risk record | `audits/<slug>/accepted-risk-record.md` |
 | GitHub execution packet | `audits/<slug>/github-execution-packet.md` |
 | audit quickstart manifest | `<product-repo-root>/audit.manifest.yml` only |
+| governance pointer | `docs/governance/README.md` on this shelf only (not a filled record) |
 
 ## Why Not Inside Product Repositories
 

@@ -12,22 +12,22 @@ Output is designed to paste into `templates/audit-report.md.template`.
 
 | Script | Platform |
 |---|---|
-| `run-full-audit.ps1` | Windows PowerShell — shelf validate + scaffold + evidence |
-| `run-full-audit.sh` | Linux/macOS bash — shelf validate + scaffold + evidence |
-| `validate-regulation-index.ps1` | Windows PowerShell — shelf self-check |
-| `validate-regulation-index.sh` | Linux/macOS bash — shelf self-check |
-| `check-tracked-files.ps1` | Windows PowerShell — unnecessary tracked-file scan |
-| `check-tracked-files.sh` | Linux/macOS bash — unnecessary tracked-file scan |
-| `check-gitignore-consistency.ps1` | Windows PowerShell — `.gitignore` vs index consistency |
-| `check-gitignore-consistency.sh` | Linux/macOS bash — `.gitignore` vs index consistency |
-| `run-delta-audit.ps1` | Windows PowerShell — delta re-audit orchestrator |
-| `run-delta-audit.sh` | Linux/macOS bash — delta re-audit orchestrator |
+| `run-full-audit.ps1` | Windows PowerShell - shelf validate + scaffold + evidence |
+| `run-full-audit.sh` | Linux/macOS bash - shelf validate + scaffold + evidence |
+| `validate-regulation-index.ps1` | Windows PowerShell - shelf self-check |
+| `validate-regulation-index.sh` | Linux/macOS bash - shelf self-check |
+| `check-tracked-files.ps1` | Windows PowerShell - unnecessary tracked-file scan |
+| `check-tracked-files.sh` | Linux/macOS bash - unnecessary tracked-file scan |
+| `check-gitignore-consistency.ps1` | Windows PowerShell - `.gitignore` vs index consistency |
+| `check-gitignore-consistency.sh` | Linux/macOS bash - `.gitignore` vs index consistency |
+| `run-delta-audit.ps1` | Windows PowerShell - delta re-audit orchestrator |
+| `run-delta-audit.sh` | Linux/macOS bash - delta re-audit orchestrator |
 | `collect-audit-evidence.ps1` | Windows PowerShell |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
 | `run-audit-quickstart.sh` | Linux/macOS bash |
-| `tests/run-regulation-tests.ps1` | Windows PowerShell — shelf regression tests |
-| `tests/run-regulation-tests.sh` | Linux/macOS bash — shelf regression tests |
+| `tests/run-regulation-tests.ps1` | Windows PowerShell - shelf regression tests |
+| `tests/run-regulation-tests.sh` | Linux/macOS bash - shelf regression tests |
 
 ## Usage
 

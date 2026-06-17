@@ -3,5 +3,6 @@ workdir: in-place
 
 commands:
   - id: echo-ok
-    run: echo quickstart-fixture-ok
+    run_windows: echo quickstart-fixture-ok
+    run_unix: echo quickstart-fixture-ok
     expect_exit: 0

@@ -52,7 +52,7 @@ Audit outputs belong under `audits/<repository-slug>/` in this shelf:
 
 Do not write audit reports into public product repositories.
 
-The shelf `.gitignore` excludes dry-run `docs/governance/` scaffolds at the shelf root; tracked audit results live under `audits/`.
+The shelf `.gitignore` excludes filled records under `audits/` and all of `docs/governance/` except `docs/governance/README.md` (pointer). Canonical audit outputs live under `audits/<slug>/` on disk only.
 
 ## Dry-Run Contract
 

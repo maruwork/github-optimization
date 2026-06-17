@@ -10,6 +10,22 @@ if [[ ! -f "$MANIFEST_PATH" ]]; then
   exit 2
 fi
 
+resolve_cmd() {
+  local block="$1"
+  local cmd
+  cmd="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+run_unix:/{print $2; exit}')"
+  if [[ -n "$cmd" ]]; then
+    echo "$cmd"
+    return 0
+  fi
+  cmd="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+run:/{print $2; exit}')"
+  if [[ -n "$cmd" ]]; then
+    echo "$cmd"
+    return 0
+  fi
+  return 1
+}
+
 echo "=== Quickstart Manifest ==="
 echo "Manifest: $MANIFEST_PATH"
 
@@ -32,7 +48,7 @@ ran=0
 
 while IFS= read -r block; do
   id="$(printf '%s\n' "$block" | sed -n '1s/^- id: *//p')"
-  cmd="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+run:/{print $2; exit}')"
+  cmd="$(resolve_cmd "$block" || true)"
   expect_exit="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+expect_exit:/{print $2; exit}')"
   expect_exit="${expect_exit:-0}"
 

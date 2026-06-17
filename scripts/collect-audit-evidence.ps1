@@ -92,14 +92,15 @@ if ($HostedRepo -and (Get-Command gh -ErrorAction SilentlyContinue)) {
     gh run list -R $HostedRepo --limit 3 2>&1
 }
 
+$manifestPath = Join-Path $RepoPath "audit.manifest.yml"
 $quickstartScript = Join-Path $PSScriptRoot "run-audit-quickstart.ps1"
-if (Test-Path $quickstartScript) {
+if ((Test-Path $manifestPath) -and (Test-Path $quickstartScript)) {
     Write-Section "Quickstart"
     $quickstartOutput = & $quickstartScript -RepoPath $RepoPath 2>&1
     $quickstartOutput | ForEach-Object { Write-Output $_ }
-    if ($LASTEXITCODE -eq 1) {
+    if ($LASTEXITCODE -ne 0) {
         Pop-Location
-        exit 1
+        exit $LASTEXITCODE
     }
 }
 

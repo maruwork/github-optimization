@@ -12,7 +12,7 @@ is_shelf=0
 
 shelf_allowed() {
   case "$1" in
-    audits/README.md|docs/governance/shelf-self-audit-report.md|docs/governance/publication-decision-record.md)
+    audits/README.md|docs/governance/README.md)
       return 0 ;;
     *) return 1 ;;
   esac
@@ -64,8 +64,12 @@ while IFS= read -r rel; do
     add_finding "$norm" "audit-in-product" "blocked" "Audit outputs belong in github-optimization/audits/<slug>/"
     continue
   fi
-  if [[ "$is_shelf" -eq 0 && "$norm" =~ ^docs/governance/.*(audit|publication-decision) ]]; then
-    add_finding "$norm" "governance-in-product" "blocked" "Governance audit records belong on the regulation shelf"
+  if [[ "$norm" =~ ^docs/governance/ && "$norm" != docs/governance/README.md ]]; then
+    if [[ "$is_shelf" -eq 1 ]]; then
+      add_finding "$norm" "governance-in-shelf" "blocked" "Filled governance records belong in audits/<slug>/ on the regulation shelf"
+    else
+      add_finding "$norm" "governance-in-product" "blocked" "Governance audit records belong on the regulation shelf"
+    fi
     continue
   fi
   if [[ "$norm" =~ ^(common|index|archive|workspace)/ ]]; then
@@ -106,7 +110,7 @@ fi
 echo "Suspicious tracked files: ${#findings[@]} (blocked: $blocked, review: $review)"
 for row in "${findings[@]}"; do
   IFS='|' read -r severity category path reason <<< "$row"
-  echo "[$severity/$category] $path — $reason"
+  echo "[$severity/$category] $path - $reason"
 done
 
 if [[ "$VERBOSE" == 1 ]]; then

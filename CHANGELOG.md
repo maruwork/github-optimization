@@ -4,6 +4,22 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.8] - 2026-06-17
+
+### Fixed
+
+- removed tracked `docs/governance/*` filled records; canonical path is `audits/<slug>/` only (`docs/governance/README.md` pointer)
+- `audit.manifest.yml` uses `run_windows` / `run_unix` for cross-OS quickstart (Ubuntu CI R-08/R-09)
+- `collect-audit-evidence.*` runs quickstart only when manifest exists; any non-zero exit fails evidence
+- `check-tracked-files.*` blocks filled `docs/governance/` paths on shelf and product repos
+- `.gitignore` adds recommended `AGENTS.md` / `CLAUDE.md` / `.claudeignore` patterns
+- bash script em-dash output normalized to ASCII `-`
+
+### Changed
+
+- `templates/audit.manifest.yml.template` and `AUDIT_MANIFEST_POLICY.md` document OS-specific command fields
+- `checklists/README.md` Tier 1 local checklist includes `G-21`
+
 ## [1.1.7] - 2026-06-17
 
 ### Fixed

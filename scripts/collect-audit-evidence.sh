@@ -84,14 +84,15 @@ if [[ -n "$HOSTED_REPO" ]] && command -v gh >/dev/null 2>&1; then
   gh run list -R "$HOSTED_REPO" --limit 3
 fi
 
+MANIFEST_PATH="$REPO_PATH/audit.manifest.yml"
 QUICKSTART_SCRIPT="$(cd "$(dirname "$0")" && pwd)/run-audit-quickstart.sh"
-if [[ -f "$QUICKSTART_SCRIPT" ]]; then
+if [[ -f "$MANIFEST_PATH" && -f "$QUICKSTART_SCRIPT" ]]; then
   section "Quickstart"
   set +e
   bash "$QUICKSTART_SCRIPT" "$REPO_PATH"
   qs_code=$?
   set -e
-  if [[ "$qs_code" -eq 1 ]]; then
-    exit 1
+  if [[ "$qs_code" -ne 0 ]]; then
+    exit "$qs_code"
   fi
 fi

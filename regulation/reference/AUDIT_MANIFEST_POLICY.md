@@ -15,12 +15,22 @@ Define when `audit.manifest.yml` is required in the target repository.
 | docs-only repository | manifest not required |
 | `release` or `strict-product` mode | R-09 requires execution evidence; manifest preferred |
 
+## Manifest Command Fields
+
+| Field | Use |
+|---|---|
+| `run_windows` | command for Windows runners (`run-audit-quickstart.ps1`) |
+| `run_unix` | command for Linux/macOS runners (`run-audit-quickstart.sh`) |
+| `run` | legacy single-platform fallback when OS-specific fields are omitted |
+
+Provide both `run_windows` and `run_unix` when CI spans multiple operating systems.
+
 ## After First Audit
 
 If quickstart evidence succeeded and the repository is runnable, the responsible AI should:
 
 1. copy `templates/audit.manifest.yml.template` to target `audit.manifest.yml`
-2. replace placeholders with the commands that actually passed
+2. replace placeholders with the commands that actually passed on each OS
 3. record the manifest path in the audit report
 
 ## Gate Mapping

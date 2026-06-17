@@ -3,10 +3,16 @@ workdir: in-place
 
 commands:
   - id: validate-index
-    run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-regulation-index.ps1
+    run_windows: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-regulation-index.ps1
+    run_unix: bash scripts/validate-regulation-index.sh
     expect_exit: 0
 
   - id: check-tracked-files
-    run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-tracked-files.ps1 -RepoPath .
+    run_windows: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-tracked-files.ps1 -RepoPath .
+    run_unix: bash scripts/check-tracked-files.sh .
     expect_exit: 0
 
+  - id: check-gitignore-consistency
+    run_windows: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-gitignore-consistency.ps1 -RepoPath .
+    run_unix: bash scripts/check-gitignore-consistency.sh .
+    expect_exit: 0

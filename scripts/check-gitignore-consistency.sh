@@ -61,7 +61,7 @@ fi
 echo "Findings: ${#findings[@]} (blocked: $blocked, review: $review)"
 for row in "${findings[@]}"; do
   IFS='|' read -r severity category path reason <<< "$row"
-  echo "[$severity/$category] $path — $reason"
+  echo "[$severity/$category] $path - $reason"
 done
 
 if [[ "$blocked" -gt 0 ]]; then

@@ -50,6 +50,7 @@ SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit invalidates manifest change" 2
 run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
 QUICKSTART_FIXTURE="$SHELF/scripts/tests/fixtures/quickstart-manifest-repo"
 run_exit "run-audit-quickstart with manifest exits 0" 0 bash "$SHELF/scripts/run-audit-quickstart.sh" "$QUICKSTART_FIXTURE"
+run_exit "run-audit-quickstart shelf manifest unix" 0 bash "$SHELF/scripts/run-audit-quickstart.sh" "$SHELF"
 
 for tpl in \
   accepted-risk-record.md.template \
@@ -82,7 +83,7 @@ run_exit "run-full-audit dry-run on fixture" 0 \
   bash "$SHELF/scripts/run-full-audit.sh" "$FIXTURE" "" public-prep pre-public "$FIXTURE_SLUG"
 run_pass "fixture audit-report scaffolded" test -f "$SHELF/audits/$FIXTURE_SLUG/audit-report.md"
 
-# Dedicated dry-run slug — never delete audits/github-optimization/ (real dogfood output).
+# Dedicated dry-run slug - never delete audits/github-optimization/ (real dogfood output).
 SHELF_DRY_RUN_SLUG="shelf-orchestrator-dry-run"
 rm -f "$SHELF/audits/$SHELF_DRY_RUN_SLUG/audit-report.md"
 run_exit "run-full-audit dry-run on shelf root" 0 \

@@ -87,6 +87,10 @@ Assert-ExitCode "run-audit-quickstart with manifest exits 0" 0 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $quickstartFixture
 }
 
+Assert-ExitCode "run-audit-quickstart shelf manifest windows" 0 {
+    & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $Shelf
+}
+
 $requiredTemplates = @(
     "accepted-risk-record.md.template",
     "audit-report.md.template",
@@ -144,7 +148,7 @@ Assert-Pass "fixture audit-report scaffolded" {
     }
 }
 
-# Use a dedicated dry-run slug — never delete audits/github-optimization/ (real dogfood output).
+# Use a dedicated dry-run slug - never delete audits/github-optimization/ (real dogfood output).
 $shelfDryRunSlug = "shelf-orchestrator-dry-run"
 $shelfDryRunReport = Join-Path $Shelf "audits\$shelfDryRunSlug\audit-report.md"
 if (Test-Path $shelfDryRunReport) { Remove-Item $shelfDryRunReport -Force }

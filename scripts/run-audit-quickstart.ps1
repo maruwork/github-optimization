@@ -16,14 +16,14 @@ if (-not (Test-Path $ManifestPath)) {
     exit 2
 }
 
-function Read-SimpleYamlMap([string[]]$lines) {
-    $map = @{}
-    foreach ($line in $lines) {
-        if ($line -match '^\s*([A-Za-z0-9_\-]+):\s*(.*)$') {
-            $map[$Matches[1]] = $Matches[2].Trim()
-        }
+function Get-QuickstartCommand([string]$Block) {
+    if ($Block -match '(?m)^\s*run_windows:\s*(.+)$') {
+        return $Matches[1].Trim()
     }
-    return $map
+    if ($Block -match '(?m)^\s*run:\s*(.+)$') {
+        return $Matches[1].Trim()
+    }
+    return ""
 }
 
 $raw = Get-Content $ManifestPath -Raw
@@ -52,9 +52,8 @@ $ran = 0
 foreach ($block in $commandBlocks) {
     if ($block -notmatch '^\s*([^\r\n]+)') { continue }
     $id = $Matches[1].Trim()
-    if (-not ($block -match '(?m)^\s*run:\s*(.+)$')) { continue }
-    $cmd = $Matches[1].Trim()
-    if ($cmd -match '^<.*>$') { continue }
+    $cmd = Get-QuickstartCommand $block
+    if (-not $cmd -or $cmd -match '^<.*>$') { continue }
 
     $expectExit = 0
     if ($block -match '(?m)^\s*expect_exit:\s*(\d+)') { $expectExit = [int]$Matches[1] }

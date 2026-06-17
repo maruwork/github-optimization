@@ -13,10 +13,14 @@ tasks/
 APPLICATION_GUIDE.md
 GITHUB_OPTIMIZATION_*_SUMMARY.md
 
-# Dry-run outputs must not be committed; tracked self-audit artifacts are allowed
+# Governance dry-run scaffolds only; canonical filled records live under audits/ (gitignored)
 docs/governance/*
-!docs/governance/shelf-self-audit-report.md
-!docs/governance/publication-decision-record.md
+!docs/governance/README.md
+
+# Developer-only AI control files (recommended public-prep)
+AGENTS.md
+CLAUDE.md
+.claudeignore
 
 # Local caches
 __pycache__/

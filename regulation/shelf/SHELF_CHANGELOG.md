@@ -2,6 +2,14 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.8 — 2026-06-17
+
+### Fixed
+
+- governance path split eliminated (`docs/governance/` filled records removed)
+- cross-OS quickstart manifest + evidence propagation parity
+- shelf `.gitignore` AI-control patterns; tracked-file screening for governance paths
+
 ## 1.1.7 — 2026-06-17
 
 ### Fixed

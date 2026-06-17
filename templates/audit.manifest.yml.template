@@ -15,11 +15,13 @@ env: {}
 
 commands:
   - id: version
-    run: <entry-command> --version
+    run_windows: <entry-command-windows> --version
+    run_unix: <entry-command-unix> --version
     expect_exit: 0
 
   - id: first-action
-    run: <entry-command> <first-successful-action>
+    run_windows: <entry-command-windows> <first-successful-action>
+    run_unix: <entry-command-unix> <first-successful-action>
     expect_exit: 0
 
 # optional post-checks

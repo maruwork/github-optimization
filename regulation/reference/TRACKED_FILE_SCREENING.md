@@ -51,9 +51,10 @@ Classification reference: `regulation/reference/REPO_CONTENT_CLASSIFICATION.md`
 
 When the target repository is this regulation shelf (`regulation/REGULATION_INDEX.md` exists at root), these paths are allowed:
 
-- `docs/governance/shelf-self-audit-report.md`
-- `docs/governance/publication-decision-record.md`
+- `docs/governance/README.md` (pointer only)
 - `audits/README.md`
+
+Filled audit artifacts must not be tracked; they belong in `audits/<slug>/` on disk only.
 
 ## Gate Mapping
 

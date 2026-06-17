@@ -16,8 +16,7 @@ function Test-ShelfAllow {
     param([string]$RelPath)
     $allowed = @(
         "audits/README.md",
-        "docs/governance/shelf-self-audit-report.md",
-        "docs/governance/publication-decision-record.md"
+        "docs/governance/README.md"
     )
     return $allowed -contains ($RelPath -replace '\\', '/')
 }
@@ -77,8 +76,9 @@ foreach ($rel in $files) {
         Add-Finding $norm "audit-in-product" "blocked" "Audit outputs belong in github-optimization/audits/<slug>/"
         continue
     }
-    if (-not $isShelf -and $norm -match '^docs/governance/.*(audit|publication-decision)') {
-        Add-Finding $norm "governance-in-product" "blocked" "Governance audit records belong on the regulation shelf"
+    if ($norm -match '^docs/governance/' -and $norm -ne 'docs/governance/README.md') {
+        $category = if ($isShelf) { "governance-in-shelf" } else { "governance-in-product" }
+        Add-Finding $norm $category "blocked" "Filled governance records belong in audits/<slug>/ on the regulation shelf"
         continue
     }
     if ($norm -match '^(common|index|archive|workspace)/') {

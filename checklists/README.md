@@ -11,7 +11,7 @@ Walk the responsible AI through regulation self-check without mixing tiers or su
 | File | Tier | Role |
 |---|---|---|
 | `repository-file-review-checklist.md` | prerequisite | full `git ls-files` read log (`G-21`) |
-| `local-public-prep-checklist.md` | 1 | local repository checks (`G-01`…`G-12`, `G-22`) |
+| `local-public-prep-checklist.md` | 1 | local repository checks (`G-01`…`G-12`, `G-21`, `G-22`) |
 | `github-settings-checklist.md` | 1 | hosted GitHub settings (`G-13`…`G-19`) |
 | `publication-decision-checklist.md` | 1 | responsibility gate (`G-20`) |
 | `release-quality-checklist.md` | 2 | CI, version, quickstart (`R-01`…`R-14`) |

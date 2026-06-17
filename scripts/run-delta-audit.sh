@@ -133,7 +133,7 @@ bash "$SHELF/scripts/collect-audit-evidence.sh" "$REPO_PATH" "$HOSTED_REPO"
 echo
 echo "=== Agent Steps Remaining ==="
 if [[ "$DELTA_MODE" == "upgrade-to-full" ]]; then
-  echo "1. Delta invalid — run scripts/run-full-audit.sh for full re-audit"
+  echo "1. Delta invalid - run scripts/run-full-audit.sh for full re-audit"
 else
   echo "1. Read regulation/execution/RE_AUDIT_POLICY.md delta rules"
   echo "2. G-21 full read only changed paths + dependency cone listed above"
