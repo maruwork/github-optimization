@@ -5,7 +5,7 @@ Status: Active
 ## Current
 
 ```text
-1.0.0
+1.1.0
 ```
 
 ## Meaning

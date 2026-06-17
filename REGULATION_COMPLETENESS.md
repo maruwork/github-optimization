@@ -38,6 +38,10 @@ Use this file to confirm the regulation set is complete for agent self-check.
 | shelf portability undefined | standalone distribution policy | `SHELF_DISTRIBUTION.md` |
 | shelf version untracked | version and changelog files | `SHELF_VERSION.md`, `SHELF_CHANGELOG.md` |
 | orchestrator not dry-run tested | fixture + shelf dry-run tests | `scripts/tests/fixtures/minimal-docs-repo/` |
+| shelf root policy files missing | LICENSE SECURITY CHANGELOG CONTRIBUTING | root policy files |
+| shelf CI missing | regulation-tests workflow | `.github/workflows/regulation-tests.yml` |
+| shelf meta-audit missing | self-audit report | `docs/governance/shelf-self-audit-report.md` |
+| gitleaks stderr noise on PowerShell | normalized native stderr lines | `collect-audit-evidence.ps1` |
 
 ## Completeness Checklist
 
@@ -63,6 +67,10 @@ Use this file to confirm the regulation set is complete for agent self-check.
 - [x] tool review cadence policy exists
 - [x] shelf distribution and version files exist
 - [x] run-full-audit dry-run tests exist
+- [x] shelf root publication policy files exist
+- [x] shelf CI workflow exists
+- [x] shelf self-audit report exists
+- [x] gitleaks evidence script is PowerShell-clean
 
 ## Remaining Non-Goals
 

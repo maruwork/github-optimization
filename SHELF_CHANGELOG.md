@@ -2,6 +2,19 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.0 — 2026-06-17
+
+### Added
+
+- root policy files: `LICENSE`, `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`
+- CI workflow `.github/workflows/regulation-tests.yml` and Dependabot config
+- tracked shelf self-audit artifacts under `docs/governance/`
+- gitleaks stderr handling fix in `collect-audit-evidence.ps1`
+
+### Changed
+
+- `.gitignore` allows tracked self-audit governance files only
+
 ## 1.0.0 — 2026-06-17
 
 ### Added

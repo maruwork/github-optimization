@@ -1,5 +1,7 @@
-# Dry-run and accidental governance outputs must not live in this shelf
-docs/governance/
+# Dry-run outputs must not be committed; tracked self-audit artifacts are allowed
+docs/governance/*
+!docs/governance/shelf-self-audit-report.md
+!docs/governance/publication-decision-record.md
 
 # Local caches
 __pycache__/

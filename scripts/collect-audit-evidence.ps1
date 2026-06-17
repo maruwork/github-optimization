@@ -46,15 +46,23 @@ Write-Section "GitHub Files"
     ".github/ISSUE_TEMPLATE/config.yml",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
-    ".github/workflows/ci.yml"
+    ".github/workflows/ci.yml",
+    ".github/workflows/regulation-tests.yml"
 ) | ForEach-Object {
     Write-Output "$_`: $(Test-Path $_)"
 }
 
 if (Get-Command gitleaks -ErrorAction SilentlyContinue) {
     Write-Section "Gitleaks"
-    $gitleaksOutput = gitleaks detect --source . --no-banner 2>&1
-    $gitleaksOutput | Select-Object -Last 3 | ForEach-Object { Write-Output $_ }
+    $gitleaksLines = @()
+    & gitleaks detect --source . --no-banner 2>&1 | ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) {
+            $gitleaksLines += $_.ToString()
+        } else {
+            $gitleaksLines += [string]$_
+        }
+    }
+    $gitleaksLines | Select-Object -Last 3 | ForEach-Object { Write-Output $_ }
 } else {
     Write-Section "Gitleaks"
     Write-Output "gitleaks: not installed"

@@ -64,6 +64,19 @@ Use dry-run only to verify orchestration:
 
 Regression tests run this automatically via `scripts/tests/run-regulation-tests.*`.
 
+## Remote Bootstrap
+
+Create and push the shelf repository:
+
+```powershell
+cd C:\path\to\github-optimization
+gh repo create github-optimization --private --source=. --remote=origin --push
+git tag -a v1.1.0 -m "Generic regulation shelf v1.1.0"
+git push origin v1.1.0
+```
+
+After the remote exists, re-run hosted gates `G-13`…`G-18` in `post-public` phase per `AUDIT_PHASE_POLICY.md`.
+
 ## Release Discipline
 
 When shelf regulation changes:
@@ -73,3 +86,4 @@ When shelf regulation changes:
 3. run `scripts/tests/run-regulation-tests.*`
 4. run `scripts/validate-regulation-index.*`
 5. tag the shelf repository if version control is in use
+6. push branch and tags to `origin`

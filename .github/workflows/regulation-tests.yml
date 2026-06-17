@@ -1,0 +1,26 @@
+name: Regulation Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run regulation regression tests
+        shell: pwsh
+        run: ./scripts/tests/run-regulation-tests.ps1
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run regulation regression tests
+        run: |
+          chmod +x scripts/*.sh scripts/tests/*.sh
+          ./scripts/tests/run-regulation-tests.sh

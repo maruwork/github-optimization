@@ -57,6 +57,11 @@ Completeness proof: `REGULATION_COMPLETENESS.md`
 
 - `PUBLICATION_RESPONSIBILITY_MODEL.md`
 
+### Shelf self-proof (this repository only)
+
+- `docs/governance/shelf-self-audit-report.md`
+- `docs/governance/publication-decision-record.md`
+
 ### Checklists
 
 - `checklists/README.md`
