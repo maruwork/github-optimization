@@ -22,7 +22,7 @@ Publication does not turn this shelf into a product runtime.
 | visibility | private first; public after hosted settings review |
 | audience | maintainers and responsible AIs |
 | contribution | limited; regulation changes only |
-| remote | `maruwork/github-optimization` when created |
+| remote | `https://github.com/maruwork/github-optimization` |
 
 ## Preconditions
 
@@ -30,8 +30,9 @@ Publication does not turn this shelf into a product runtime.
 - [x] regression tests pass locally
 - [x] CI workflow exists
 - [x] `LICENSE`, `SECURITY.md`, `CHANGELOG.md` exist
-- [ ] hosted About/Topics/Community Profile reviewed after remote creation
-- [ ] secret scanning and Dependabot decisions recorded after remote creation
+- [x] remote created and initial push completed
+- [ ] hosted About/Topics/Community Profile reviewed
+- [ ] secret scanning and Dependabot hosted state recorded
 
 ## Execution Notes
 

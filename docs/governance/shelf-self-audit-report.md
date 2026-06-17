@@ -6,7 +6,7 @@ Status: Final
 
 - repository: github-optimization
 - local path: `C:\Users\f_tan\project\common\github-optimization`
-- hosted URL: pending remote creation
+- hosted URL: https://github.com/maruwork/github-optimization
 - audited at: 2026-06-17
 - executor: agent:grok
 - audit mode: `public-prep`
@@ -49,7 +49,7 @@ large tracked files >512KB: none
 
 ### Hosted GitHub
 
-- remote not yet created at audit time
+- remote created: `maruwork/github-optimization`
 - publication decision record exists at `docs/governance/publication-decision-record.md`
 
 ### Execution
@@ -102,7 +102,7 @@ Tier 3 result: n/a
 
 ### Majors
 
-- hosted metadata gates pending until remote repository is created and reviewed
+- hosted metadata gates `G-13`…`G-18` pending manual review on GitHub
 
 ### Minors
 
@@ -117,7 +117,7 @@ Tier 2 gate: n/a
 Tier 3 gate: n/a
 Final label: PUBLIC_PREP_PASS
 Open Blockers: 0
-Open Majors: hosted settings review after remote creation
+Open Majors: hosted settings review on GitHub (G-13..G-18)
 Facts confidence: high
 ```
 
@@ -132,5 +132,6 @@ Facts confidence: high
 
 ## Fix Tasks
 
-1. create GitHub remote and push `v1.0.0`
-2. after push, re-run hosted gates `G-13`…`G-18` in `post-public` phase
+1. set GitHub About description and Topics
+2. record hosted secret scanning, Dependabot, and code scanning decisions
+3. re-run `post-public` audit for gates `G-13`…`G-18`
