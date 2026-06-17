@@ -1,0 +1,28 @@
+# Audit manifest
+# Target path: repository root audit.manifest.yml
+#
+# Purpose: give agents a stable, machine-runnable quickstart route.
+# This file is the automation contract for RELEASE_QUALITY_GATE R-08 and R-09.
+
+version: 1
+
+# isolated: run in a fresh temp directory with the repository copied in
+# in-place: run from repository root
+workdir: isolated
+
+# optional environment variables for all commands
+env: {}
+
+commands:
+  - id: version
+    run: <entry-command> --version
+    expect_exit: 0
+
+  - id: first-action
+    run: <entry-command> <first-successful-action>
+    expect_exit: 0
+
+# optional post-checks
+assertions:
+  - id: artifact-created
+    path_exists: <relative-path-created-by-first-action>

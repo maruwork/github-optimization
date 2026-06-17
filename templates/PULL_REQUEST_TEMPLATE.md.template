@@ -1,0 +1,14 @@
+## Summary
+
+- what changed
+- why it changed
+
+## Checks
+
+- [ ] local validation run
+- [ ] documentation updated when needed
+- [ ] no secret or generated asset was added by mistake
+
+## Notes
+
+Add any reviewer context here.

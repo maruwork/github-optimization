@@ -1,0 +1,13 @@
+# Dry-run and accidental governance outputs must not live in this shelf
+docs/governance/
+
+# Local caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,27 @@
+# Contributing
+
+Thank you for considering a contribution to this project.
+
+## Before You Start
+
+- read `README.md`
+- read `SECURITY.md` if the change may involve credentials, local files, or vulnerability behavior
+- check whether the issue already exists
+
+## Preferred Contribution Flow
+
+1. open or confirm an issue when the change is non-trivial
+2. prepare a focused branch
+3. keep the change small enough to review
+4. update docs when behavior or usage changes
+
+## Pull Request Expectations
+
+- explain what changed
+- explain why it changed
+- list the checks you ran
+- mention any remaining limitations or follow-up work
+
+## Review Notes
+
+Maintainers may ask contributors to narrow scope, add evidence, or split follow-up work before merge.

@@ -1,0 +1,55 @@
+# Publication Decision Record
+
+Status: Draft
+
+Default path: `docs/governance/publication-decision-record.md`
+
+## Repository
+
+- name:
+- local path:
+- hosted URL:
+- reviewed at:
+
+## People
+
+- project-side owner:
+- shared-governance reviewer:
+- post-release repository-local owner:
+- post-release shared-surface owner:
+
+## Publication Execution
+
+Choose one:
+
+- [ ] `publish-by-common`
+- [ ] `publish-by-project`
+
+Public-release executor:
+
+## Evidence
+
+- Tier 1 gate result: PASS | BLOCKED
+- gate summary location:
+- secret scan command + result:
+- tracked-file review note:
+- hosted metadata review note:
+
+## Explicit Decisions
+
+| Item | Decision | Reason |
+|---|---|---|
+| Dependabot | enabled / disabled / waived | |
+| secret scanning | enabled / disabled / waived | |
+| code scanning | enabled / disabled / waived | |
+| Tier 2 release-quality checklist | completed / deferred | |
+
+## Waivers
+
+List every Tier 1 waiver here or link to the exact note.
+
+## Approval
+
+- project-side owner approval:
+- shared-governance approval:
+- approval date:

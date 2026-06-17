@@ -1,0 +1,18 @@
+# Merge these blocks into the target repository .gitignore as needed.
+
+# Local machine caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+
+# Developer-only AI control files
+AGENTS.md
+CLAUDE.md
+.claudeignore
+
+# Internal management — do not publish
+/common/
+/index/
+/archive/
+/workspace/

@@ -1,0 +1,15 @@
+# Security Policy
+
+## Supported Versions
+
+Document which release lines receive fixes here.
+
+| Version | Supported |
+| --- | --- |
+| latest | :white_check_mark: |
+| previous | :warning: |
+| older | :x: |
+
+## Reporting A Vulnerability
+
+Explain how to report a vulnerability, what information to include, and what response window maintainers target.

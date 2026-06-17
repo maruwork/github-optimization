@@ -1,0 +1,35 @@
+# Tier 2 Defer Record
+
+Status: Active
+
+## Repository
+
+- name:
+- reviewed at:
+- deferred by:
+
+## Reason
+
+Why Tier 2 release-quality checks are not required for this repository now.
+
+## Scope Deferred
+
+- [ ] entire Tier 2 checklist
+- [ ] specific gate IDs only:
+
+## Expiry
+
+Defer expires on:
+
+- next release
+- next audit
+- explicit date:
+
+## Owner
+
+Who re-enables Tier 2 checks:
+
+## Approval
+
+- approver:
+- approval date:

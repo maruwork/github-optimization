@@ -1,0 +1,56 @@
+# Project Name
+
+Status: Active
+
+One-sentence description of what this repository does and who it is for.
+
+## What It Does
+
+Explain the core problem and outcome in plain language.
+
+## Requirements
+
+List runtime requirements that matter for first use:
+
+- language/runtime version
+- operating systems supported
+- external tools required before first run
+
+## Setup
+
+Show the real install or clone path. Do not use shorthand commands here unless the shorthand is actually installed by setup.
+
+```bash
+git clone https://github.com/<owner>/<repo>.git
+cd <repo>
+```
+
+## Quickstart
+
+Show the smallest successful first-run path.
+
+```bash
+# example only — replace with the real entry command
+<entry-command> --version
+<entry-command> <first-successful-action>
+```
+
+## Usage
+
+Document the main commands or workflows.
+
+## Project Layout
+
+Explain only the directories users need to understand.
+
+## Contributing
+
+Read `CONTRIBUTING.md` before opening a pull request.
+
+## Security
+
+Read `SECURITY.md` before reporting a vulnerability.
+
+## License
+
+See `LICENSE`.

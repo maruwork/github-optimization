@@ -1,0 +1,156 @@
+# Audit Report
+
+Status: Draft
+
+Output path default: `docs/governance/audit-report.md`
+
+## Target
+
+- repository:
+- local path:
+- hosted URL:
+- audited at:
+- executor:
+- audit mode: `public-prep` | `release` | `strict-product`
+- HEAD:
+- tag/describe:
+
+## Read Log
+
+- tracked file count:
+- full read completed: yes | no
+- G-21 result: pass | blocked
+
+| Path | Class | Review | Notes |
+|---|---|---|---|
+| | | | |
+
+## Machine Evidence
+
+Paste output from `scripts/collect-audit-evidence.*`.
+
+```text
+
+```
+
+## Facts
+
+### Local
+
+-
+
+### Hosted GitHub
+
+-
+
+### Execution
+
+-
+
+## Tier 1 — Public Prep Gate
+
+| ID | Result | Evidence |
+|---|---|---|
+| G-01 | | |
+| G-02 | | |
+| G-03 | | |
+| G-04 | | |
+| G-05 | | |
+| G-06 | | |
+| G-07 | | |
+| G-08 | | |
+| G-09 | | |
+| G-10 | | |
+| G-11 | | |
+| G-12 | | |
+| G-13 | | |
+| G-14 | | |
+| G-15 | | |
+| G-16 | | |
+| G-17 | | |
+| G-18 | | |
+| G-19 | | |
+| G-20 | | |
+| G-21 | | |
+| G-22 | | |
+
+Tier 1 result: PASS | BLOCKED
+
+## Tier 2 — Release Quality Gate
+
+| ID | Result | Evidence |
+|---|---|---|
+| R-01 | | |
+| R-02 | | |
+| R-03 | | |
+| R-04 | | |
+| R-05 | | |
+| R-06 | | |
+| R-07 | | |
+| R-08 | | |
+| R-09 | | |
+| R-10 | | |
+| R-11 | | |
+| R-12 | | |
+| R-13 | | |
+| R-14 | | |
+
+Tier 2 result: PASS | BLOCKED | DEFERRED | n/a
+
+Tier 2 defer record path: `docs/governance/tier2-defer-record.md`
+
+Accepted risk record path: `docs/governance/accepted-risk-record.md`
+
+## Tier 3 — Product Readiness Gate
+
+| ID | Result | Evidence |
+|---|---|---|
+| P-01 | | |
+| P-02 | | |
+| P-03 | | |
+| P-04 | | |
+| P-05 | | |
+| P-06 | | |
+| P-07 | | |
+| P-08 | | |
+| P-09 | | |
+| P-10 | | |
+
+Tier 3 result: PASS | BLOCKED | n/a
+
+## Evaluation
+
+### Blockers
+
+-
+
+### Majors
+
+-
+
+### Minors
+
+-
+
+## Final Verdict
+
+```text
+Audit mode:
+Tier 1 gate:
+Tier 2 gate:
+Tier 3 gate:
+Final label:
+Open Blockers:
+Open Majors:
+Facts confidence: high | medium | low
+```
+
+## Waivers
+
+| Gate ID | Reason | Owner |
+|---|---|---|
+| | | |
+
+## Fix Tasks
+
+List repository changes required to clear Blockers. Do not phrase as human-run instructions unless execution is impossible.

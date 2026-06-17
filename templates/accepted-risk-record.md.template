@@ -1,0 +1,53 @@
+# Accepted Risk Record
+
+Status: Active
+
+Output path default: `docs/governance/accepted-risk-record.md`
+
+## Repository
+
+- name:
+- reviewed at:
+- recorded by:
+
+## Gate
+
+- gate ID: R-02
+- present state: CI failing on default branch
+
+## Risk Accepted
+
+Describe the failing check and why release or audit may proceed temporarily.
+
+## Owner
+
+Who will fix the failure:
+
+## Fix Deadline
+
+Date or release by which the risk expires:
+
+## Evidence
+
+- failing workflow run URL or ID:
+- failing job name:
+- error excerpt:
+
+## Revisit Trigger
+
+Re-audit required when any of the following occurs:
+
+- fix merged
+- fix deadline passed
+- default branch receives a new release tag
+
+## Approval
+
+- approver:
+- approval date:
+
+## Audit Report Link
+
+Reference path to the audit report that cites this record:
+
+- `docs/governance/audit-report.md`
