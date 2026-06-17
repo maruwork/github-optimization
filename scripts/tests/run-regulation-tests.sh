@@ -33,8 +33,10 @@ run_exit() {
   fi
 }
 
+FIXTURE="$SHELF/scripts/tests/fixtures/minimal-docs-repo"
+
 run_pass "validate-regulation-index" bash "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
-run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$SHELF"
+run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
 
 for tpl in \
   accepted-risk-record.md.template \
@@ -54,7 +56,6 @@ do
   run_pass "policy exists: $policy" test -f "$SHELF/$policy"
 done
 
-FIXTURE="$SHELF/scripts/tests/fixtures/minimal-docs-repo"
 if [[ ! -d "$FIXTURE/.git" ]]; then
   git -C "$FIXTURE" init
   git -C "$FIXTURE" add README.md LICENSE SECURITY.md .gitignore

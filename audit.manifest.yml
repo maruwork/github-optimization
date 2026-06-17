@@ -1,0 +1,8 @@
+version: 1
+workdir: in-place
+
+commands:
+  - id: validate-index
+    run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-regulation-index.ps1
+    expect_exit: 0
+

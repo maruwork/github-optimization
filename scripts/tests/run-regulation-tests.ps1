@@ -40,8 +40,10 @@ Assert-ExitCode "validate-regulation-index" 0 {
     & (Join-Path $Shelf "scripts\validate-regulation-index.ps1") -ShelfPath $Shelf
 }
 
+$fixture = Join-Path $Shelf "scripts\tests\fixtures\minimal-docs-repo"
+
 Assert-ExitCode "run-audit-quickstart missing manifest exits 2" 2 {
-    & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $Shelf
+    & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $fixture
 }
 
 $requiredTemplates = @(
@@ -74,7 +76,6 @@ foreach ($policy in $requiredPolicies) {
     }
 }
 
-$fixture = Join-Path $Shelf "scripts\tests\fixtures\minimal-docs-repo"
 if (-not (Test-Path (Join-Path $fixture ".git"))) {
     Push-Location $fixture
     git init | Out-Null
