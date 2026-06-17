@@ -12,7 +12,10 @@
 
 This shelf is governance documentation and scripts, not a runtime service.
 
-Report issues in the repository where this shelf is hosted, or contact the maintainer through the hosting organization's standard security channel.
+Use **Private vulnerability reporting** on the hosted repository:
+https://github.com/maruwork/github-optimization/security/advisories/new
+
+You can also open a private security advisory from the repository **Security** tab.
 
 Include:
 
