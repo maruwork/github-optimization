@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.1.9] - 2026-06-17
+
+### Fixed
+
+- `run-audit-quickstart.sh` reads multiline YAML command blocks via NUL-delimited records (Ubuntu CI no longer reports `commands run: 0`)
+
 ## [1.1.8] - 2026-06-17
 
 ### Fixed

@@ -2,6 +2,12 @@
 
 All notable changes to the generic regulation shelf.
 
+## 1.1.9 — 2026-06-17
+
+### Fixed
+
+- bash quickstart multiline manifest parse (`awk` RS + NUL records); fixes Ubuntu regulation-tests `commands run: 0`
+
 ## 1.1.8 — 2026-06-17
 
 ### Fixed

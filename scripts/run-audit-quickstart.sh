@@ -46,7 +46,8 @@ fi
 failures=0
 ran=0
 
-while IFS= read -r block; do
+while IFS= read -r -d '' block; do
+  [[ -z "$block" ]] && continue
   id="$(printf '%s\n' "$block" | sed -n '1s/^- id: *//p')"
   cmd="$(resolve_cmd "$block" || true)"
   expect_exit="$(printf '%s\n' "$block" | awk -F': *' '/^[[:space:]]+expect_exit:/{print $2; exit}')"
@@ -69,7 +70,7 @@ while IFS= read -r block; do
   else
     echo "result: PASS"
   fi
-done < <(awk 'BEGIN{RS="- id:"} NR>1 {print "- id:" $0}' "$MANIFEST_PATH")
+done < <(awk 'BEGIN{RS="- id:"} NR>1 {printf "- id:%s\0", $0}' "$MANIFEST_PATH")
 
 [[ -n "$TEMP_ROOT" ]] && rm -rf "$TEMP_ROOT"
 
