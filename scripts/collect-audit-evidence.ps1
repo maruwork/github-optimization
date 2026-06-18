@@ -4,28 +4,39 @@ param(
     [string]$HostedRepo = ""
 )
 
-$ErrorActionPreference = "Continue"
-Push-Location $RepoPath
+$resolvedRepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
+$RepoPath = $resolvedRepoPath
 
-function Invoke-Git {
-    param(
-        [Parameter(ValueFromRemainingArguments = $true)]
-        [string[]]$GitArgs
-    )
-    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+function Convert-ToBashPath {
+    param([string]$Path)
+
+    $normalized = $Path -replace "\\", "/"
+    if ($normalized -match "^([A-Za-z]):/(.*)$") {
+        $drive = $matches[1].ToLowerInvariant()
+        $rest = ($matches[2] -replace "/+", "/").TrimStart("/")
+        return "/mnt/$drive/$rest"
+    }
+
+    return $normalized -replace "/+", "/"
+}
+
+function Convert-ToGitBashPath {
+    param([string]$Path)
+
+    $normalized = $Path -replace "\\", "/"
+    if ($normalized -match "^([A-Za-z]):/(.*)$") {
+        $drive = $matches[1].ToLowerInvariant()
+        $rest = ($matches[2] -replace "/+", "/").TrimStart("/")
+        return "/$drive/$rest"
+    }
+
+    return $normalized -replace "/+", "/"
 }
 
 function Resolve-GitleaksCommand {
-    $cmd = Get-Command gitleaks -ErrorAction SilentlyContinue
-    if ($cmd -and $cmd.Source) {
-        $item = Get-Item -LiteralPath $cmd.Source -ErrorAction SilentlyContinue
-        if ($item -and $item.Target) {
-            return @($item.Target)[0]
-        }
-        return $cmd.Source
-    }
-
     $candidates = @(
+        (Join-Path $env:LOCALAPPDATA "Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"),
+        (Join-Path $env:USERPROFILE "AppData\\Local\\Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\\WinGet\\Links\\gitleaks.exe"),
         (Join-Path $env:USERPROFILE "AppData\\Local\\Microsoft\\WinGet\\Links\\gitleaks.exe")
     ) | Where-Object { $_ -and (Test-Path $_) }
@@ -43,12 +54,99 @@ function Resolve-GitleaksCommand {
     return $candidate
 }
 
+$gitBashCandidates = @(
+    "C:\Program Files\Git\bin\bash.exe",
+    "C:\Program Files\Git\usr\bin\bash.exe"
+) | Where-Object { Test-Path -LiteralPath $_ }
+
+$bashCommand = if ($gitBashCandidates.Count -gt 0) {
+    Get-Item -LiteralPath $gitBashCandidates[0]
+} else {
+    Get-Command bash -ErrorAction SilentlyContinue
+}
+
+$bashCollector = Join-Path $PSScriptRoot "collect-audit-evidence.sh"
+if ($bashCommand -and (Test-Path -LiteralPath $bashCollector)) {
+    $resolvedCollector = (Resolve-Path -LiteralPath $bashCollector).Path
+    $resolvedGitleaks = Resolve-GitleaksCommand
+    $isGitBash = $bashCommand.FullName -like "*\Git\*\bash.exe"
+    if ($isGitBash) {
+        $bashScriptPath = Convert-ToGitBashPath $resolvedCollector
+        $bashRepoPath = Convert-ToGitBashPath $RepoPath
+        $bashArgs = @("-lc", '"$0" "$@"', $bashScriptPath, $bashRepoPath)
+        if ($HostedRepo) {
+            $bashArgs += $HostedRepo
+        }
+        $previousGitleaks = $env:GITLEAKS_CMD
+        try {
+            if ($resolvedGitleaks) {
+                $env:GITLEAKS_CMD = Convert-ToGitBashPath $resolvedGitleaks
+            }
+            $bashOutput = & $bashCommand.FullName @bashArgs 2>&1
+        } finally {
+            if ($null -ne $previousGitleaks) {
+                $env:GITLEAKS_CMD = $previousGitleaks
+            } else {
+                Remove-Item Env:GITLEAKS_CMD -ErrorAction SilentlyContinue
+            }
+        }
+    } else {
+        $bashScriptPath = Convert-ToBashPath $resolvedCollector
+        $bashRepoPath = Convert-ToBashPath $RepoPath
+        $bashArgs = @($bashScriptPath, $bashRepoPath)
+        if ($HostedRepo) {
+            $bashArgs += $HostedRepo
+        }
+        $bashOutput = & $bashCommand.Source @bashArgs 2>&1
+    }
+    $bashExit = $LASTEXITCODE
+    if ($bashExit -eq 0) {
+        $bashOutput | ForEach-Object { Write-Output $_ }
+        exit 0
+    }
+}
+
+$ErrorActionPreference = "Continue"
+Push-Location $RepoPath
+
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+}
+
 function Initialize-GhConfig {
-    return
+    $base = if ($env:TEMP) { $env:TEMP } else { "C:\tmp" }
+    $ghConfigDir = Join-Path $base "github-optimization-gh"
+    if (-not (Test-Path -LiteralPath $ghConfigDir)) {
+        New-Item -ItemType Directory -Path $ghConfigDir -Force | Out-Null
+    }
+    return $ghConfigDir
 }
 
 function Invoke-PublicGitHubApi {
     param([string]$RelativePath)
+
+    $ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+    if ($ghCommand -and $ghCommand.Source) {
+        $previousConfigDir = $env:GH_CONFIG_DIR
+        try {
+            $env:GH_CONFIG_DIR = Initialize-GhConfig
+            $raw = (& $ghCommand.Source api $RelativePath 2>$null) -join "`n"
+            if ($LASTEXITCODE -eq 0 -and $raw) {
+                return $raw | ConvertFrom-Json -Depth 50
+            }
+        } catch {
+        } finally {
+            if ($null -ne $previousConfigDir) {
+                $env:GH_CONFIG_DIR = $previousConfigDir
+            } else {
+                Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+            }
+        }
+    }
 
     $curlCandidates = @()
     $curlCommand = Get-Command curl.exe -ErrorAction SilentlyContinue
@@ -68,7 +166,11 @@ function Invoke-PublicGitHubApi {
         }
     }
 
-    Invoke-RestMethod -Uri "https://api.github.com/$RelativePath" -Headers @{ "User-Agent" = "github-optimization-audit" }
+    try {
+        return Invoke-RestMethod -Uri "https://api.github.com/$RelativePath" -Headers @{ "User-Agent" = "github-optimization-audit" }
+    } catch {
+        return $null
+    }
 }
 
 function Write-JsonCompact {
@@ -158,6 +260,10 @@ if ($gitleaksCmd) {
         Write-Output "result: PASS"
     } elseif ($gitleaksExit -eq 1) {
         Write-Output "result: BLOCKED (gitleaks findings)"
+    } elseif ($gitleaksLines -match "Is a directory") {
+        Write-Output "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
+    } elseif ($gitleaksLines -match "Access is denied") {
+        Write-Output "result: BLOCKED (execution environment denied gitleaks execution)"
     } else {
         Write-Output "result: BLOCKED (gitleaks execution failed)"
     }
@@ -172,22 +278,26 @@ if ((Test-Path "pytest.ini") -or (Test-Path "tests")) {
 }
 
 if ($HostedRepo) {
-    Initialize-GhConfig
+    $null = Initialize-GhConfig
     Write-Section "Hosted Metadata"
     $repo = Invoke-PublicGitHubApi "repos/$HostedRepo"
-    Write-JsonCompact @{
-        description = $repo.description
-        topics      = $repo.topics
-        homepage    = $repo.homepage
-        visibility  = $repo.visibility
-        has_issues  = $repo.has_issues
-    }
     $community = Invoke-PublicGitHubApi "repos/$HostedRepo/community/profile"
-    Write-JsonCompact @{
-        health_percentage = $community.health_percentage
-        files             = $community.files
+    if ($repo -and $community) {
+        Write-JsonCompact @{
+            description = $repo.description
+            topics      = $repo.topics
+            homepage    = $repo.homepage
+            visibility  = $repo.visibility
+            has_issues  = $repo.has_issues
+        }
+        Write-JsonCompact @{
+            health_percentage = $community.health_percentage
+            files             = $community.files
+        }
+        Write-JsonCompact $repo.security_and_analysis
+    } else {
+        Write-Output "result: BLOCKED (hosted metadata unavailable)"
     }
-    Write-JsonCompact $repo.security_and_analysis
     Write-Section "Hosted Issue Templates"
     foreach ($path in @(
             ".github/ISSUE_TEMPLATE/bug_report.md",
@@ -195,21 +305,29 @@ if ($HostedRepo) {
             ".github/ISSUE_TEMPLATE/config.yml"
         )) {
         $content = Invoke-PublicGitHubApi "repos/$HostedRepo/contents/$path"
-        Write-JsonCompact @{ path = $content.path }
+        if ($content) {
+            Write-JsonCompact @{ path = $content.path }
+        } else {
+            Write-JsonCompact @{ path = $null; requested = $path; result = "BLOCKED" }
+        }
     }
     Write-Section "Latest CI"
     $runs = Invoke-PublicGitHubApi "repos/$HostedRepo/actions/runs?per_page=3"
-    $projectedRuns = @($runs.workflow_runs | Select-Object -First 3 | ForEach-Object {
-            [pscustomobject]@{
-                name        = $_.name
-                event       = $_.event
-                status      = $_.status
-                conclusion  = $_.conclusion
-                head_branch = $_.head_branch
-                html_url    = $_.html_url
-            }
-        })
-    Write-JsonCompact $projectedRuns
+    if ($runs -and $runs.workflow_runs) {
+        $projectedRuns = @($runs.workflow_runs | Select-Object -First 3 | ForEach-Object {
+                [pscustomobject]@{
+                    name        = $_.name
+                    event       = $_.event
+                    status      = $_.status
+                    conclusion  = $_.conclusion
+                    head_branch = $_.head_branch
+                    html_url    = $_.html_url
+                }
+            })
+        Write-JsonCompact $projectedRuns
+    } else {
+        Write-Output "result: BLOCKED (latest CI metadata unavailable)"
+    }
 }
 
 $manifestPath = Join-Path $RepoPath "audit.manifest.yml"

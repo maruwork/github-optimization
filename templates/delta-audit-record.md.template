@@ -14,7 +14,7 @@ Output path: `audits/<repository-slug>/delta-audit-record.md`
 - audit mode:
 - prior HEAD:
 - present HEAD:
-- delta mode: allowed | upgraded-to-full
+- delta mode: `allowed` | `upgrade-to-full`
 
 ## Change Summary
 
@@ -33,9 +33,46 @@ Output path: `audits/<repository-slug>/delta-audit-record.md`
 | prior open Blocker | pass | blocked |
 | audit.manifest.yml changed | pass | blocked |
 
-## Machine Evidence
+## Evidence Index
 
-Paste output from `scripts/run-delta-audit.*` and `scripts/collect-audit-evidence.*`.
+Record every delta-scoped command, hosted check, and carry-forward decision used for scoring.
+
+| Check | Claim area | Command or script | Working directory | Env overrides | Exit code / result | Transcript section |
+|---|---|---|---|---|---|---|
+| | | | | | | |
+
+## Local Command Transcripts
+
+### Transcript 1
+
+- check:
+- command:
+- working directory:
+- env overrides:
+- exit code / result:
+
+```text
+
+```
+
+## Hosted Transcripts
+
+### Hosted Transcript 1
+
+- claim area:
+- command:
+- working directory:
+- env overrides:
+- exit code / result:
+
+```text
+
+```
+
+## Machine Evidence Bundle
+
+Store the raw output from `scripts/run-delta-audit.*` and any rerun `scripts/collect-audit-evidence.*` execution here.
+If the raw bundle shows an execution-environment artifact, preserve it and score from the explicit successful transcript row that verified the same claim.
 
 ```text
 
@@ -62,7 +99,7 @@ List gate IDs affected by the change set. Copy forward only rows that meet `regu
 ## Final Recommendation
 
 ```text
-Continue delta: yes | no — upgrade to full re-audit
+Continue delta: yes | no - upgrade to full re-audit
 Open Blockers from prior audit:
 Gates rescored:
 Facts confidence: high | medium | low

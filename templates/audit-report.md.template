@@ -18,20 +18,88 @@ Output path default: `audits/<repository-slug>/audit-report.md`
 ## Read Log
 
 - tracked file count:
+- inventory commands reviewed: `git ls-files`, `git ls-files | wc -l`, `git rev-parse HEAD`, `git describe --tags --always`
 - full read completed: yes | no
 - G-21 result: pass | blocked
 
-| Path | Class | Review | Notes |
+### Read Exceptions
+
+Record every path not fully read before final scoring. If there are no exceptions, write `none`.
+
+| Path | Class | Read status | Exception reason | Notes |
+|---|---|---|---|---|
+| | | | | |
+
+### Read Coverage
+
+Record the actual reviewed path set or the explicit review grouping that proves `G-21`.
+
+| Path or grouping | Class | Review | Notes |
 |---|---|---|---|
 | | | | |
 
-## Machine Evidence
+## Evidence Index
 
-Paste output from `scripts/collect-audit-evidence.*`.
+Every scored runtime, quickstart, and hosted claim must have a transcript row.
+
+| Check | Claim area | Command or script | Working directory | Env overrides | Exit code / result | Transcript section |
+|---|---|---|---|---|---|---|
+| | | | | | | |
+
+## Local Command Transcripts
+
+Use one subsection per executed local check. Keep the exact command, working directory, env overrides, exit code, and a short output excerpt.
+
+### Transcript 1
+
+- check:
+- command:
+- working directory:
+- env overrides:
+- exit code / result:
 
 ```text
 
 ```
+
+## Hosted Transcripts
+
+Use one subsection per hosted-settings claim bundle. Store the exact `gh api`, `gh run`, or equivalent command and the hosted output excerpt used for scoring.
+
+### Hosted Transcript 1
+
+- claim area:
+- command:
+- working directory:
+- env overrides:
+- exit code / result:
+
+```text
+
+```
+
+## Quickstart Transcript
+
+- source: `audit.manifest.yml` | README-derived transcript
+- command or script:
+- working directory:
+- env overrides:
+- exit code / result:
+
+```text
+
+```
+
+## Machine Evidence Bundle
+
+Keep the raw collector output here. This does not replace the transcript sections above.
+If the raw bundle shows an execution-environment artifact, preserve it and score from the explicit successful transcript row that verified the same claim.
+
+<!-- GO_MACHINE_EVIDENCE_START -->
+```text
+
+```
+<!-- GO_MACHINE_EVIDENCE_END -->
 
 ## Facts
 
@@ -47,7 +115,7 @@ Paste output from `scripts/collect-audit-evidence.*`.
 
 -
 
-## Tier 1 — Public Prep Gate
+## Tier 1 - Public Prep Gate
 
 | ID | Result | Evidence |
 |---|---|---|
@@ -76,7 +144,7 @@ Paste output from `scripts/collect-audit-evidence.*`.
 
 Tier 1 result: PASS | BLOCKED
 
-## Tier 2 — Release Quality Gate
+## Tier 2 - Release Quality Gate
 
 | ID | Result | Evidence |
 |---|---|---|
@@ -101,7 +169,7 @@ Tier 2 defer record path: `audits/<repository-slug>/tier2-defer-record.md`
 
 Accepted risk record path: `audits/<repository-slug>/accepted-risk-record.md`
 
-## Tier 3 — Product Readiness Gate
+## Tier 3 - Product Readiness Gate
 
 | ID | Result | Evidence |
 |---|---|---|

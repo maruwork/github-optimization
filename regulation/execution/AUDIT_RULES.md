@@ -64,6 +64,14 @@ Every audit report must contain:
 
 If one of these is missing, the audit is incomplete.
 
+Environment-artifact rule:
+
+- keep the raw collector output even when the current execution environment blocks a tool path or hosted CLI config
+- do not score the repository `blocked` from that raw bundle alone when the same check is verified through another agent-executable route in the same audit
+- when this happens, store both:
+  - the raw blocked bundle excerpt
+  - the successful transcript row used for scoring, plus a short note that the blocked raw result was an execution-environment artifact
+
 ### 5. Define the rerun contract
 
 For runnable repositories, the audit must leave one direct rerun path:
@@ -109,6 +117,7 @@ An audit is invalid when any of the following is true:
 - the minimum evidence bundle is missing
 - a repeated runnable-repository audit closed without `audit.manifest.yml`, README-derived rerun transcript, or recorded waiver
 - the report tells a human to execute a routine command that the agent environment could have executed itself
+- a repository was scored `blocked` only from a raw collector failure that the same audit already proved was an execution-environment artifact
 
 If invalid, restart from `regulation/execution/AUDIT_RUNBOOK.md` Step 1.
 

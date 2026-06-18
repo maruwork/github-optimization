@@ -8,6 +8,16 @@ $Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) {
 
 $failures = 0
 
+function Invoke-TestGit {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath,
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -C $RepoPath -c "safe.directory=$RepoPath" @GitArgs
+}
+
 function Assert-Pass([string]$name, [scriptblock]$block) {
     Write-Output "TEST: $name"
     try {
@@ -79,9 +89,9 @@ Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
     if ($out -notmatch "=== Root Files ===") { throw "evidence transcript truncated before Root Files" }
 }
 
-$presentHead = (git -C $Shelf rev-parse HEAD)
+$presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
 # v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
-$manifestPriorHead = (git -C $Shelf rev-parse 'v1.1.4^{commit}')
+$manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')
 
 Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {
     & (Join-Path $Shelf "scripts\run-delta-audit.ps1") `

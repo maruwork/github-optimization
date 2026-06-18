@@ -10,15 +10,15 @@ If you follow this runbook to completion, the audit is done except for fixes in 
 
 ## Start Here
 
-1. Validate the regulation shelf with `scripts/validate-regulation-index.*` (or use `scripts/run-full-audit.*`, which runs this first)
-2. Read `regulation/REGULATION_INDEX.md`
-3. Read `regulation/execution/AGENT_EXECUTION_MODEL.md` and `regulation/execution/AUDIT_RULES.md`
-4. Determine audit phase with `regulation/execution/AUDIT_PHASE_POLICY.md` (`pre-public` | `post-public`)
-5. If a prior audit report exists, read `regulation/execution/RE_AUDIT_POLICY.md`
-6. Determine repository slug (`adop`, `veil`, etc.) for output paths
-7. Create `audits/<repository-slug>/` under this shelf if needed
-8. Copy `templates/audit-report.md.template` to `audits/<repository-slug>/audit-report.md` unless orchestrator already scaffolded it
-9. Fill the report as the agent completes each step below
+1. Validate the regulation shelf with `scripts/validate-regulation-index.*` or use `scripts/run-full-audit.*`, which runs this first.
+2. Read `regulation/REGULATION_INDEX.md`.
+3. Read `regulation/execution/AGENT_EXECUTION_MODEL.md` and `regulation/execution/AUDIT_RULES.md`.
+4. Determine audit phase with `regulation/execution/AUDIT_PHASE_POLICY.md` (`pre-public` | `post-public`).
+5. If a prior audit report exists, read `regulation/execution/RE_AUDIT_POLICY.md`.
+6. Determine repository slug (`adop`, `veil`, etc.) for output paths.
+7. Create `audits/<repository-slug>/` under this shelf if needed.
+8. Copy `templates/audit-report.md.template` to `audits/<repository-slug>/audit-report.md` unless orchestrator already scaffolded it.
+9. Fill the report as the agent completes each step below.
 
 References:
 
@@ -49,7 +49,7 @@ Record before Step 1:
 | `release` | Tier 1 + Tier 2 |
 | `strict-product` | Tier 1 + Tier 2 + Tier 3 |
 
-## Step 1 — Inventory (`G-02`)
+## Step 1 - Inventory (`G-02`)
 
 ```bash
 git ls-files
@@ -58,15 +58,23 @@ git rev-parse HEAD
 git describe --tags --always
 ```
 
-## Step 2 — Full file read (`G-21`)
+## Step 2 - Full file read (`G-21`)
 
 Walk `checklists/repository-file-review-checklist.md`.
 
-**Stop rule:** do not write code/content findings until `G-21` prerequisites are complete.
+Stop rule: do not write code or content findings until `G-21` prerequisites are complete.
 
-## Step 3 — Machine evidence (`G-01`, `G-22`, Tier 2 baseline)
+Before final scoring, the report must contain:
 
-Resolve shelf path per `regulation/shelf/SHELF_PATH.md`, then from repository root.
+- `## Read Log`
+- `### Read Exceptions`
+- `### Read Coverage`
+
+If any path was not fully read, record it explicitly in `### Read Exceptions`.
+
+## Step 3 - Machine evidence (`G-01`, `G-22`, Tier 2 baseline)
+
+Resolve shelf path per `regulation/shelf/SHELF_PATH.md`, then run from repository root.
 
 Preferred orchestrator:
 
@@ -90,7 +98,24 @@ Evidence only:
 "$SHELF/scripts/collect-audit-evidence.sh" . owner/repo
 ```
 
-Paste output into the audit report Evidence section.
+Store the raw collector output in `## Machine Evidence Bundle`.
+
+Then fill:
+
+- `## Evidence Index`
+- `## Local Command Transcripts`
+- `## Hosted Transcripts`
+- `## Quickstart Transcript`
+
+Do not replace these sections with prose summary alone.
+Each scored runtime, quickstart, and hosted claim must point to an explicit transcript row.
+
+If the raw collector blocks because the current execution environment cannot execute a tool or cannot read the caller's hosted CLI state:
+
+- preserve that raw bundle exactly as collected
+- rerun the affected check through another agent-executable route when available
+- score the gate from the successful transcript row, not from the raw blocked bundle alone
+- add a short note that the blocked raw result was an execution-environment artifact rather than a repository defect
 
 If `gitleaks` is unavailable, do not score `G-01` `pass`.
 Record the missing-tool state and treat Tier 1 as blocked until a baseline secret-scan transcript exists.
@@ -101,29 +126,29 @@ Quickstart (`R-08`, `R-09`):
 - if not, derive commands from `README.md`, execute, record transcript
 - after first successful runnable-tool audit, add `audit.manifest.yml`
 
-## Step 4 — Tier 1 local checks (`G-01`…`G-12`, `G-22`)
+## Step 4 - Tier 1 local checks (`G-01` to `G-12`, `G-22`)
 
 Walk `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` and `checklists/local-public-prep-checklist.md`.
 
-## Step 5 — Tier 1 hosted checks (`G-13`…`G-19`)
+## Step 5 - Tier 1 hosted checks (`G-13` to `G-19`)
 
 Walk `regulation/reference/TOOL_VERIFICATION_MATRIX.md`, `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`, and `checklists/github-settings-checklist.md`.
 
 When GitHub Community Profile omits issue-template evidence, verify `G-11` from hosted repository contents and issue-enablement state.
 
-## Step 6 — Publication responsibility (`G-20`)
+## Step 6 - Publication responsibility (`G-20`)
 
 Walk `regulation/reference/PUBLICATION_RESPONSIBILITY_MODEL.md` and `checklists/publication-decision-checklist.md`.
 
 Write or verify `audits/<repository-slug>/publication-decision-record.md`.
 
-## Step 7 — Tier 1 verdict
+## Step 7 - Tier 1 verdict
 
 Score all Tier 1 rows in `regulation/gates/PUBLIC_PREP_GATE.md`.
 
 If any row is `blocked`, final verdict cannot exceed `PUBLIC_PREP_BLOCKED`.
 
-## Step 8 — Tier 2 release quality (`R-01`…`R-14`)
+## Step 8 - Tier 2 release quality (`R-01` to `R-14`)
 
 Required when audit mode is `release` or `strict-product`.
 
@@ -133,13 +158,13 @@ If entire Tier 2 is deferred, write `audits/<repository-slug>/tier2-defer-record
 
 Whole Tier 2 defer is invalid for `strict-product`.
 
-## Step 9 — Tier 3 product readiness (`P-01`…`P-10`)
+## Step 9 - Tier 3 product readiness (`P-01` to `P-10`)
 
 Required only when audit mode is `strict-product`.
 
 Walk `checklists/product-readiness-checklist.md`, `regulation/reference/JUDGMENT_GUIDE.md`, and score `regulation/gates/PRODUCT_READINESS_GATE.md`.
 
-## Step 10 — Final verdict
+## Step 10 - Final verdict
 
 Apply `regulation/gates/FULL_AUDIT_VERDICT.md` and `regulation/reference/WAIVER_POLICY.md`.
 
@@ -148,8 +173,14 @@ Write facts, gate tables, evaluation, final label, and fix tasks.
 ## Finished Means
 
 - [ ] `G-21` read log complete
-- [ ] machine evidence attached
-- [ ] Tier 1 table complete (`G-01`…`G-22`)
+- [ ] read exceptions explicitly recorded or `none`
+- [ ] read coverage recorded
+- [ ] evidence index complete for every scored runtime, quickstart, and hosted claim
+- [ ] machine evidence bundle attached
+- [ ] local command transcripts stored with command, workdir, env, exit, excerpt
+- [ ] hosted transcripts stored with command, workdir, env, exit, excerpt
+- [ ] quickstart transcript stored with source, command, workdir, env, exit, excerpt
+- [ ] Tier 1 table complete (`G-01` to `G-22`)
 - [ ] Tier 2 table complete or `tier2-defer-record.md` exists
 - [ ] Tier 3 table complete when mode is `strict-product`
 - [ ] final label assigned

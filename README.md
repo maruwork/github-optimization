@@ -63,17 +63,17 @@ This shelf answers those questions by turning them into one repeatable audit flo
 | Not for | Reason |
 |---|---|
 | audit reports in product repos | scored artifacts belong in `audits/<slug>/` here |
-| live project examples (`VEIL_*`, `ADOP_*`, …) | generic shelf only; see `domain-option/` templates |
+| live project examples (`VEIL_*`, `ADOP_*`, etc.) | generic shelf only; see `domain-option/` templates |
 | copying this folder into public product repos | unless the product documents shared governance |
 | filled records under `docs/governance/` | pointer only; canonical path is `audits/<slug>/` |
 
 ## Start Here
 
-1. `regulation/REGULATION_SELF_CHECK.md` — assignment to the responsible AI
-2. `regulation/REGULATION_INDEX.md` — required regulation files
-3. `regulation/execution/AUDIT_RUNBOOK.md` — execution order
-4. `regulation/gates/GATE_REGISTRY.md` — all 46 judgment items
-5. `templates/audit-report.md.template` — output skeleton
+1. `regulation/REGULATION_SELF_CHECK.md` - assignment to the responsible AI
+2. `regulation/REGULATION_INDEX.md` - required regulation files
+3. `regulation/execution/AUDIT_RUNBOOK.md` - execution order
+4. `regulation/gates/GATE_REGISTRY.md` - all 46 judgment items
+5. `templates/audit-report.md.template` - output skeleton
 
 One-line assignment:
 
@@ -128,15 +128,15 @@ Final label: `regulation/gates/FULL_AUDIT_VERDICT.md`
 ## Repository Layout
 
 ```text
-README.md, LICENSE, SECURITY.md, CHANGELOG.md, …   # entry and shelf metadata
-audit.manifest.yml                                 # shelf self-check quickstart only
-regulation/                                        # all regulation text
+README.md, LICENSE, SECURITY.md, CHANGELOG.md, etc.   # entry and shelf metadata
+audit.manifest.yml                                    # shelf self-check quickstart only
+regulation/                                           # all regulation text
 checklists/  templates/  scripts/
-docs/governance/README.md                          # pointer; no filled records
-audits/                                            # local audit results (gitignored)
-.github/workflows/ci.yml                         # shelf CI
-.github/workflows/codeql.yml                     # code scanning (G-18)
-domain-option/                                     # copy templates only (excluded from regulation)
+docs/governance/README.md                             # pointer; no filled records
+audits/                                               # local audit results (gitignored)
+.github/workflows/ci.yml                              # shelf CI
+.github/workflows/codeql.yml                          # code scanning (G-18)
+domain-option/                                        # copy templates only (excluded from regulation)
 ```
 
 ## Output Locations

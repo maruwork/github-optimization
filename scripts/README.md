@@ -23,7 +23,7 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 | `check-gitignore-consistency.sh` | Linux/macOS bash - `.gitignore` vs index consistency |
 | `run-delta-audit.ps1` | Windows PowerShell - delta re-audit orchestrator |
 | `run-delta-audit.sh` | Linux/macOS bash - delta re-audit orchestrator |
-| `collect-audit-evidence.ps1` | Windows PowerShell |
+| `collect-audit-evidence.ps1` | Windows PowerShell wrapper; delegates to bash companion when available |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
 | `run-audit-quickstart.sh` | Linux/macOS bash |
@@ -51,6 +51,11 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 ```bash
 ./collect-audit-evidence.sh /path/to/repo owner/repo
 ```
+
+When both are available, prefer the bash collector as the authoritative cross-platform evidence path.
+The PowerShell wrapper reuses that path so Windows invocation and Unix invocation stay aligned.
+On Windows, the wrapper should prefer Git Bash over the WSL shim so `gitleaks`, `gh`, and coreutils remain available.
+For authoritative Windows evidence, run the wrapper from a normal Windows PowerShell host terminal.
 
 ## What They Collect
 
@@ -96,3 +101,6 @@ They replace human-operated evidence gathering and shelf self-validation.
 
 `collect-audit-evidence.*` can leave a gate in a visibly blocked state.
 Example: if `gitleaks` is unavailable, the script records that `G-01` cannot pass yet.
+
+`run-full-audit.*` captures the raw machine evidence bundle into the scaffolded report.
+The agent still must complete read coverage, per-claim transcript rows, and gate scoring before closing the audit.

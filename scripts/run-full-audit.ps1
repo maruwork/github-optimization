@@ -37,6 +37,22 @@ $auditDir = Join-Path $Shelf "audits\$slug"
 $reportPath = Join-Path $auditDir "audit-report.md"
 $reportRel = "audits/$slug/audit-report.md"
 
+function Set-ReportMachineEvidence {
+    param(
+        [string]$Path,
+        [string]$EvidenceText
+    )
+
+    $raw = Get-Content -LiteralPath $Path -Raw
+    $replacement = "<!-- GO_MACHINE_EVIDENCE_START -->`r`n" + '```text' + "`r`n$EvidenceText`r`n" + '```' + "`r`n<!-- GO_MACHINE_EVIDENCE_END -->"
+    $updated = [regex]::Replace(
+        $raw,
+        '(?s)<!-- GO_MACHINE_EVIDENCE_START -->.*?<!-- GO_MACHINE_EVIDENCE_END -->',
+        [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $replacement }
+    )
+    Set-Content -LiteralPath $Path -Value $updated -NoNewline
+}
+
 Write-Output "=== Full Audit Orchestrator ==="
 Write-Output "Shelf: $Shelf"
 Write-Output "Repository: $RepoPath"
@@ -79,24 +95,30 @@ if ((-not $reportExists) -or $ForceScaffold) {
 $evidenceScript = Join-Path $Shelf "scripts\collect-audit-evidence.ps1"
 Write-Output ""
 Write-Output "=== Machine Evidence ==="
-& $evidenceScript -RepoPath $RepoPath -HostedRepo $HostedRepo
+$evidenceOutput = & $evidenceScript -RepoPath $RepoPath -HostedRepo $HostedRepo 2>&1
+$evidenceOutput | ForEach-Object { Write-Output $_ }
 $evidenceExit = $LASTEXITCODE
+$evidenceText = ($evidenceOutput | ForEach-Object { [string]$_ }) -join "`r`n"
+if (Test-Path -LiteralPath $reportPath) {
+    Set-ReportMachineEvidence -Path $reportPath -EvidenceText $evidenceText
+}
 
 Write-Output ""
 Write-Output "=== Agent Steps Remaining ==="
 Write-Output "1. Read regulation/REGULATION_INDEX.md and complete G-21 full file read in target repository"
-Write-Output "2. Paste machine evidence into $reportRel"
-Write-Output "3. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
+Write-Output "2. Complete Read Exceptions and Read Coverage in $reportRel"
+Write-Output "3. Fill Evidence Index, Local Command Transcripts, Hosted Transcripts, and Quickstart Transcript in $reportRel"
+Write-Output "4. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
 if ($AuditMode -in @("release", "strict-product")) {
-    Write-Output "4. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
+    Write-Output "5. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
 }
 if ($AuditMode -eq "strict-product") {
-    Write-Output "5. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
+    Write-Output "6. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
 }
-Write-Output "6. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AuditPhase"
-Write-Output "7. Write audits/$slug/publication-decision-record.md when phase=pre-public (G-20)"
-Write-Output "8. If R-02 blocked with accepted risk, write audits/$slug/accepted-risk-record.md"
-Write-Output "9. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
+Write-Output "7. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AuditPhase"
+Write-Output "8. Write audits/$slug/publication-decision-record.md when phase=pre-public (G-20)"
+Write-Output "9. If R-02 blocked with accepted risk, write audits/$slug/accepted-risk-record.md"
+Write-Output "10. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
 Write-Output ""
 Write-Output "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/RE_AUDIT_POLICY.md, regulation/shelf/OUTPUT_PATHS.md"
 

@@ -11,8 +11,9 @@ git_safe() {
 github_api() {
   local path="$1"
   if command -v gh >/dev/null 2>&1; then
-    gh api "$path"
-    return $?
+    if gh api "$path" 2>/dev/null; then
+      return 0
+    fi
   fi
   if command -v curl >/dev/null 2>&1; then
     curl -fsSL -H "User-Agent: github-optimization-audit" "https://api.github.com/$path"
@@ -21,21 +22,79 @@ github_api() {
   return 127
 }
 
-resolve_gitleaks() {
-  if command -v gitleaks >/dev/null 2>&1; then
-    command -v gitleaks
+resolve_existing_path() {
+  local candidate="$1"
+  local resolved=""
+  if command -v realpath >/dev/null 2>&1; then
+    resolved="$(realpath "$candidate" 2>/dev/null || true)"
+  fi
+  if [[ -z "$resolved" ]]; then
+    resolved="$(readlink "$candidate" 2>/dev/null || true)"
+  fi
+  if [[ -z "$resolved" ]]; then
+    resolved="$(readlink -f "$candidate" 2>/dev/null || true)"
+  fi
+  if [[ -n "$resolved" && -e "$resolved" && ! -d "$resolved" ]]; then
+    printf '%s\n' "$resolved"
     return 0
   fi
-  if command -v gitleaks.exe >/dev/null 2>&1; then
-    command -v gitleaks.exe
+  if [[ -e "$candidate" && ! -d "$candidate" ]]; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+  return 1
+}
+
+resolve_gitleaks() {
+  if [[ -n "${GITLEAKS_CMD:-}" && -x "$GITLEAKS_CMD" ]]; then
+    printf '%s\n' "$GITLEAKS_CMD"
     return 0
   fi
   local candidate
-  for candidate in /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe; do
-    [[ -x "$candidate" ]] || continue
-    printf '%s\n' "$candidate"
+  local resolved
+  local windows_path
+  local normalized
+  for windows_path in "${LOCALAPPDATA:-}" "${USERPROFILE:-}"; do
+    [[ -n "$windows_path" ]] || continue
+    normalized="${windows_path//\\//}"
+    if [[ "$normalized" =~ ^([A-Za-z]):/(.*)$ ]]; then
+      candidate="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}/Microsoft/WinGet/Links/gitleaks.exe"
+      resolved="$(resolve_existing_path "$candidate" || true)"
+      if [[ -n "$resolved" && -x "$resolved" ]]; then
+        printf '%s\n' "$resolved"
+        return 0
+      fi
+    fi
+  done
+  for candidate in \
+    "${HOME:-}/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe" \
+    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
+    /c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
+    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Packages/*/gitleaks.exe \
+    /c/Users/*/AppData/Local/Microsoft/WinGet/Packages/*/gitleaks.exe \
+    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
+    /c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe
+  do
+    [[ -e "$candidate" ]] || continue
+    resolved="$(resolve_existing_path "$candidate" || true)"
+    [[ -n "$resolved" && -x "$resolved" ]] || continue
+    printf '%s\n' "$resolved"
     return 0
   done
+  if command -v gitleaks >/dev/null 2>&1; then
+    resolved="$(resolve_existing_path "$(command -v gitleaks)" || true)"
+    if [[ -n "$resolved" && -x "$resolved" ]]; then
+      printf '%s\n' "$resolved"
+      return 0
+    fi
+  fi
+  if command -v gitleaks.exe >/dev/null 2>&1; then
+    resolved="$(resolve_existing_path "$(command -v gitleaks.exe)" || true)"
+    if [[ -n "$resolved" && -x "$resolved" ]]; then
+      printf '%s\n' "$resolved"
+      return 0
+    fi
+  fi
   return 1
 }
 
@@ -51,10 +110,15 @@ echo "Path: $REPO_PATH"
 if [[ -n "$HOSTED_REPO" ]]; then
   echo "Hosted: $HOSTED_REPO"
 fi
+echo "collector: scripts/collect-audit-evidence.sh"
+echo "working directory: $REPO_PATH"
 
 section "Git"
+echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH rev-parse HEAD"
 git_safe rev-parse HEAD
+echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH describe --tags --always"
 git_safe describe --tags --always 2>/dev/null || true
+echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH ls-files | wc -l"
 echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
@@ -104,15 +168,25 @@ done
 
 section "Gitleaks"
 if GITLEAKS_CMD="$(resolve_gitleaks)"; then
+  echo "command: $GITLEAKS_CMD detect --source . --no-banner"
   set +e
-  "$GITLEAKS_CMD" detect --source . --no-banner 2>&1 | tail -n 3
-  gitleaks_code=${PIPESTATUS[0]}
+  gitleaks_output="$("$GITLEAKS_CMD" detect --source . --no-banner 2>&1)"
+  gitleaks_code=$?
   set -e
+  printf '%s\n' "$gitleaks_output" | tail -n 3
   echo "exit code: $gitleaks_code"
   case "$gitleaks_code" in
     0) echo "result: PASS" ;;
     1) echo "result: BLOCKED (gitleaks findings)" ;;
-    *) echo "result: BLOCKED (gitleaks execution failed)" ;;
+    *)
+      if printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
+        echo "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
+      elif printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
+        echo "result: BLOCKED (execution environment denied gitleaks execution)"
+      else
+        echo "result: BLOCKED (gitleaks execution failed)"
+      fi
+      ;;
   esac
 else
   echo "gitleaks: unavailable"
@@ -134,19 +208,51 @@ fi
 
 if [[ -n "$HOSTED_REPO" ]]; then
   section "Hosted Metadata"
+  echo "commands: repos/$HOSTED_REPO ; repos/$HOSTED_REPO/community/profile ; repos/$HOSTED_REPO security_and_analysis"
   set +e
-  github_api "repos/$HOSTED_REPO"
-  github_api "repos/$HOSTED_REPO/community/profile"
-  github_api "repos/$HOSTED_REPO"
-  section "Hosted Issue Templates"
-  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/bug_report.md"
-  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/feature_request.md"
-  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/config.yml"
-  section "Latest CI"
-  if command -v gh >/dev/null 2>&1; then
-    gh run list -R "$HOSTED_REPO" --limit 3
+  repo_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
+  repo_status=$?
+  community_json="$(github_api "repos/$HOSTED_REPO/community/profile" 2>/dev/null)"
+  community_status=$?
+  if [[ "$repo_status" -eq 0 && "$community_status" -eq 0 ]]; then
+    printf '%s\n' "$repo_json"
+    printf '%s\n' "$community_json"
+    printf '%s\n' "$repo_json"
   else
-    github_api "repos/$HOSTED_REPO/actions/runs?per_page=3"
+    echo "result: BLOCKED (hosted metadata unavailable)"
+  fi
+  section "Hosted Issue Templates"
+  echo "commands: contents/.github/ISSUE_TEMPLATE/{bug_report.md,feature_request.md,config.yml}"
+  for issue_path in \
+    ".github/ISSUE_TEMPLATE/bug_report.md" \
+    ".github/ISSUE_TEMPLATE/feature_request.md" \
+    ".github/ISSUE_TEMPLATE/config.yml"
+  do
+    issue_json="$(github_api "repos/$HOSTED_REPO/contents/$issue_path" 2>/dev/null)"
+    if [[ "$?" -eq 0 ]]; then
+      printf '%s\n' "$issue_json"
+    else
+      printf '{"path":null,"requested":"%s","result":"BLOCKED"}\n' "$issue_path"
+    fi
+  done
+  section "Latest CI"
+  echo "command: gh run list -R $HOSTED_REPO --limit 3 (or public actions runs API fallback)"
+  if command -v gh >/dev/null 2>&1; then
+    if ! gh run list -R "$HOSTED_REPO" --limit 3 2>/dev/null; then
+      runs_json="$(github_api "repos/$HOSTED_REPO/actions/runs?per_page=3" 2>/dev/null)"
+      if [[ "$?" -eq 0 ]]; then
+        printf '%s\n' "$runs_json"
+      else
+        echo "result: BLOCKED (latest CI metadata unavailable)"
+      fi
+    fi
+  else
+    runs_json="$(github_api "repos/$HOSTED_REPO/actions/runs?per_page=3" 2>/dev/null)"
+    if [[ "$?" -eq 0 ]]; then
+      printf '%s\n' "$runs_json"
+    else
+      echo "result: BLOCKED (latest CI metadata unavailable)"
+    fi
   fi
   set -e
 fi
@@ -155,6 +261,7 @@ MANIFEST_PATH="$REPO_PATH/audit.manifest.yml"
 QUICKSTART_SCRIPT="$(cd "$(dirname "$0")" && pwd)/run-audit-quickstart.sh"
 if [[ -f "$MANIFEST_PATH" && -f "$QUICKSTART_SCRIPT" ]]; then
   section "Quickstart"
+  echo "command: bash $QUICKSTART_SCRIPT $REPO_PATH"
   set +e
   bash "$QUICKSTART_SCRIPT" "$REPO_PATH"
   qs_code=$?

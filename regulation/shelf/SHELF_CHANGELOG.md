@@ -1,6 +1,6 @@
 # Shelf Changelog
 
-## 1.2.0 窶・2026-06-18
+## 1.2.0 - 2026-06-18
 
 ### Added
 
@@ -24,32 +24,32 @@
 
 All notable changes to the generic regulation shelf.
 
-## 1.1.14 — 2026-06-17
+## 1.1.14 - 2026-06-17
 
 ### Added
 
 - public-prep GitHub surface files (CoC, support, issue/PR templates)
 - `ci.yml` + `codeql.yml`; retired `regulation-tests.yml` duplicate
 
-## 1.1.13 — 2026-06-17
+## 1.1.13 - 2026-06-17
 
 ### Changed
 
 - root README aligned with output paths, script pipeline, quickstart contract, and reference map
 
-## 1.1.12 — 2026-06-17
+## 1.1.12 - 2026-06-17
 
 ### Fixed
 
 - tracked-ignored fixture gitlink removed; runtime-generated `local-only.secret`
 
-## 1.1.11 — 2026-06-17
+## 1.1.11 - 2026-06-17
 
 ### Fixed
 
 - tracked-ignored-repo fixture shipped in repo (CI path missing on v1.1.10)
 
-## 1.1.10 — 2026-06-17
+## 1.1.10 - 2026-06-17
 
 ### Fixed
 
@@ -58,13 +58,13 @@ All notable changes to the generic regulation shelf.
 - delta-audit bash: no python dependency; empty diff list output
 - quickstart isolated copy includes dotfiles on Windows
 
-## 1.1.9 — 2026-06-17
+## 1.1.9 - 2026-06-17
 
 ### Fixed
 
 - bash quickstart multiline manifest parse (`awk` RS + NUL records); fixes Ubuntu regulation-tests `commands run: 0`
 
-## 1.1.8 — 2026-06-17
+## 1.1.8 - 2026-06-17
 
 ### Fixed
 
@@ -72,7 +72,7 @@ All notable changes to the generic regulation shelf.
 - cross-OS quickstart manifest + evidence propagation parity
 - shelf `.gitignore` AI-control patterns; tracked-file screening for governance paths
 
-## 1.1.7 — 2026-06-17
+## 1.1.7 - 2026-06-17
 
 ### Fixed
 
@@ -80,7 +80,7 @@ All notable changes to the generic regulation shelf.
 - bash quickstart manifest id parse; collect-audit-evidence quickstart exit propagation
 - AUDIT_RULES Tier 1 gate range G-21/G-22
 
-## 1.1.6 — 2026-06-17
+## 1.1.6 - 2026-06-17
 
 ### Added
 
@@ -95,7 +95,7 @@ All notable changes to the generic regulation shelf.
 
 - delta orchestrator: Windows name-status parse, Open Blockers count parse
 
-## 1.1.5 — 2026-06-17
+## 1.1.5 - 2026-06-17
 
 ### Added
 
@@ -106,7 +106,7 @@ All notable changes to the generic regulation shelf.
 
 - evidence bundle and shelf quickstart include screening output
 
-## 1.1.4 — 2026-06-17
+## 1.1.4 - 2026-06-17
 
 ### Added
 
@@ -125,14 +125,14 @@ All notable changes to the generic regulation shelf.
 
 - `docs/governance/` self-audit summary updated to release dogfood verdict
 
-## 1.1.3 — 2026-06-17
+## 1.1.3 - 2026-06-17
 
 ### Changed
 
 - moved all regulation markdown from repository root into `regulation/` subdirectories
 - root now shows README + standard repo files only
 
-## 1.1.2 — 2026-06-17
+## 1.1.2 - 2026-06-17
 
 ### Removed from GitHub
 
@@ -145,7 +145,7 @@ All notable changes to the generic regulation shelf.
 - shelf moved to project root (`github-optimization/`)
 - GitHub remote scope: regulation files only
 
-## 1.1.1 — 2026-06-17
+## 1.1.1 - 2026-06-17
 
 ### Added
 
@@ -158,7 +158,7 @@ All notable changes to the generic regulation shelf.
 - `run-full-audit.*` scaffolds shelf `audits/<slug>/` with optional `-AuditSlug`
 - regulation tests, templates, policies, and checklists updated to new paths
 
-## 1.1.0 — 2026-06-17
+## 1.1.0 - 2026-06-17
 
 ### Added
 
@@ -171,7 +171,7 @@ All notable changes to the generic regulation shelf.
 
 - `.gitignore` allows tracked self-audit governance files only
 
-## 1.0.0 — 2026-06-17
+## 1.0.0 - 2026-06-17
 
 ### Added
 

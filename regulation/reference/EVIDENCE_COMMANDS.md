@@ -87,6 +87,8 @@ gitleaks detect --source . --verbose
 If `gitleaks` is unavailable, `G-01` cannot be scored `pass`.
 Record the missing-tool state explicitly and treat the gate as `blocked` until a baseline transcript exists.
 
+If the tool is installed but the current execution environment exposes its path incorrectly, denies execution, or hides hosted CLI state, keep that blocked raw output but verify through another agent-executable route before scoring the repository itself `blocked`.
+
 Optional deeper scan:
 
 ```bash
@@ -171,6 +173,20 @@ Do **not** store the filled record in a public product repository or in `docs/go
 
 Store command transcripts in `audits/<repository-slug>/audit-report.md` on this shelf.
 
+Canonical report shape:
+
+- `## Read Log`
+- `### Read Exceptions`
+- `### Read Coverage`
+- `## Evidence Index`
+- `## Local Command Transcripts`
+- `## Hosted Transcripts`
+- `## Quickstart Transcript`
+- `## Machine Evidence Bundle`
+
+Raw machine evidence is not the scoring authority by itself when the same audit proves an execution-environment artifact.
+In that case, keep the raw blocked bundle and add a successful transcript row for the route actually used to score the claim.
+
 Each executed check records:
 
 - command or script path used
@@ -184,5 +200,21 @@ Each hosted-settings claim records:
 
 - API command used, or
 - cited hosted page/report path captured during the audit
+
+Recommended transcript subsection format:
+
+```markdown
+### Transcript N
+
+- check:
+- command:
+- working directory:
+- env overrides:
+- exit code / result:
+
+```text
+<raw excerpt>
+```
+```
 
 Do not mark a scored claim `pass` from memory or chat summary alone.

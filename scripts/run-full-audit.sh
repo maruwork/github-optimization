@@ -41,6 +41,30 @@ AUDIT_DIR="$SHELF/audits/$SLUG"
 REPORT_PATH="$AUDIT_DIR/audit-report.md"
 REPORT_REL="audits/$SLUG/audit-report.md"
 
+set_report_machine_evidence() {
+  local path="$1"
+  local body_file="$2"
+  awk -v body="$body_file" '
+    BEGIN {
+      in_block = 0
+      while ((getline line < body) > 0) body_text = body_text line "\n"
+      close(body)
+    }
+    /^<!-- GO_MACHINE_EVIDENCE_START -->$/ {
+      print
+      printf "%s", body_text
+      in_block = 1
+      next
+    }
+    /^<!-- GO_MACHINE_EVIDENCE_END -->$/ {
+      in_block = 0
+      print
+      next
+    }
+    !in_block { print }
+  ' "$path" >"$path.tmp" && mv "$path.tmp" "$path"
+}
+
 echo "=== Full Audit Orchestrator ==="
 echo "Shelf: $SHELF"
 echo "Repository: $REPO_PATH"
@@ -77,25 +101,33 @@ fi
 echo
 echo "=== Machine Evidence ==="
 set +e
-bash "$SHELF/scripts/collect-audit-evidence.sh" "$REPO_PATH" "$HOSTED_REPO"
+EVIDENCE_OUTPUT="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$REPO_PATH" "$HOSTED_REPO" 2>&1)"
 EVIDENCE_EXIT=$?
 set -e
+printf '%s\n' "$EVIDENCE_OUTPUT"
+if [[ -f "$REPORT_PATH" ]]; then
+  BODY_FILE="$(mktemp)"
+  printf '```text\n%s\n```\n' "$EVIDENCE_OUTPUT" >"$BODY_FILE"
+  set_report_machine_evidence "$REPORT_PATH" "$BODY_FILE"
+  rm -f "$BODY_FILE"
+fi
 
 echo
 echo "=== Agent Steps Remaining ==="
 echo "1. Read regulation/REGULATION_INDEX.md and complete G-21 full file read in target repository"
-echo "2. Paste machine evidence into $REPORT_REL"
-echo "3. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
+echo "2. Complete Read Exceptions and Read Coverage in $REPORT_REL"
+echo "3. Fill Evidence Index, Local Command Transcripts, Hosted Transcripts, and Quickstart Transcript in $REPORT_REL"
+echo "4. Score Tier 1 gates G-01..G-22 (regulation/gates/PUBLIC_PREP_GATE.md)"
 if [[ "$AUDIT_MODE" == "release" || "$AUDIT_MODE" == "strict-product" ]]; then
-  echo "4. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
+  echo "5. Score Tier 2 gates R-01..R-14 (regulation/gates/RELEASE_QUALITY_GATE.md)"
 fi
 if [[ "$AUDIT_MODE" == "strict-product" ]]; then
-  echo "5. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
+  echo "6. Score Tier 3 gates P-01..P-10 (regulation/gates/PRODUCT_READINESS_GATE.md)"
 fi
-echo "6. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AUDIT_PHASE"
-echo "7. Write audits/$SLUG/publication-decision-record.md when phase=pre-public (G-20)"
-echo "8. If R-02 blocked with accepted risk, write audits/$SLUG/accepted-risk-record.md"
-echo "9. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
+echo "7. Apply regulation/execution/AUDIT_PHASE_POLICY.md for phase=$AUDIT_PHASE"
+echo "8. Write audits/$SLUG/publication-decision-record.md when phase=pre-public (G-20)"
+echo "9. If R-02 blocked with accepted risk, write audits/$SLUG/accepted-risk-record.md"
+echo "10. Assign final label via regulation/gates/FULL_AUDIT_VERDICT.md"
 echo
 echo "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/RE_AUDIT_POLICY.md, regulation/shelf/OUTPUT_PATHS.md"
 
