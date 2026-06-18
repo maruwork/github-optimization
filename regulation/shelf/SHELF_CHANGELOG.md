@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.4 - 2026-06-18
+
+### Fixed
+
+- PowerShell collector now resolves `gitleaks` from `PATH`, including CI-installed `go install` binaries, before declaring the tool unavailable.
+
 ## 1.2.3 - 2026-06-18
 
 ### Fixed

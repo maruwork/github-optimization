@@ -34,6 +34,22 @@ function Convert-ToGitBashPath {
 }
 
 function Resolve-GitleaksCommand {
+    foreach ($commandName in @("gitleaks", "gitleaks.exe")) {
+        $command = Get-Command $commandName -ErrorAction SilentlyContinue
+        if ($command -and $command.Source -and (Test-Path -LiteralPath $command.Source)) {
+            return $command.Source
+        }
+    }
+
+    $whereOutput = & where.exe gitleaks 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        foreach ($path in $whereOutput) {
+            if ($path -and (Test-Path -LiteralPath $path)) {
+                return $path
+            }
+        }
+    }
+
     $candidates = @(
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe"),
         (Join-Path $env:USERPROFILE "AppData\Local\Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe"),
