@@ -106,9 +106,9 @@ Assert-ExitCode "check-gitignore-consistency blocked tracked-ignored fixture" 1 
     & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $trackedIgnoredFixture
 }
 
-Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
+Assert-Pass "collect-audit-evidence completes transcript and exits blocked after blocked gitignore" {
     $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $trackedIgnoredFixture 2>&1 | Out-String
-    if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE" }
+    if ($LASTEXITCODE -ne 1) { throw "expected exit 1, got $LASTEXITCODE" }
     if ($out -notmatch "=== Root Files ===") { throw "evidence transcript truncated before Root Files" }
     if ($out -match "result: BLOCKED \(execution environment .*gitleaks") {
         throw "gitleaks execution-environment artifact must be SKIPPED or scored from another transcript"

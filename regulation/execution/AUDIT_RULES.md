@@ -67,6 +67,8 @@ If one of these is missing, the audit is incomplete.
 Environment-artifact rule:
 
 - keep the raw collector output even when the current execution environment blocks a tool path or hosted CLI config
+- `collect-audit-evidence.*` must exit non-zero when it prints any real `result: BLOCKED` row, after preserving the full transcript
+- `result: SKIPPED` is allowed only for non-scoring execution-environment artifacts and must not be used to hide repository defects
 - do not score the repository `blocked` from that raw bundle alone when the same check is verified through another agent-executable route in the same audit
 - when this happens, store both:
   - the raw bundle excerpt

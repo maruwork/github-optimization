@@ -108,6 +108,12 @@ section() {
   echo "=== $1 ==="
 }
 
+collector_blocked=0
+blocked() {
+  collector_blocked=1
+  echo "result: BLOCKED $1"
+}
+
 cd "$REPO_PATH"
 
 section "Repository"
@@ -130,14 +136,22 @@ SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
 if [[ -f "$SCREEN_SCRIPT" ]]; then
   set +e
   bash "$SCREEN_SCRIPT" "$REPO_PATH"
+  screen_code=$?
   set -e
+  if [[ "$screen_code" -ne 0 ]]; then
+    collector_blocked=1
+  fi
 fi
 
 GITIGNORE_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-gitignore-consistency.sh"
 if [[ -f "$GITIGNORE_SCRIPT" ]]; then
   set +e
   bash "$GITIGNORE_SCRIPT" "$REPO_PATH"
+  gitignore_code=$?
   set -e
+  if [[ "$gitignore_code" -ne 0 ]]; then
+    collector_blocked=1
+  fi
 fi
 
 section "Large Tracked Files (>512KB)"
@@ -182,16 +196,18 @@ if GITLEAKS_CMD="$(resolve_gitleaks)"; then
   echo "exit code: $gitleaks_code"
   case "$gitleaks_code" in
     0) echo "result: PASS" ;;
-    1) echo "result: BLOCKED (gitleaks findings)" ;;
+    1) blocked "(gitleaks findings)" ;;
     *)
       if [[ "$IS_WINDOWS_BASH" -eq 1 ]] && printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
         echo "result: SKIPPED (Windows Git Bash cannot score G-01 from WinGet gitleaks path; use collect-audit-evidence.ps1)"
+      elif [[ "$IS_WINDOWS_BASH" -eq 1 ]] && printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
+        echo "result: SKIPPED (Windows Git Bash cannot score G-01 from denied WinGet gitleaks path; use collect-audit-evidence.ps1 or a direct gitleaks transcript)"
       elif printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
-        echo "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
+        blocked "(execution environment exposed the resolved gitleaks path as a directory)"
       elif printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
-        echo "result: BLOCKED (execution environment denied gitleaks execution)"
+        blocked "(execution environment denied gitleaks execution)"
       else
-        echo "result: BLOCKED (gitleaks execution failed)"
+        blocked "(gitleaks execution failed)"
       fi
       ;;
   esac
@@ -200,7 +216,7 @@ else
   if [[ "$IS_WINDOWS_BASH" -eq 1 ]]; then
     echo "result: SKIPPED (Windows Git Bash cannot score G-01; use collect-audit-evidence.ps1)"
   else
-    echo "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+    blocked "(G-01 cannot pass without a baseline gitleaks transcript)"
   fi
 fi
 
@@ -230,7 +246,7 @@ if [[ -n "$HOSTED_REPO" ]]; then
     printf '%s\n' "$community_json"
     printf '%s\n' "$repo_json"
   else
-    echo "result: BLOCKED (hosted metadata unavailable)"
+    blocked "(hosted metadata unavailable)"
   fi
   section "Hosted Issue Templates"
   echo "commands: contents/.github/ISSUE_TEMPLATE/{bug_report.md,feature_request.md,config.yml}"
@@ -243,6 +259,7 @@ if [[ -n "$HOSTED_REPO" ]]; then
     if [[ "$?" -eq 0 ]]; then
       printf '%s\n' "$issue_json"
     else
+      collector_blocked=1
       printf '{"path":null,"requested":"%s","result":"BLOCKED"}\n' "$issue_path"
     fi
   done
@@ -254,7 +271,7 @@ if [[ -n "$HOSTED_REPO" ]]; then
       if [[ "$?" -eq 0 ]]; then
         printf '%s\n' "$runs_json"
       else
-        echo "result: BLOCKED (latest CI metadata unavailable)"
+        blocked "(latest CI metadata unavailable)"
       fi
     fi
   else
@@ -262,7 +279,7 @@ if [[ -n "$HOSTED_REPO" ]]; then
     if [[ "$?" -eq 0 ]]; then
       printf '%s\n' "$runs_json"
     else
-      echo "result: BLOCKED (latest CI metadata unavailable)"
+      blocked "(latest CI metadata unavailable)"
     fi
   fi
   set -e
@@ -280,4 +297,8 @@ if [[ -f "$MANIFEST_PATH" && -f "$QUICKSTART_SCRIPT" ]]; then
   if [[ "$qs_code" -ne 0 ]]; then
     exit "$qs_code"
   fi
+fi
+
+if [[ "$collector_blocked" -ne 0 ]]; then
+  exit 1
 fi

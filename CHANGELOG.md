@@ -4,6 +4,18 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.1] - 2026-06-18
+
+### Changed
+
+- `collect-audit-evidence.*` now exits non-zero when it emits a real `result: BLOCKED` row while still preserving the full transcript.
+- README, runbook, and scripts documentation now state that `run-full-audit.*` and `run-delta-audit.*` are scaffold/evidence orchestrators, not final verdict engines.
+
+### Fixed
+
+- Bash collector now treats Windows Git Bash / WinGet `gitleaks.exe` access-denied artifacts as `SKIPPED`, matching the PowerShell route and evidence rules.
+- Regression tests now fail if blocked collector evidence exits successfully.
+
 ## [1.2.0] - 2026-06-18
 
 ### Added

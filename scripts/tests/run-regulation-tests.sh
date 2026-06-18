@@ -70,12 +70,12 @@ if [[ ! -d "$TRACKED_IGNORED/.git" ]]; then
 fi
 run_exit "check-gitignore-consistency blocked tracked-ignored fixture" 1 \
   bash "$SHELF/scripts/check-gitignore-consistency.sh" "$TRACKED_IGNORED"
-echo "TEST: collect-audit-evidence completes after blocked gitignore"
+echo "TEST: collect-audit-evidence completes transcript and exits blocked after blocked gitignore"
 set +e
 evidence_out="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$TRACKED_IGNORED" 2>&1)"
 evidence_code=$?
 set -e
-if [[ "$evidence_code" -eq 0 ]] && echo "$evidence_out" | grep -q "=== Root Files ==="; then
+if [[ "$evidence_code" -eq 1 ]] && echo "$evidence_out" | grep -q "=== Root Files ==="; then
   if echo "$evidence_out" | grep -Eq "result: BLOCKED \(execution environment .*gitleaks"; then
     echo "  FAIL: gitleaks execution-environment artifact must be SKIPPED or scored from another transcript"
     failures=$((failures + 1))
@@ -83,7 +83,7 @@ if [[ "$evidence_code" -eq 0 ]] && echo "$evidence_out" | grep -q "=== Root File
     echo "  PASS"
   fi
 else
-  echo "  FAIL: expected exit 0 and Root Files section, got exit $evidence_code"
+  echo "  FAIL: expected exit 1 and Root Files section, got exit $evidence_code"
   failures=$((failures + 1))
 fi
 PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"

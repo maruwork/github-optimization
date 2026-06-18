@@ -105,6 +105,13 @@ if ($bashCommand -and -not $isGitBashCollector -and (Test-Path -LiteralPath $bas
 
 $ErrorActionPreference = "Continue"
 Push-Location $RepoPath
+$script:CollectorBlocked = $false
+
+function Write-CollectorBlocked {
+    param([string]$Reason)
+    $script:CollectorBlocked = $true
+    Write-Output "result: BLOCKED $Reason"
+}
 
 function Invoke-Git {
     param(
@@ -195,11 +202,17 @@ Write-Output "Tracked files: $count"
 $screenScript = Join-Path $PSScriptRoot "check-tracked-files.ps1"
 if (Test-Path $screenScript) {
     & $screenScript -RepoPath $RepoPath
+    if ($LASTEXITCODE -ne 0) {
+        $script:CollectorBlocked = $true
+    }
 }
 
 $gitignoreScript = Join-Path $PSScriptRoot "check-gitignore-consistency.ps1"
 if (Test-Path $gitignoreScript) {
     & $gitignoreScript -RepoPath $RepoPath
+    if ($LASTEXITCODE -ne 0) {
+        $script:CollectorBlocked = $true
+    }
 }
 
 Write-Section "Large Tracked Files (>512KB)"
@@ -247,23 +260,23 @@ if ($gitleaksCmd) {
     $gitleaksLines | Select-Object -Last 3 | ForEach-Object { Write-Output $_ }
     Write-Output "exit code: $gitleaksExit"
     if ($gitleaksLines -match "NativeCommandFailed|ApplicationFailedException|ResourceUnavailable") {
-        Write-Output "result: BLOCKED (gitleaks execution failed)"
+        Write-CollectorBlocked "(gitleaks execution failed)"
     } elseif ($gitleaksExit -eq 0) {
         Write-Output "result: PASS"
     } elseif ($gitleaksLines -match "Is a directory") {
-        Write-Output "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
+        Write-CollectorBlocked "(execution environment exposed the resolved gitleaks path as a directory)"
     } elseif ($gitleaksLines -match "Access is denied") {
         Write-Output "result: SKIPPED (execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring)"
     } elseif ($gitleaksLines -match "not recognized") {
-        Write-Output "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+        Write-CollectorBlocked "(G-01 cannot pass without a baseline gitleaks transcript)"
     } elseif ($gitleaksExit -eq 1) {
-        Write-Output "result: BLOCKED (gitleaks findings)"
+        Write-CollectorBlocked "(gitleaks findings)"
     } else {
-        Write-Output "result: BLOCKED (gitleaks execution failed)"
+        Write-CollectorBlocked "(gitleaks execution failed)"
     }
 } else {
     Write-Output "gitleaks: unavailable"
-    Write-Output "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+    Write-CollectorBlocked "(G-01 cannot pass without a baseline gitleaks transcript)"
 }
 
 if ((Test-Path "pytest.ini") -or (Test-Path "tests")) {
@@ -290,7 +303,7 @@ if ($HostedRepo) {
         }
         Write-JsonCompact $repo.security_and_analysis
     } else {
-        Write-Output "result: BLOCKED (hosted metadata unavailable)"
+        Write-CollectorBlocked "(hosted metadata unavailable)"
     }
     Write-Section "Hosted Issue Templates"
     foreach ($path in @(
@@ -302,6 +315,7 @@ if ($HostedRepo) {
         if ($content) {
             Write-JsonCompact @{ path = $content.path }
         } else {
+            $script:CollectorBlocked = $true
             Write-JsonCompact @{ path = $null; requested = $path; result = "BLOCKED" }
         }
     }
@@ -320,7 +334,7 @@ if ($HostedRepo) {
             })
         Write-JsonCompact $projectedRuns
     } else {
-        Write-Output "result: BLOCKED (latest CI metadata unavailable)"
+        Write-CollectorBlocked "(latest CI metadata unavailable)"
     }
 }
 
@@ -337,4 +351,7 @@ if ((Test-Path $manifestPath) -and (Test-Path $quickstartScript)) {
 }
 
 Pop-Location
+if ($script:CollectorBlocked) {
+    exit 1
+}
 exit 0

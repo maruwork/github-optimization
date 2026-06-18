@@ -1,5 +1,17 @@
 # Shelf Changelog
 
+## 1.2.1 - 2026-06-18
+
+### Changed
+
+- `collect-audit-evidence.*` now exits non-zero when it emits a real `result: BLOCKED` row while still preserving the full transcript.
+- README, runbook, and script docs now describe `run-full-audit.*` and `run-delta-audit.*` as scaffold/evidence orchestrators, not final verdict engines.
+
+### Fixed
+
+- Bash collector now treats Windows Git Bash / WinGet `gitleaks.exe` access-denied artifacts as `SKIPPED`, matching the PowerShell collector and evidence rules.
+- Regression tests now assert that blocked collector evidence cannot be reported with a successful exit code.
+
 ## 1.2.0 - 2026-06-18
 
 ### Added

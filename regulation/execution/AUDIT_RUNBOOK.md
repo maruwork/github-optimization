@@ -88,6 +88,10 @@ SHELF="${GITHUB_OPTIMIZATION_ROOT:-../github-optimization}"
 "$SHELF/scripts/run-full-audit.sh" . owner/repo release pre-public
 ```
 
+The orchestrator is not the final scorer.
+Exit `0` from `run-full-audit.*` means shelf validation, report scaffold, and machine-evidence collection completed.
+The audit is still unfinished until the agent completes read coverage, transcript mapping, gate scoring, waivers, and final label assignment.
+
 Evidence only:
 
 ```powershell
@@ -99,6 +103,8 @@ Evidence only:
 ```
 
 Store the raw collector output in `## Machine Evidence Bundle`.
+`collect-audit-evidence.*` exits non-zero when it prints any real `result: BLOCKED` row, but it still attempts to print the full transcript first.
+`result: SKIPPED` is reserved for non-scoring execution-environment artifacts and does not by itself make the collector fail.
 
 Then fill:
 

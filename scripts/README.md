@@ -30,6 +30,15 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 | `tests/run-regulation-tests.ps1` | Windows PowerShell - shelf regression tests |
 | `tests/run-regulation-tests.sh` | Linux/macOS bash - shelf regression tests |
 
+## Exit Code Contract
+
+`collect-audit-evidence.*` exits `0` only when the collector produced no `result: BLOCKED` rows and no quickstart failure.
+It may still print `result: SKIPPED` for non-scoring execution-environment artifacts such as Windows Git Bash or managed-sandbox WinGet `gitleaks.exe` issues.
+Any real `result: BLOCKED` row makes the collector exit non-zero after it finishes printing the transcript.
+
+`run-full-audit.*` and `run-delta-audit.*` are scaffold/evidence orchestrators, not final verdict engines.
+An orchestrator exit `0` means the scaffold and machine-evidence phase completed; the agent still must complete full-file read coverage, transcript mapping, gate scoring, waivers, and final verdict assignment.
+
 ## Usage
 
 ```powershell
@@ -100,6 +109,7 @@ Scripts do not replace full-file read review or gate scoring.
 They replace human-operated evidence gathering and shelf self-validation.
 
 `collect-audit-evidence.*` can leave a gate in a visibly blocked state when a required tool is unavailable on the authoritative route.
+When that happens, it exits non-zero after preserving the full transcript.
 Windows Git Bash is not the authoritative route for `G-01`; it records `SKIPPED` for Windows-only Gitleaks path issues.
 
 `run-full-audit.*` captures the raw machine evidence bundle into the scaffolded report.

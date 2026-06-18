@@ -2,7 +2,7 @@
 
 Status: Active
 
-Shelf version: `1.2.0` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.2.1` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
@@ -113,7 +113,7 @@ Run in this order unless `RE_AUDIT_POLICY.md` limits scope to a delta.
 
 | Step | Script | Purpose |
 |---|---|---|
-| 1 | `scripts/run-full-audit.*` | shelf validate + scaffold + evidence (orchestrator) |
+| 1 | `scripts/run-full-audit.*` | shelf validate + scaffold + evidence (orchestrator, not final scorer) |
 | 2 | `scripts/validate-regulation-index.*` | required-file index check (shelf self-proof) |
 | 3 | `scripts/collect-audit-evidence.*` | machine evidence bundle |
 | 4 | `scripts/check-tracked-files.*` | unnecessary tracked-file screening (`G-03`, `G-21`) |
@@ -122,6 +122,10 @@ Run in this order unless `RE_AUDIT_POLICY.md` limits scope to a delta.
 | 7 | `scripts/run-delta-audit.*` | delta re-audit when prior report exists |
 
 Script reference and usage examples: `scripts/README.md`
+
+`run-full-audit.*` and `run-delta-audit.*` do not mechanically complete the final audit verdict.
+They create or update audit artifacts, collect machine evidence, and then list the remaining agent judgment steps.
+The audit is complete only after the read log, transcripts, gate tables, waivers, and final label are filled.
 
 Regression tests after shelf edits:
 
