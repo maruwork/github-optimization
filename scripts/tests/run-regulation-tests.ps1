@@ -47,6 +47,30 @@ function Assert-ExitCode([string]$name, [int]$expected, [scriptblock]$block) {
 }
 
 $fixture = Join-Path $Shelf "scripts\tests\fixtures\minimal-docs-repo"
+$trackedIgnoredFixture = Join-Path $Shelf "scripts\tests\fixtures\tracked-ignored-repo"
+$deltaDryRunSlug = "delta-orchestrator-dry-run"
+$fixtureSlug = "minimal-docs-repo"
+$shelfDryRunSlug = "shelf-orchestrator-dry-run"
+
+function Remove-GeneratedTestArtifacts {
+    $generatedPaths = @(
+        (Join-Path $Shelf "audits\$deltaDryRunSlug"),
+        (Join-Path $Shelf "audits\$fixtureSlug"),
+        (Join-Path $Shelf "audits\$shelfDryRunSlug"),
+        (Join-Path $fixture ".git"),
+        (Join-Path $trackedIgnoredFixture ".git"),
+        (Join-Path $trackedIgnoredFixture "local-only.secret"),
+        (Join-Path $Shelf "scripts\tests\fixtures\quickstart-isolated-repo\out")
+    )
+
+    foreach ($generatedPath in $generatedPaths) {
+        if (Test-Path -LiteralPath $generatedPath) {
+            Remove-Item -LiteralPath $generatedPath -Recurse -Force
+        }
+    }
+}
+
+Remove-GeneratedTestArtifacts
 
 Assert-ExitCode "validate-regulation-index" 0 {
     & (Join-Path $Shelf "scripts\validate-regulation-index.ps1") -ShelfPath $Shelf
@@ -68,14 +92,13 @@ Assert-ExitCode "check-gitignore-consistency on fixture" 0 {
     & (Join-Path $Shelf "scripts\check-gitignore-consistency.ps1") -RepoPath $fixture
 }
 
-$trackedIgnoredFixture = Join-Path $Shelf "scripts\tests\fixtures\tracked-ignored-repo"
 if (-not (Test-Path (Join-Path $trackedIgnoredFixture ".git"))) {
     Push-Location $trackedIgnoredFixture
     Set-Content -Path "local-only.secret" -Value "fixture-secret=tracked-but-ignored" -NoNewline
-    git init | Out-Null
-    git add README.md LICENSE SECURITY.md .gitignore
-    git add -f local-only.secret
-    git -c user.email="fixture@test" -c user.name="fixture" commit -m "init tracked-ignored fixture" | Out-Null
+    git -c "safe.directory=$trackedIgnoredFixture" init | Out-Null
+    git -c "safe.directory=$trackedIgnoredFixture" add README.md LICENSE SECURITY.md .gitignore
+    git -c "safe.directory=$trackedIgnoredFixture" add -f local-only.secret
+    git -c "safe.directory=$trackedIgnoredFixture" -c user.email="fixture@test" -c user.name="fixture" commit -m "init tracked-ignored fixture" | Out-Null
     Pop-Location
 }
 
@@ -92,11 +115,10 @@ Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')
-
 Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {
     & (Join-Path $Shelf "scripts\run-delta-audit.ps1") `
         -RepoPath $Shelf `
-        -AuditSlug "github-optimization" `
+        -AuditSlug $deltaDryRunSlug `
         -PriorHead $presentHead `
         -SkipShelfValidation
 }
@@ -104,7 +126,7 @@ Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {
 Assert-ExitCode "run-delta-audit invalidates manifest change" 2 {
     & (Join-Path $Shelf "scripts\run-delta-audit.ps1") `
         -RepoPath $Shelf `
-        -AuditSlug "github-optimization" `
+        -AuditSlug $deltaDryRunSlug `
         -PriorHead $manifestPriorHead `
         -SkipShelfValidation
 }
@@ -177,13 +199,12 @@ foreach ($policy in $requiredPolicies) {
 
 if (-not (Test-Path (Join-Path $fixture ".git"))) {
     Push-Location $fixture
-    git init | Out-Null
-    git add README.md LICENSE SECURITY.md .gitignore
-    git -c user.email="fixture@test" -c user.name="fixture" commit -m "init minimal docs fixture" | Out-Null
+    git -c "safe.directory=$fixture" init | Out-Null
+    git -c "safe.directory=$fixture" add README.md LICENSE SECURITY.md .gitignore
+    git -c "safe.directory=$fixture" -c user.email="fixture@test" -c user.name="fixture" commit -m "init minimal docs fixture" | Out-Null
     Pop-Location
 }
 
-$fixtureSlug = "minimal-docs-repo"
 $fixtureReport = Join-Path $Shelf "audits\$fixtureSlug\audit-report.md"
 if (Test-Path $fixtureReport) { Remove-Item $fixtureReport -Force }
 
@@ -202,7 +223,6 @@ Assert-Pass "fixture audit-report scaffolded" {
 }
 
 # Use a dedicated dry-run slug - never delete audits/github-optimization/ (real dogfood output).
-$shelfDryRunSlug = "shelf-orchestrator-dry-run"
 $shelfDryRunReport = Join-Path $Shelf "audits\$shelfDryRunSlug\audit-report.md"
 if (Test-Path $shelfDryRunReport) { Remove-Item $shelfDryRunReport -Force }
 
@@ -219,6 +239,8 @@ Assert-Pass "shelf orchestrator dry-run report scaffolded" {
         throw "missing $shelfDryRunReport"
     }
 }
+
+Remove-GeneratedTestArtifacts
 
 Write-Output ""
 if ($failures -eq 0) {
