@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.7] - 2026-06-19
+
+### Fixed
+
+- PowerShell collector hosted GitHub evidence parsing now supports Windows PowerShell 5.1 by routing JSON parsing through a compatibility helper instead of using PowerShell 7-only `ConvertFrom-Json -Depth` directly.
+
 ## [1.2.6] - 2026-06-18
 
 ### Fixed

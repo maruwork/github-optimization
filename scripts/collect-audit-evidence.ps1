@@ -146,6 +146,16 @@ function Initialize-GhConfig {
     return $ghConfigDir
 }
 
+function ConvertFrom-JsonCompat {
+    param([string]$Json)
+
+    $command = Get-Command ConvertFrom-Json -ErrorAction Stop
+    if ($command.Parameters.ContainsKey("Depth")) {
+        return $Json | ConvertFrom-Json -Depth 50
+    }
+    return $Json | ConvertFrom-Json
+}
+
 function Invoke-PublicGitHubApi {
     param([string]$RelativePath)
 
@@ -156,7 +166,7 @@ function Invoke-PublicGitHubApi {
             $env:GH_CONFIG_DIR = Initialize-GhConfig
             $raw = (& $ghCommand.Source api $RelativePath 2>$null) -join "`n"
             if ($LASTEXITCODE -eq 0 -and $raw) {
-                return $raw | ConvertFrom-Json -Depth 50
+                return ConvertFrom-JsonCompat -Json $raw
             }
         } catch {
         } finally {
@@ -182,7 +192,7 @@ function Invoke-PublicGitHubApi {
 
         $raw = (& $curlPath -fsSL "https://api.github.com/$RelativePath" 2>$null) -join "`n"
         if ($LASTEXITCODE -eq 0 -and $raw) {
-            return $raw | ConvertFrom-Json -Depth 50
+            return ConvertFrom-JsonCompat -Json $raw
         }
     }
 
