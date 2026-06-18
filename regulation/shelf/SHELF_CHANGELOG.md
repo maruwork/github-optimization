@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.2 - 2026-06-18
+
+### Fixed
+
+- CI now installs `gitleaks` before running regulation tests so the stricter collector exit-code contract is tested on the authoritative baseline route.
+
 ## 1.2.1 - 2026-06-18
 
 ### Changed
