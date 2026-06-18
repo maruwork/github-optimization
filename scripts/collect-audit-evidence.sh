@@ -4,6 +4,41 @@ set -euo pipefail
 REPO_PATH="${1:?repo path required}"
 HOSTED_REPO="${2:-}"
 
+git_safe() {
+  git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
+}
+
+github_api() {
+  local path="$1"
+  if command -v gh >/dev/null 2>&1; then
+    gh api "$path"
+    return $?
+  fi
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL -H "User-Agent: github-optimization-audit" "https://api.github.com/$path"
+    return $?
+  fi
+  return 127
+}
+
+resolve_gitleaks() {
+  if command -v gitleaks >/dev/null 2>&1; then
+    command -v gitleaks
+    return 0
+  fi
+  if command -v gitleaks.exe >/dev/null 2>&1; then
+    command -v gitleaks.exe
+    return 0
+  fi
+  local candidate
+  for candidate in /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe; do
+    [[ -x "$candidate" ]] || continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+  return 1
+}
+
 section() {
   echo
   echo "=== $1 ==="
@@ -18,9 +53,9 @@ if [[ -n "$HOSTED_REPO" ]]; then
 fi
 
 section "Git"
-git rev-parse HEAD
-git describe --tags --always 2>/dev/null || true
-echo "Tracked files: $(git ls-files | wc -l | tr -d ' ')"
+git_safe rev-parse HEAD
+git_safe describe --tags --always 2>/dev/null || true
+echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
 if [[ -f "$SCREEN_SCRIPT" ]]; then
@@ -46,7 +81,7 @@ while IFS= read -r f; do
       found=1
     fi
   fi
-done < <(git ls-files)
+done < <(git_safe ls-files)
 if [[ "$found" -eq 0 ]]; then echo "none"; fi
 
 section "Root Files"
@@ -68,12 +103,20 @@ do
 done
 
 section "Gitleaks"
-if command -v gitleaks >/dev/null 2>&1; then
+if GITLEAKS_CMD="$(resolve_gitleaks)"; then
   set +e
-  gitleaks detect --source . --no-banner 2>&1 | tail -n 3
+  "$GITLEAKS_CMD" detect --source . --no-banner 2>&1 | tail -n 3
+  gitleaks_code=${PIPESTATUS[0]}
   set -e
+  echo "exit code: $gitleaks_code"
+  case "$gitleaks_code" in
+    0) echo "result: PASS" ;;
+    1) echo "result: BLOCKED (gitleaks findings)" ;;
+    *) echo "result: BLOCKED (gitleaks execution failed)" ;;
+  esac
 else
-  echo "gitleaks: not installed"
+  echo "gitleaks: unavailable"
+  echo "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
 fi
 
 if [[ -f pytest.ini || -d tests ]]; then
@@ -89,14 +132,22 @@ if [[ -f pytest.ini || -d tests ]]; then
   set -e
 fi
 
-if [[ -n "$HOSTED_REPO" ]] && command -v gh >/dev/null 2>&1; then
+if [[ -n "$HOSTED_REPO" ]]; then
   section "Hosted Metadata"
   set +e
-  gh api "repos/$HOSTED_REPO" --jq '{description, topics: .topics, homepage, visibility}'
-  gh api "repos/$HOSTED_REPO/community/profile" --jq '{health_percentage}'
-  gh api "repos/$HOSTED_REPO" --jq '.security_and_analysis'
+  github_api "repos/$HOSTED_REPO"
+  github_api "repos/$HOSTED_REPO/community/profile"
+  github_api "repos/$HOSTED_REPO"
+  section "Hosted Issue Templates"
+  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/bug_report.md"
+  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/feature_request.md"
+  github_api "repos/$HOSTED_REPO/contents/.github/ISSUE_TEMPLATE/config.yml"
   section "Latest CI"
-  gh run list -R "$HOSTED_REPO" --limit 3
+  if command -v gh >/dev/null 2>&1; then
+    gh run list -R "$HOSTED_REPO" --limit 3
+  else
+    github_api "repos/$HOSTED_REPO/actions/runs?per_page=3"
+  fi
   set -e
 fi
 

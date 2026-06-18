@@ -31,6 +31,9 @@ else
 fi
 
 REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+git_safe() {
+  git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
+}
 SLUG="${AUDIT_SLUG:-$(basename "$REPO_PATH" | tr '[:upper:]' '[:lower:]')}"
 AUDIT_DIR="$SHELF/audits/$SLUG"
 REPORT_PATH="$AUDIT_DIR/audit-report.md"
@@ -64,15 +67,15 @@ if [[ -z "$PRIOR_HEAD" ]]; then
 fi
 
 cd "$REPO_PATH"
-PRESENT_HEAD="$(git rev-parse HEAD)"
-PRIOR_FULL="$(git rev-parse "$PRIOR_HEAD")"
-PRIOR_COUNT="$(git ls-tree -r --name-only "$PRIOR_FULL" | wc -l | tr -d ' ')"
-PRESENT_COUNT="$(git ls-files | wc -l | tr -d ' ')"
+PRESENT_HEAD="$(git_safe rev-parse HEAD)"
+PRIOR_FULL="$(git_safe rev-parse "$PRIOR_HEAD")"
+PRIOR_COUNT="$(git_safe ls-tree -r --name-only "$PRIOR_FULL" | wc -l | tr -d ' ')"
+PRESENT_COUNT="$(git_safe ls-files | wc -l | tr -d ' ')"
 DELTA_PERCENT="$(awk -v prior="$PRIOR_COUNT" -v present="$PRESENT_COUNT" \
   'BEGIN{d=present-prior; if (d<0) d=-d; printf "%.1f", (prior ? 100*d/prior : 100)}')"
 
-mapfile -t CHANGED < <(git diff --name-only "$PRIOR_FULL" "$PRESENT_HEAD")
-mapfile -t UNTRACKED < <(git ls-files --others --exclude-standard)
+mapfile -t CHANGED < <(git_safe diff --name-only "$PRIOR_FULL" "$PRESENT_HEAD")
+mapfile -t UNTRACKED < <(git_safe ls-files --others --exclude-standard)
 
 invalidations=()
 OVER20="$(awk -v d="$DELTA_PERCENT" 'BEGIN{print (d>20)?1:0}')"

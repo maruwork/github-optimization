@@ -6,6 +6,9 @@ Status: Active
 
 Single registry of every judgment item used in regulation self-check.
 
+The registry covers publication readiness as a whole.
+Security-related rows are only one subset of the full audit.
+
 ## Tier 1 — Public Prep (`regulation/gates/PUBLIC_PREP_GATE.md`)
 
 | ID | Requirement |
@@ -14,7 +17,7 @@ Single registry of every judgment item used in regulation self-check.
 | G-02 | tracked file inventory captured |
 | G-03 | developer-only AI files are not tracked |
 | G-04 | internal-management paths are ignored |
-| G-05 | `README.md` exists and states purpose |
+| G-05 | `README.md` exists and explains what the project does, why it is useful, and how to get started |
 | G-06 | `LICENSE` exists |
 | G-07 | `SECURITY.md` exists |
 | G-08 | `CHANGELOG.md` exists or release route is explicit |
@@ -22,8 +25,8 @@ Single registry of every judgment item used in regulation self-check.
 | G-10 | `CONTRIBUTING.md` when outside contribution expected |
 | G-11 | issue template when issues enabled |
 | G-12 | pull request template when public contribution expected |
-| G-13 | About description is set |
-| G-14 | Topics are set |
+| G-13 | About description is set and states project purpose clearly |
+| G-14 | Topics are set and classify intended purpose, subject area, or language |
 | G-15 | Community Profile reviewed |
 | G-16 | secret scanning decision explicit |
 | G-17 | Dependabot decision explicit |

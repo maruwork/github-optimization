@@ -10,13 +10,15 @@ Judgment guide: `../regulation/reference/JUDGMENT_GUIDE.md`
 
 ## Minimum
 
-- [ ] baseline secret scan performed with `Gitleaks` (`G-01`)
+- [ ] baseline secret scan performed with `Gitleaks`; if the tool is unavailable, score `G-01` `blocked` until a transcript exists
 - [ ] tracked file inventory captured with `git ls-files` (`G-02`)
 - [ ] every tracked file fully read or explicitly excepted (`G-21`)
 - [ ] no unnecessary large generated files remain tracked (`G-22`)
 - [ ] internal-management folders are excluded by `.gitignore` (`G-04`)
 - [ ] developer-only AI files are not tracked (`G-03`)
-- [ ] `README.md` exists and explains what the repository is (`G-05`)
+- [ ] `README.md` exists, explains what the repository does, why it is useful, and what the user should do first (`G-05`)
+- [ ] `README.md` tells the user where to get help or find longer documentation
+- [ ] user-facing entry docs name a maintainer, support route, or linked ownership path when public use is expected
 - [ ] `LICENSE` exists (`G-06`)
 - [ ] `SECURITY.md` exists (`G-07`)
 - [ ] `CHANGELOG.md` exists, or release history is explicitly documented elsewhere (`G-08`)

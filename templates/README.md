@@ -5,6 +5,8 @@ Status: Active
 ## Purpose
 
 Reusable file starters and output skeletons for regulation self-check.
+The `README.md.template` is also a writing guide for explaining user value before publication.
+It is designed to help authors answer the core first-visit questions: what, why, how to start, where to get help, and who maintains the project.
 
 ## Root Templates
 

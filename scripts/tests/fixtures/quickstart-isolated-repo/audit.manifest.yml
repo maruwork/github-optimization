@@ -1,0 +1,19 @@
+version: 1
+workdir: isolated
+
+env:
+  FIXTURE_TOKEN: quickstart-env-token
+
+commands:
+  - id: write-env
+    run_windows: powershell -NoProfile -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force out | Out-Null; Set-Content -Path 'out/env.txt' -Value $env:FIXTURE_TOKEN"
+    run_unix: mkdir -p out && printf '%s' "$FIXTURE_TOKEN" > out/env.txt
+    expect_exit: 0
+
+  - id: legacy-run
+    run: echo quickstart-legacy-run
+    expect_exit: 0
+
+assertions:
+  - id: env-file-created
+    path_exists: out/env.txt

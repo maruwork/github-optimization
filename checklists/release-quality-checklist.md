@@ -31,6 +31,9 @@ Skip only when Tier 2 is formally deferred in `audits/<repository-slug>/tier2-de
 
 - [ ] README install/setup steps match the actual entry path (`R-08`)
 - [ ] README quickstart succeeds end-to-end (`R-09`)
+- [ ] README opening explains the user-facing value before internal implementation detail
+- [ ] README status and support/help route are explicit when they matter
+- [ ] About description and Topics still match the actual product purpose after release changes
 - [ ] required runtime versions are stated when they matter (`R-10`)
 - [ ] known platform caveats are documented when CI or local evidence found them (`R-11`)
 - [ ] `audit.manifest.yml` exists when the repository expects repeat audits

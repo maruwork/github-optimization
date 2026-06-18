@@ -108,6 +108,28 @@ Assert-ExitCode "run-audit-quickstart with manifest exits 0" 0 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $quickstartFixture
 }
 
+Assert-Pass "run-audit-quickstart isolated env/assertions windows" {
+    $isolatedFixture = Join-Path $Shelf "scripts\tests\fixtures\quickstart-isolated-repo"
+    $leakedPath = Join-Path $isolatedFixture "out\env.txt"
+    if (Test-Path $leakedPath) { Remove-Item -Recurse -Force (Join-Path $isolatedFixture "out") }
+
+    $out = & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $isolatedFixture 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE" }
+    foreach ($needle in @(
+            "=== quickstart:write-env ===",
+            "=== quickstart:legacy-run ===",
+            "=== assertion:path_exists:out/env.txt ===",
+            "assertions run: 1"
+        )) {
+        if ($out -notmatch [regex]::Escape($needle)) {
+            throw "missing output: $needle"
+        }
+    }
+    if (Test-Path $leakedPath) {
+        throw "isolated workdir leaked artifact into fixture"
+    }
+}
+
 Assert-ExitCode "run-audit-quickstart shelf manifest windows" 0 {
     & (Join-Path $Shelf "scripts\run-audit-quickstart.ps1") -RepoPath $Shelf
 }

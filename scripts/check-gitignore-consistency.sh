@@ -5,6 +5,10 @@ REPO_PATH="${1:?repo path required}"
 cd "$REPO_PATH"
 REPO_PATH="$(pwd)"
 
+git_safe() {
+  git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
+}
+
 declare -a findings=()
 
 add_finding() {
@@ -37,13 +41,13 @@ done
 
 while IFS= read -r rel; do
   [[ -z "$rel" ]] && continue
-  rule="$(git check-ignore -v "$rel" 2>/dev/null | head -n 1 || true)"
+  rule="$(git_safe check-ignore -v "$rel" 2>/dev/null | head -n 1 || true)"
   add_finding "$rel" "tracked-but-ignored" "blocked" "Tracked file matches ignore rule: ${rule:-unknown}"
-done < <(git ls-files -ci --exclude-standard 2>/dev/null || true)
+done < <(git_safe ls-files -ci --exclude-standard 2>/dev/null || true)
 
 echo "=== Gitignore Consistency ==="
 echo "Repository: $REPO_PATH"
-echo "Tracked files: $(git ls-files | wc -l | tr -d ' ')"
+echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 blocked=0
 review=0

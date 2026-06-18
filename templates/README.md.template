@@ -2,11 +2,54 @@
 
 Status: Active
 
-One-sentence description of what this repository does and who it is for.
+One-sentence summary of what this repository does, why it matters, and who it is for.
+
+## Start Here
+
+Answer the user's first question in 2-4 bullets:
+
+- what problem this repository solves
+- what outcome the user gets
+- who should use it
+- what they can run first
+
+## Why This Exists
+
+Describe the GitHub/publication problem in plain language.
+Write this for someone deciding in a few seconds whether the repository is relevant.
 
 ## What It Does
 
 Explain the core problem and outcome in plain language.
+Prefer user outcomes over internal architecture.
+
+## Project Status
+
+State the current status clearly:
+
+- production-ready
+- beta
+- experimental
+- internal draft before wider release
+
+If the repository is not ready for production use or outside contributions, say so here.
+
+## Before You Publish
+
+Call out the most common pre-GitHub concerns this repository removes, for example:
+
+- missing public-facing files
+- unclear setup or quickstart
+- internal-only tracked files
+- repeat manual review before each release
+
+## Getting Started
+
+Answer the first-run question directly:
+
+- what a new user should install first
+- what command they should run first
+- what success looks like
 
 ## Requirements
 
@@ -28,6 +71,8 @@ cd <repo>
 ## Quickstart
 
 Show the smallest successful first-run path.
+This should be the path a new user actually tries first, not an internal shortcut.
+If setup and first run are different, keep both short and explicit.
 
 ```bash
 # example only — replace with the real entry command
@@ -39,9 +84,39 @@ Show the smallest successful first-run path.
 
 Document the main commands or workflows.
 
+## Help
+
+Tell the reader where to go next:
+
+- `docs/` for longer guides
+- `SUPPORT.md` for support routing
+- `CONTRIBUTING.md` for contribution rules
+- issue tracker or discussions if those are the right entry points
+
 ## Project Layout
 
 Explain only the directories users need to understand.
+
+## Maintainers
+
+State who maintains the project or where maintenance ownership is documented.
+
+## More Documentation
+
+Keep the README focused on first contact.
+Move long reference material to `docs/` or other linked files, and prefer relative links.
+
+## Why This README Works
+
+Before publishing, confirm:
+
+- the first screen tells the user why the repo matters
+- the opening answers: what is this, why is it useful, and how do I start
+- the quickstart is the real first-success path
+- the reader can find help and maintainer ownership
+- the current project status is explicit
+- the README reflects what the repository does on GitHub, not only how it is built internally
+- the language is understandable without private team context
 
 ## Contributing
 

@@ -11,7 +11,8 @@ version: 1
 workdir: isolated
 
 # optional environment variables for all commands
-env: {}
+env:
+  # SAMPLE_ENV: sample-value
 
 commands:
   - id: version

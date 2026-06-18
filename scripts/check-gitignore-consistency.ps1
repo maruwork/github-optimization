@@ -7,6 +7,14 @@ $ErrorActionPreference = "Stop"
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 Push-Location $RepoPath
 
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+}
+
 $findings = New-Object System.Collections.Generic.List[object]
 
 function Add-Finding {
@@ -49,16 +57,17 @@ foreach ($pattern in $recommended) {
     }
 }
 
-$ignoredTracked = @(git ls-files -ci --exclude-standard 2>$null)
+$ignoredTracked = @(Invoke-Git ls-files -ci --exclude-standard 2>$null)
 foreach ($rel in $ignoredTracked) {
     if (-not $rel) { continue }
-    $rule = (git check-ignore -v $rel 2>$null | Select-Object -First 1)
+    $rule = (Invoke-Git check-ignore -v $rel 2>$null | Select-Object -First 1)
+    if (-not $rule) { $rule = "unknown" }
     Add-Finding $rel "tracked-but-ignored" "blocked" "Tracked file matches ignore rule: $rule"
 }
 
 Write-Output "=== Gitignore Consistency ==="
 Write-Output "Repository: $RepoPath"
-Write-Output "Tracked files: $((git ls-files | Measure-Object).Count)"
+Write-Output "Tracked files: $((Invoke-Git ls-files | Measure-Object).Count)"
 
 $blocked = @($findings | Where-Object { $_.Severity -eq "blocked" })
 $review = @($findings | Where-Object { $_.Severity -eq "review" })

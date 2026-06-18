@@ -7,6 +7,10 @@ VERBOSE="${VERBOSE:-0}"
 cd "$REPO_PATH"
 REPO_PATH="$(pwd)"
 
+git_safe() {
+  git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
+}
+
 is_shelf=0
 [[ -f regulation/REGULATION_INDEX.md ]] && is_shelf=1
 
@@ -76,13 +80,13 @@ while IFS= read -r rel; do
     add_finding "$norm" "internal-management-candidate" "review" "Typical internal-management path; confirm user-facing intent"
     continue
   fi
-done < <(git ls-files)
+done < <(git_safe ls-files)
 
 root_count=0
 while IFS= read -r rel; do
   [[ -z "$rel" ]] && continue
   [[ "$rel" != */* ]] && root_count=$((root_count + 1))
-done < <(git ls-files)
+done < <(git_safe ls-files)
 
 if [[ "$root_count" -gt 12 ]]; then
   add_finding "(root)" "root-clutter" "review" "Root has ${root_count} tracked entries; confirm each is user-facing or GitHub-standard"
@@ -91,7 +95,7 @@ fi
 echo "=== Tracked File Screening ==="
 echo "Repository: $REPO_PATH"
 if [[ "$is_shelf" -eq 1 ]]; then echo "Mode: regulation-shelf"; else echo "Mode: product"; fi
-echo "Tracked files: $(git ls-files | wc -l | tr -d ' ')"
+echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 blocked=0
 review=0
@@ -116,7 +120,7 @@ done
 if [[ "$VERBOSE" == 1 ]]; then
   echo
   echo "All tracked files:"
-  git ls-files | sed 's/^/  /'
+  git_safe ls-files | sed 's/^/  /'
 fi
 
 if [[ "$blocked" -gt 0 ]]; then

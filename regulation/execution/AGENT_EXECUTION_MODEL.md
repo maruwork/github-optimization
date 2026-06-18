@@ -37,6 +37,18 @@ Invalid evidence:
 - "this probably works"
 - checklist ticks without output
 
+## Standard Agent Path
+
+The normal audit path is:
+
+1. capture repository identity, tracked-file inventory, and full-read log
+2. run local evidence commands and save transcripts
+3. execute README setup and quickstart from manifest or README-derived commands
+4. capture hosted GitHub metadata when gates depend on hosted settings
+5. write the gate table, verdict, and publication decision record
+
+This is the default expectation, not an ideal case.
+
 ## Quickstart Automation Contract
 
 README quickstart is not a human chore. It is an agent-executed gate.
@@ -65,6 +77,15 @@ Humans should not be the default executor for:
 - README quickstart replay
 - gate table filling
 
+## Failure Modes
+
+The audit method failed if the report:
+
+- asks a human to execute a routine command the agent environment could run
+- leaves README setup or quickstart as an unexecuted suggestion
+- scores a runtime or hosted claim without stored evidence
+- depends on chat history instead of shelf-stored audit artifacts
+
 ## Completion Standard
 
 An audit is agent-complete when:
@@ -72,4 +93,5 @@ An audit is agent-complete when:
 - `regulation/execution/AUDIT_RUNBOOK.md` finished
 - evidence is attached
 - final label is assigned
-- remaining work is expressed as fix tasks, not as instructions to a human operator
+- no routine operator command remains unresolved
+- remaining work is expressed as fix tasks, approvals, policy choices, or external-state changes

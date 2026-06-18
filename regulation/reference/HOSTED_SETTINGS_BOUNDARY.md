@@ -22,20 +22,24 @@ Forbidden default:
 
 - scoring `pass` without hosted evidence
 - leaving Dependabot / secret scanning / code scanning implicit
+- relying on Community Profile alone when issue-template evidence is missing but issues are enabled
 
 ## Evidence Sources
 
 ```bash
-gh api repos/<owner>/<repo> --jq '{description, topics: .topics, homepage, visibility}'
+gh api repos/<owner>/<repo> --jq '{description, topics: .topics, homepage, visibility, has_issues}'
 gh api repos/<owner>/<repo>/community/profile --jq '{health_percentage, files}'
 gh api repos/<owner>/<repo> --jq '.security_and_analysis'
 gh run list -R <owner>/<repo> --limit 5
+gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE/bug_report.md --jq '{path}'
+gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE/config.yml --jq '{path}'
 ```
 
 ## Gate Mapping
 
 | Gate | Hosted action |
 |---|---|
+| G-11 | verify issue-template route from hosted repo contents when issues are enabled and Community Profile is incomplete |
 | G-13 | verify About description |
 | G-14 | verify Topics |
 | G-15 | verify Community Profile |

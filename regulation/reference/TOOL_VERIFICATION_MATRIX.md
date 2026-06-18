@@ -1,10 +1,21 @@
-# GitHub Optimization Tool Verification Matrix
+# GitHub Optimization Audit Evidence Tool Matrix
 
 Status: Active
 
 Verified on: 2026-06-17
 
 Review cadence: `regulation/reference/TOOL_REVIEW_CADENCE.md`
+
+## Purpose
+
+Clarify which external tools or GitHub-native features this shelf may consult while collecting audit evidence.
+These are common evidence sources for the publication-readiness audit flow.
+
+## How To Read This File
+
+- `use` means the shelf can rely on that source as a normal audit input
+- `conditional` means use it only when the target repository or audit scope makes it necessary
+- absence from this file does not mean "bad tool"; it means "not part of the shared baseline shelf"
 
 ## External Tools
 

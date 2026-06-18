@@ -1,5 +1,27 @@
 # Shelf Changelog
 
+## 1.2.0 窶・2026-06-18
+
+### Added
+
+- `regulation/reference/GO_ROLE_CRITERIA.md` as the internal pass-criteria basis behind the public GO role list
+- `regulation/reference/GO_ROLE_COVERAGE.md` as the gate-to-role coverage audit
+- explicit external source register with URLs and checked date for GO role criteria
+- isolated quickstart fixture for manifest `env`, legacy `run`, and `path_exists` assertions
+- `.gitattributes` to keep shell scripts LF-normalized across Windows and Unix
+
+### Changed
+
+- README, checklists, gates, and execution rules now treat role communication, rerun evidence, and reduced manual review as formal audit conditions
+- hosted issue-template evidence can now be verified from repository contents when Community Profile omits the template entry
+- publication-evidence rules now require a direct rerun contract and a minimum evidence bundle
+
+### Fixed
+
+- PowerShell and bash evidence scripts now harden Git access against `safe.directory` and global-ignore environment drift
+- quickstart runners now support shared `env`, post-run path assertions, and legacy manifest `run`
+- secret-scan evidence now records an explicit blocked state when `gitleaks` is unavailable or cannot execute
+
 All notable changes to the generic regulation shelf.
 
 ## 1.1.14 — 2026-06-17

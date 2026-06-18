@@ -2,18 +2,61 @@
 
 Status: Active
 
-Shelf version: `1.1.14` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.2.0` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
-Generic **regulation shelf** for public-repository self-check.
+AI-run **GitHub publication optimization shelf**.
 
-The responsible AI reads this shelf, executes evidence against a target repository, scores 46 gates, and writes results under `audits/<repository-slug>/` on disk. This is not a human-operated checklist.
+The responsible AI reads this shelf, executes evidence against a target repository, scores 46 gates, and writes results under `audits/<repository-slug>/` on disk.
+
+In one line:
+
+- make it easier to put a repository on GitHub in a publishable state without doing the whole review manually
+
+## What Problem It Solves
+
+Users usually get stuck on the same questions before publishing:
+
+- Is this repository clean enough to put on GitHub?
+- Did we forget public-facing files, settings, or quickstart proof?
+- Are there tracked files, ignored files, or internal leftovers that should not go up?
+- Can we check all of that without redoing the same manual review every time?
+
+This shelf answers those questions by turning them into one repeatable audit flow.
+
+## What It Does
+
+- checks whether a repository is ready to publish or release on GitHub
+- gathers the evidence needed for that judgment
+- replays quickstart commands when possible
+- writes the results into one audit shelf outside the product repository
+- supports repeat audits with the same rules and output format
+
+## GO Roles
+
+- check if a repository is ready for GitHub publication
+- keep only user-needed, public-facing material
+- catch unnecessary files and internal leftovers before release
+- verify public-facing files, setup, and quickstart
+- help the repository communicate its usefulness effectively
+- collect repeatable publication evidence
+- store audit outputs outside the product repository
+- support repeat audits with shared templates and checks
+- reduce manual publication review work
 
 | Role | Action |
 |---|---|
 | Responsible AI | read regulation, run scripts, score gates, write audit artifacts |
 | Human | optional publication approval; not default command execution |
+
+## Toolset At A Glance
+
+- `regulation/` defines the audit rules, gate set, and runbook
+- `scripts/` runs the actual optimization checks: evidence collection, quickstart replay, full audit orchestration, and delta re-audit
+- `templates/` provides audit report and supporting record templates
+- `checklists/` maps human-readable review flow to the gate model
+- `audits/<slug>/` stores the finished outputs for each target repository
 
 ## What This Repository Is Not
 
@@ -35,7 +78,7 @@ The responsible AI reads this shelf, executes evidence against a target reposito
 One-line assignment:
 
 ```text
-Read $GITHUB_OPTIMIZATION_ROOT (or ../github-optimization relative to the target repo), self-assess whether the target repository complies with this regulation, execute evidence, and complete the audit report.
+Read $GITHUB_OPTIMIZATION_ROOT (or ../github-optimization relative to the target repo), decide whether the target repository is publication-ready under this regulation, execute evidence, and complete the audit report.
 ```
 
 ## Execution Pipeline
@@ -122,6 +165,15 @@ Read: `regulation/shelf/OUTPUT_PATHS.md`, `audits/README.md`
 | This shelf (self-check) | root `audit.manifest.yml` runs validate-index, tracked-file screening, gitignore consistency |
 
 Manifest fields: `run_windows` / `run_unix` per `regulation/reference/AUDIT_MANIFEST_POLICY.md`
+
+## Audit Shape
+
+The shelf evaluates four broad areas together:
+
+- repository entry quality and publication files
+- repeatable quickstart and release evidence
+- hosted GitHub metadata and automation state
+- basic security and hygiene evidence
 
 ## Regulation Scope
 

@@ -24,20 +24,20 @@ Registry: `regulation/gates/GATE_REGISTRY.md`
 
 | ID | Requirement | Primary checklist | Evidence |
 |---|---|---|---|
-| G-01 | `Gitleaks` baseline secret scan completed | local-public-prep | scan command + result |
+| G-01 | `Gitleaks` baseline secret scan completed | local-public-prep | scan command + result; missing tool means `blocked` |
 | G-02 | tracked file inventory captured with `git ls-files` | local-public-prep, classification | file count + list reference; not a substitute for `G-21` |
 | G-03 | developer-only AI files are not tracked | local-public-prep, classification | `git ls-files` proof |
 | G-04 | internal-management paths are ignored | local-public-prep | `.gitignore` excerpt |
-| G-05 | `README.md` exists and states purpose | local-public-prep | file path |
+| G-05 | `README.md` exists and explains what the project does, why it is useful, and how to get started | local-public-prep | README excerpt |
 | G-06 | `LICENSE` exists | local-public-prep | file path |
 | G-07 | `SECURITY.md` exists | local-public-prep | file path |
 | G-08 | `CHANGELOG.md` exists or release history route is explicit | local-public-prep, github-settings | file path or waiver |
 | G-09 | `CODE_OF_CONDUCT.md` exists when public contribution is expected | local-public-prep | file path or waiver |
 | G-10 | `CONTRIBUTING.md` exists when outside contribution is expected | local-public-prep, github-settings | file path or waiver |
-| G-11 | issue template exists when issues are enabled | github-settings | file path or waiver |
+| G-11 | issue template exists when issues are enabled | github-settings | file path, hosted repo-contents proof, or waiver |
 | G-12 | pull request template exists when public contribution is expected | github-settings | file path or waiver |
-| G-13 | About description is set | github-settings | hosted metadata note |
-| G-14 | Topics are set | github-settings | hosted metadata note |
+| G-13 | About description is set and states project purpose clearly | github-settings | hosted metadata note |
+| G-14 | Topics are set and classify intended purpose, subject area, or language | github-settings | hosted metadata note |
 | G-15 | Community Profile reviewed | github-settings | health percentage or review note |
 | G-16 | secret scanning decision is explicit | github-settings, tool matrix | enabled/disabled + reason |
 | G-17 | Dependabot decision is explicit | github-settings, tool matrix | enabled/disabled + reason |

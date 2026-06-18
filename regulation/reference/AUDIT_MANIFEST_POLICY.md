@@ -25,6 +25,13 @@ Define when `audit.manifest.yml` is required in the target repository.
 
 Provide both `run_windows` and `run_unix` when CI spans multiple operating systems.
 
+Optional manifest sections:
+
+| Section | Use |
+|---|---|
+| `env` | environment variables applied to every quickstart command |
+| `assertions[].path_exists` | verify that a quickstart-created relative path exists before the run is scored `pass` |
+
 ## After First Audit
 
 If quickstart evidence succeeded and the repository is runnable, the responsible AI should:

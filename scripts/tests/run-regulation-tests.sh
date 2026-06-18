@@ -71,6 +71,24 @@ SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit invalidates manifest change" 2
 run_exit "run-audit-quickstart missing manifest exits 2" 2 bash "$SHELF/scripts/run-audit-quickstart.sh" "$FIXTURE"
 QUICKSTART_FIXTURE="$SHELF/scripts/tests/fixtures/quickstart-manifest-repo"
 run_exit "run-audit-quickstart with manifest exits 0" 0 bash "$SHELF/scripts/run-audit-quickstart.sh" "$QUICKSTART_FIXTURE"
+echo "TEST: run-audit-quickstart isolated env/assertions unix"
+ISOLATED_FIXTURE="$SHELF/scripts/tests/fixtures/quickstart-isolated-repo"
+rm -rf "$ISOLATED_FIXTURE/out"
+set +e
+isolated_out="$(bash "$SHELF/scripts/run-audit-quickstart.sh" "$ISOLATED_FIXTURE" 2>&1)"
+isolated_code=$?
+set -e
+if [[ "$isolated_code" -eq 0 ]] \
+  && echo "$isolated_out" | grep -Fq "=== quickstart:write-env ===" \
+  && echo "$isolated_out" | grep -Fq "=== quickstart:legacy-run ===" \
+  && echo "$isolated_out" | grep -Fq "=== assertion:path_exists:out/env.txt ===" \
+  && echo "$isolated_out" | grep -Fq "assertions run: 1" \
+  && [[ ! -e "$ISOLATED_FIXTURE/out/env.txt" ]]; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected isolated env/assertions flow to pass"
+  failures=$((failures + 1))
+fi
 run_exit "run-audit-quickstart shelf manifest unix" 0 bash "$SHELF/scripts/run-audit-quickstart.sh" "$SHELF"
 
 for tpl in \

@@ -38,6 +38,14 @@ $deltaPath = Join-Path $auditDir "delta-audit-record.md"
 $deltaRel = "audits/$slug/delta-audit-record.md"
 $reportRel = "audits/$slug/audit-report.md"
 
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+}
+
 function Get-PriorHeadFromReport([string]$text) {
     if ($text -match '(?m)^-\s*HEAD:\s*`?([0-9a-f]{7,40})`?') { return $Matches[1] }
     if ($text -match '(?m)^HEAD:\s*`?([0-9a-f]{7,40})`?') { return $Matches[1] }
@@ -71,16 +79,16 @@ if (-not $PriorHead) {
 
 Push-Location $RepoPath
 try {
-    $presentHead = (git rev-parse HEAD).Trim()
-    $priorFull = (git rev-parse $PriorHead 2>$null).Trim()
+    $presentHead = (Invoke-Git rev-parse HEAD).Trim()
+    $priorFull = (Invoke-Git rev-parse $PriorHead 2>$null).Trim()
     if (-not $priorFull) {
         Write-Error "Prior HEAD not found in repository: $PriorHead"
     }
 
-    $priorCount = [int](git ls-tree -r --name-only $priorFull | Measure-Object).Count
-    $presentCount = [int](git ls-files | Measure-Object).Count
-    $changed = @(git diff --name-only $priorFull $presentHead)
-    $untracked = @(git ls-files --others --exclude-standard)
+    $priorCount = [int](Invoke-Git ls-tree -r --name-only $priorFull | Measure-Object).Count
+    $presentCount = [int](Invoke-Git ls-files | Measure-Object).Count
+    $changed = @(Invoke-Git diff --name-only $priorFull $presentHead)
+    $untracked = @(Invoke-Git ls-files --others --exclude-standard)
 
     $deltaPercent = if ($priorCount -gt 0) {
         [math]::Round((100.0 * [math]::Abs($presentCount - $priorCount) / $priorCount), 1)

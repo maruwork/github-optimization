@@ -10,6 +10,21 @@ The agent runs these commands and stores the transcript in the audit report.
 
 Adapt paths and repository names to the target project.
 
+## Required Audit Record
+
+Every completed audit report stores:
+
+- repository path and reviewed commit or ref
+- audit date and responsible agent
+- tracked-file inventory reference
+- read log reference
+- command transcripts with working directory and result
+- hosted metadata transcript for scored GitHub settings
+- quickstart source: `audit.manifest.yml` or README-derived transcript
+- final gate table and verdict
+
+Do not treat chat history as the canonical record.
+
 ## Agent Bundle
 
 Preferred single pass:
@@ -29,7 +44,15 @@ Quickstart only:
 & ".../github-optimization/scripts/run-audit-quickstart.ps1" -RepoPath <repo>
 ```
 
-If `audit.manifest.yml` is missing, the agent still executes README-derived commands and should then add a manifest for the next run.
+If `audit.manifest.yml` is missing, the agent still executes README-derived commands.
+The audit report must then store:
+
+- exact command lines
+- working directory
+- required environment values
+- any path assertions used to judge success
+
+If the repository is expected to be re-audited and is runnable, the agent should then add a manifest for the next run unless an explicit waiver is recorded.
 
 Shelf path resolution: `regulation/shelf/SHELF_PATH.md`
 
@@ -60,6 +83,9 @@ Baseline:
 ```bash
 gitleaks detect --source . --verbose
 ```
+
+If `gitleaks` is unavailable, `G-01` cannot be scored `pass`.
+Record the missing-tool state explicitly and treat the gate as `blocked` until a baseline transcript exists.
 
 Optional deeper scan:
 
@@ -116,9 +142,17 @@ gh api repos/<owner>/<repo>/releases/latest --jq '.tag_name,.target_commitish'
 ## Hosted GitHub Metadata
 
 ```bash
-gh api repos/<owner>/<repo> --jq '{description, topics: .topics, homepage, visibility}'
+gh api repos/<owner>/<repo> --jq '{description, topics: .topics, homepage, visibility, has_issues}'
 gh api repos/<owner>/<repo>/community/profile --jq '{health_percentage, files}'
 gh api repos/<owner>/<repo> --jq '.security_and_analysis'
+```
+
+Issue template evidence when GitHub Community Profile does not surface the template entry reliably:
+
+```bash
+gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE/bug_report.md --jq '{path}'
+gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE/feature_request.md --jq '{path}'
+gh api repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE/config.yml --jq '{path}'
 ```
 
 ## Publication Decision Record
@@ -135,11 +169,20 @@ Do **not** store the filled record in a public product repository or in `docs/go
 
 ## Evidence Storage Rule
 
-Store command transcripts in `audits/<repository-slug>/audit-report.md` on this shelf:
+Store command transcripts in `audits/<repository-slug>/audit-report.md` on this shelf.
 
-- command used
+Each executed check records:
+
+- command or script path used
+- working directory
+- environment overrides if used
 - date and reviewer
-- pass/fail result
-- short excerpt or link to hosted evidence
+- exit code or pass/fail result
+- short output excerpt or hosted evidence reference
 
-Do not rely on chat history as the canonical record.
+Each hosted-settings claim records:
+
+- API command used, or
+- cited hosted page/report path captured during the audit
+
+Do not mark a scored claim `pass` from memory or chat summary alone.

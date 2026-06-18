@@ -92,6 +92,9 @@ Evidence only:
 
 Paste output into the audit report Evidence section.
 
+If `gitleaks` is unavailable, do not score `G-01` `pass`.
+Record the missing-tool state and treat Tier 1 as blocked until a baseline secret-scan transcript exists.
+
 Quickstart (`R-08`, `R-09`):
 
 - if `audit.manifest.yml` exists, evidence script runs `run-audit-quickstart`
@@ -105,6 +108,8 @@ Walk `regulation/reference/REPO_CONTENT_CLASSIFICATION.md` and `checklists/local
 ## Step 5 — Tier 1 hosted checks (`G-13`…`G-19`)
 
 Walk `regulation/reference/TOOL_VERIFICATION_MATRIX.md`, `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`, and `checklists/github-settings-checklist.md`.
+
+When GitHub Community Profile omits issue-template evidence, verify `G-11` from hosted repository contents and issue-enablement state.
 
 ## Step 6 — Publication responsibility (`G-20`)
 

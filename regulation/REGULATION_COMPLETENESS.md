@@ -42,6 +42,10 @@ Use this file to confirm the regulation set is complete for agent self-check.
 | shelf CI missing | CI workflow | `.github/workflows/ci.yml` |
 | shelf meta-audit missing | self-audit report | `audits/github-optimization/audit-report.md` (local, gitignored) |
 | gitleaks stderr noise on PowerShell | normalized native stderr lines | `collect-audit-evidence.ps1` |
+| GO role list lacked internal pass criteria | role criteria table | `regulation/reference/GO_ROLE_CRITERIA.md` |
+| GO role list lacked gate coverage audit | coverage audit | `regulation/reference/GO_ROLE_COVERAGE.md` |
+| source anchors were too weak to defend later | URL + checked-date source register | `regulation/reference/GO_ROLE_CRITERIA.md` |
+| shell script line endings depended on local Git defaults | `.gitattributes` LF policy | `.gitattributes` |
 
 ## Completeness Checklist
 
@@ -71,6 +75,8 @@ Use this file to confirm the regulation set is complete for agent self-check.
 - [x] shelf CI workflow exists
 - [x] shelf self-audit report exists
 - [x] gitleaks evidence script is PowerShell-clean
+- [x] GO role criteria and coverage files exist
+- [x] external source register exists for GO role criteria
 
 ## Remaining Non-Goals
 

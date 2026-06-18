@@ -4,9 +4,10 @@ Status: Active
 
 ## Purpose
 
-Collect machine-readable audit evidence in one pass.
+Collect machine-readable publication-readiness audit evidence in one pass.
 
 Output is designed to paste into `templates/audit-report.md.template`.
+They gather repeatable audit evidence across docs, quickstart, CI, metadata, and basic hygiene checks.
 
 ## Scripts
 
@@ -61,15 +62,22 @@ Output is designed to paste into `templates/audit-report.md.template`.
 - latest CI run summary when `gh` is available
 - hosted metadata and Community Profile when `gh` is available
 - security feature state when `gh` is available
-- Gitleaks result when `gitleaks` is installed (`G-01`)
+- Gitleaks result when `gitleaks` is available; otherwise an explicit blocked state for `G-01`
 - large tracked files over 512KB (`G-22`)
 - pytest result when `pytest` is available (`R-12` baseline)
+- hosted issue-template contents when issues are enabled and GitHub Community Profile omits the template entry
 
 ## Quickstart Contract
 
 Repeated audits should add `audit.manifest.yml` to the target repository using `templates/audit.manifest.yml.template`.
 
 Without a manifest, the agent still executes README-derived commands and records the transcript.
+
+Supported quickstart manifest helpers:
+
+- shared `env` variables for all commands
+- legacy `run` fallback when OS-specific fields are omitted
+- `assertions[].path_exists` post-checks for created artifacts
 
 ## Regression Tests
 
@@ -85,3 +93,6 @@ Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 Scripts do not replace full-file read review or gate scoring.
 They replace human-operated evidence gathering and shelf self-validation.
+
+`collect-audit-evidence.*` can leave a gate in a visibly blocked state.
+Example: if `gitleaks` is unavailable, the script records that `G-01` cannot pass yet.

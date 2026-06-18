@@ -8,6 +8,14 @@ $ErrorActionPreference = "Stop"
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 Push-Location $RepoPath
 
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+}
+
 function Test-IsShelfRepo {
     Test-Path -LiteralPath (Join-Path $RepoPath "regulation/REGULATION_INDEX.md")
 }
@@ -22,7 +30,7 @@ function Test-ShelfAllow {
 }
 
 $isShelf = Test-IsShelfRepo
-$files = @(git ls-files)
+$files = @(Invoke-Git ls-files)
 $findings = New-Object System.Collections.Generic.List[object]
 
 function Add-Finding {

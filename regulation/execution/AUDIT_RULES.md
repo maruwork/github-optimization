@@ -51,19 +51,41 @@ Forbidden default behavior:
 - telling the user to run a command the agent can run
 - scoring R-08 or R-09 without an execution transcript
 
-### 4. One repository per report
+### 4. Record the minimum evidence bundle
+
+Every audit report must contain:
+
+- repository identity and reviewed commit or ref
+- tracked-file inventory reference
+- completed read log or explicit exception table
+- executed command transcript for each scored runtime or quickstart claim
+- hosted metadata transcript for each scored GitHub-settings claim
+- final gate table and verdict block
+
+If one of these is missing, the audit is incomplete.
+
+### 5. Define the rerun contract
+
+For runnable repositories, the audit must leave one direct rerun path:
+
+- `audit.manifest.yml`, or
+- a README-derived transcript that records exact commands, working directory, and required environment values
+
+If the repository is expected to be re-audited and is not docs-only, the agent should add or update `audit.manifest.yml` before closing the audit unless an explicit waiver is recorded.
+
+### 6. One repository per report
 
 Audit each repository separately.
 
 Do not mix findings from multiple repositories in one verdict block.
 
-### 5. Record waivers explicitly
+### 7. Record waivers explicitly
 
 Read: `regulation/reference/WAIVER_POLICY.md`
 
 `waived` is valid only when the waiver policy is satisfied.
 
-### 6. Use gate IDs
+### 8. Use gate IDs
 
 Mark findings against:
 
@@ -82,6 +104,11 @@ An audit is invalid when any of the following is true:
 - verdict mixed multiple repositories
 - README quickstart was scored without agent execution evidence
 - `G-21` was scored `pass` without a completed read log
+- a scored runtime, setup, or quickstart claim has no command transcript
+- a scored hosted-settings claim has no stored `gh api`, `gh run`, or equivalent cited hosted transcript
+- the minimum evidence bundle is missing
+- a repeated runnable-repository audit closed without `audit.manifest.yml`, README-derived rerun transcript, or recorded waiver
+- the report tells a human to execute a routine command that the agent environment could have executed itself
 
 If invalid, restart from `regulation/execution/AUDIT_RUNBOOK.md` Step 1.
 
