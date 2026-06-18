@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.3] - 2026-06-18
+
+### Fixed
+
+- CI Gitleaks installation now uses the current Go module path `github.com/zricethezav/gitleaks/v8`.
+
 ## [1.2.2] - 2026-06-18
 
 ### Fixed

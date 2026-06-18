@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.3 - 2026-06-18
+
+### Fixed
+
+- CI Gitleaks installation now uses the current Go module path `github.com/zricethezav/gitleaks/v8`.
+
 ## 1.2.2 - 2026-06-18
 
 ### Fixed

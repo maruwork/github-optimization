@@ -20,7 +20,7 @@ jobs:
       - name: Install Gitleaks
         shell: pwsh
         run: |
-          go install github.com/gitleaks/gitleaks/v8@latest
+          go install github.com/zricethezav/gitleaks/v8@latest
           "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           & "$env:USERPROFILE\go\bin\gitleaks.exe" version
       - name: Run regulation regression tests
@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
       - name: Install Gitleaks
         run: |
-          go install github.com/gitleaks/gitleaks/v8@latest
+          go install github.com/zricethezav/gitleaks/v8@latest
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
           "$HOME/go/bin/gitleaks" version
       - name: Run regulation regression tests
