@@ -115,6 +115,29 @@ Assert-Pass "collect-audit-evidence completes transcript and exits blocked after
     }
 }
 
+Assert-Pass "collect-audit-evidence treats gitleaks access-denied artifact as skipped" {
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gitleaks-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    $fakeGitleaks = Join-Path $fakeDir "gitleaks.cmd"
+    Set-Content -Path $fakeGitleaks -Value @(
+        "@echo off",
+        "echo Access is denied. 1>&2",
+        "exit /b 2"
+    )
+    $previousPath = $env:PATH
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $fixture 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE" }
+        if ($out -notmatch "result: SKIPPED \(execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring\)") {
+            throw "expected SKIPPED access-denied gitleaks artifact"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')

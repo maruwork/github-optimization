@@ -86,6 +86,26 @@ else
   echo "  FAIL: expected exit 1 and Root Files section, got exit $evidence_code"
   failures=$((failures + 1))
 fi
+echo "TEST: collect-audit-evidence treats gitleaks access-denied artifact as skipped"
+fake_gitleaks="$(mktemp)"
+cat >"$fake_gitleaks" <<'EOF'
+#!/usr/bin/env bash
+echo "Access is denied" >&2
+exit 2
+EOF
+chmod +x "$fake_gitleaks"
+set +e
+access_denied_out="$(GITLEAKS_CMD="$fake_gitleaks" bash "$SHELF/scripts/collect-audit-evidence.sh" "$FIXTURE" 2>&1)"
+access_denied_code=$?
+set -e
+rm -f "$fake_gitleaks"
+if [[ "$access_denied_code" -eq 0 ]] \
+  && echo "$access_denied_out" | grep -Fq "result: SKIPPED (execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring)"; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected SKIPPED access-denied gitleaks artifact, got exit $access_denied_code"
+  failures=$((failures + 1))
+fi
 PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" rev-parse "v1.1.4^{commit}")"

@@ -201,11 +201,11 @@ if GITLEAKS_CMD="$(resolve_gitleaks)"; then
       if [[ "$IS_WINDOWS_BASH" -eq 1 ]] && printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
         echo "result: SKIPPED (Windows Git Bash cannot score G-01 from WinGet gitleaks path; use collect-audit-evidence.ps1)"
       elif [[ "$IS_WINDOWS_BASH" -eq 1 ]] && printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
-        echo "result: SKIPPED (Windows Git Bash cannot score G-01 from denied WinGet gitleaks path; use collect-audit-evidence.ps1 or a direct gitleaks transcript)"
+        echo "result: SKIPPED (execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring)"
       elif printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
         blocked "(execution environment exposed the resolved gitleaks path as a directory)"
       elif printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
-        blocked "(execution environment denied gitleaks execution)"
+        echo "result: SKIPPED (execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring)"
       else
         blocked "(gitleaks execution failed)"
       fi

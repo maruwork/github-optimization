@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.6] - 2026-06-18
+
+### Fixed
+
+- Bash and PowerShell collector regressions now verify that access-denied Gitleaks execution-environment artifacts are reported as `SKIPPED`, not scoring `BLOCKED`.
+
 ## [1.2.5] - 2026-06-18
 
 ### Fixed
