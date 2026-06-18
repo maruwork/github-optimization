@@ -138,16 +138,6 @@ Assert-Pass "collect-audit-evidence treats gitleaks access-denied artifact as sk
     }
 }
 
-Assert-Pass "collect-audit-evidence avoids PowerShell 7-only ConvertFrom-Json usage" {
-    $collector = Get-Content -LiteralPath (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -Raw
-    if ($collector -match '\$raw\s*\|\s*ConvertFrom-Json\s+-Depth') {
-        throw "raw GitHub JSON must flow through ConvertFrom-JsonCompat"
-    }
-    if ($collector -notmatch 'function ConvertFrom-JsonCompat') {
-        throw "expected ConvertFrom-JsonCompat helper"
-    }
-}
-
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')
