@@ -187,6 +187,9 @@ Canonical report shape:
 Raw machine evidence is not the scoring authority by itself when the same audit proves an execution-environment artifact.
 In that case, keep the raw blocked bundle and add a successful transcript row for the route actually used to score the claim.
 
+For Windows evidence, the preferred authoritative route is the normal Windows PowerShell host terminal.
+If a managed sandbox reports a WinGet tool path differently from that host terminal, record the sandbox output as raw machine evidence and score from the successful host-terminal or equivalent transcript.
+
 Each executed check records:
 
 - command or script path used

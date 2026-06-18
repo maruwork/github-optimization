@@ -9,7 +9,7 @@ Single registry of every judgment item used in regulation self-check.
 The registry covers publication readiness as a whole.
 Security-related rows are only one subset of the full audit.
 
-## Tier 1 — Public Prep (`regulation/gates/PUBLIC_PREP_GATE.md`)
+## Tier 1 - Public Prep (`regulation/gates/PUBLIC_PREP_GATE.md`)
 
 | ID | Requirement |
 |---|---|
@@ -36,7 +36,7 @@ Security-related rows are only one subset of the full audit.
 | G-21 | every tracked file fully read or explicitly excepted |
 | G-22 | no unnecessary large generated files remain tracked |
 
-## Tier 2 — Release Quality (`regulation/gates/RELEASE_QUALITY_GATE.md`)
+## Tier 2 - Release Quality (`regulation/gates/RELEASE_QUALITY_GATE.md`)
 
 | ID | Requirement |
 |---|---|
@@ -55,7 +55,7 @@ Security-related rows are only one subset of the full audit.
 | R-13 | smoke or quickstart evidence recorded |
 | R-14 | hosted CI evidence link or run id recorded |
 
-## Tier 3 — Product Readiness (`regulation/gates/PRODUCT_READINESS_GATE.md`)
+## Tier 3 - Product Readiness (`regulation/gates/PRODUCT_READINESS_GATE.md`)
 
 | ID | Requirement |
 |---|---|

@@ -11,7 +11,7 @@ AGENTS.md
 CLAUDE.md
 .claudeignore
 
-# Internal management — do not publish
+# Internal management - do not publish
 /common/
 /index/
 /archive/

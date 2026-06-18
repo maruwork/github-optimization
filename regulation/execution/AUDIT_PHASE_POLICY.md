@@ -53,7 +53,7 @@ Pre-public audits may defer entire Tier 2 only when:
 Post-public audits must produce:
 
 - `audits/<repository-slug>/audit-report.md`
-- refreshed machine evidence for `R-02`, `R-09`, and hosted gates `G-13`…`G-19`
+- refreshed machine evidence for `R-02`, `R-09`, and hosted gates `G-13` to `G-19`
 
 Post-public waivers:
 

@@ -30,7 +30,7 @@ Listing files is not the same as reading them.
 | Result | When |
 |---|---|
 | `pass` | latest default-branch run is success |
-| `waived` | not applicable — CI failure cannot be waived in `release` or `strict-product` |
+| `waived` | not applicable - CI failure cannot be waived in `release` or `strict-product` |
 | `blocked` | latest run failed and no accepted-risk record exists |
 
 Accepted-risk record must name owner, reason, and fix deadline.

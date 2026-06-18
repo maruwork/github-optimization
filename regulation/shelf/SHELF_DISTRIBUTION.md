@@ -78,7 +78,7 @@ git tag -a v1.1.0 -m "Generic regulation shelf v1.1.0"
 git push origin v1.1.0
 ```
 
-After the remote exists, re-run hosted gates `G-13`…`G-18` in `post-public` phase per `regulation/execution/AUDIT_PHASE_POLICY.md`.
+After the remote exists, re-run hosted gates `G-13` to `G-18` in `post-public` phase per `regulation/execution/AUDIT_PHASE_POLICY.md`.
 
 ## Release Discipline
 

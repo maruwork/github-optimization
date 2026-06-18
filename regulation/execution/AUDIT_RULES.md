@@ -71,6 +71,8 @@ Environment-artifact rule:
 - when this happens, store both:
   - the raw blocked bundle excerpt
   - the successful transcript row used for scoring, plus a short note that the blocked raw result was an execution-environment artifact
+- for Windows collector evidence, the authoritative route is a normal Windows PowerShell host terminal unless the audit explicitly names another validated Windows route
+- if a managed sandbox exposes a WinGet tool path differently than the host terminal, treat that as an execution-environment artifact only after a host-terminal or equivalent transcript proves the same check
 
 ### 5. Define the rerun contract
 
@@ -97,9 +99,9 @@ Read: `regulation/reference/WAIVER_POLICY.md`
 
 Mark findings against:
 
-- Tier 1: `G-01` … `G-22` in `regulation/gates/PUBLIC_PREP_GATE.md`
-- Tier 2: `R-01` … `R-14` in `regulation/gates/RELEASE_QUALITY_GATE.md`
-- Tier 3: `P-01` … `P-10` in `regulation/gates/PRODUCT_READINESS_GATE.md`
+- Tier 1: `G-01` to `G-22` in `regulation/gates/PUBLIC_PREP_GATE.md`
+- Tier 2: `R-01` to `R-14` in `regulation/gates/RELEASE_QUALITY_GATE.md`
+- Tier 3: `P-01` to `P-10` in `regulation/gates/PRODUCT_READINESS_GATE.md`
 
 ## Invalid Audit
 

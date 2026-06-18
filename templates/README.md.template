@@ -75,7 +75,7 @@ This should be the path a new user actually tries first, not an internal shortcu
 If setup and first run are different, keep both short and explicit.
 
 ```bash
-# example only — replace with the real entry command
+# example only - replace with the real entry command
 <entry-command> --version
 <entry-command> <first-successful-action>
 ```

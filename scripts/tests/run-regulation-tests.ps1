@@ -90,7 +90,7 @@ Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
 }
 
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
-# v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
+# v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')
 
 Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {

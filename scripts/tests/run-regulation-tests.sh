@@ -62,7 +62,7 @@ else
   failures=$((failures + 1))
 fi
 PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"
-# v1.1.4 → present always includes audit.manifest.yml change (v1.1.5); stable across future commits
+# v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" rev-parse "v1.1.4^{commit}")"
 SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit allowed (no changes)" 0 \
   bash "$SHELF/scripts/run-delta-audit.sh" "$SHELF" "" release github-optimization "$PRESENT_HEAD"

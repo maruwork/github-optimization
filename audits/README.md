@@ -32,6 +32,6 @@ Examples:
 2. never write audit reports into public product repositories
 3. `audit.manifest.yml` may remain in a product repository root for quickstart automation only
 4. regulation files stay in the parent shelf; only execution results live under `audits/`
-5. audit result files are **gitignored** — they stay local and are not pushed to GitHub
+5. audit result files are **gitignored** - they stay local and are not pushed to GitHub
 
 Read: `regulation/shelf/OUTPUT_PATHS.md`

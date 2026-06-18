@@ -58,7 +58,7 @@ G-01 pass | G-02 pass | G-03 pass | G-04 pass
 G-05 pass | G-06 pass | G-07 pass | G-08 pass
 G-09 pass | G-10 pass | G-11 pass | G-12 pass
 G-13 pass | G-14 pass | G-15 pass
-G-16 pass | G-17 pass | G-18 waived(code scanning deferred — reason: ...)
+G-16 pass | G-17 pass | G-18 waived(code scanning deferred - reason: ...)
 G-19 pass | G-20 pass
 G-21 pass | G-22 pass
 

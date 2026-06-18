@@ -27,23 +27,49 @@ This shelf answers those questions by turning them into one repeatable audit flo
 
 ## What It Does
 
-- checks whether a repository is ready to publish or release on GitHub
-- gathers the evidence needed for that judgment
-- replays quickstart commands when possible
-- writes the results into one audit shelf outside the product repository
-- supports repeat audits with the same rules and output format
+It turns eight publication concerns into AI-executed evidence and gate scoring:
+
+1. reduce pre-publication uncertainty
+2. find missing public files and GitHub settings
+3. detect internal files, AI control files, caches, secret-risk files, and misplaced audit artifacts
+4. check whether README, help, and maintainer information answer a new user's first questions
+5. verify install, setup, and quickstart with execution transcripts
+6. record GitHub-side decisions for CI, Dependabot, CodeQL, secret scanning, and related automation
+7. store audit results in `github-optimization/audits/<slug>/`, outside the product repository
+8. support repeat audits and delta audits with the same criteria
+
+## Three-Layer Model
+
+| Layer | Purpose | Primary files |
+|---|---|---|
+| User value | the eight publication concerns this shelf removes | `README.md`, `regulation/reference/GO_ROLE_CRITERIA.md` |
+| Audit judgment | convert those concerns into pass/blocked decisions | `regulation/gates/*.md`, `regulation/execution/SCOPE_AND_TIERS.md`, `regulation/gates/FULL_AUDIT_VERDICT.md` |
+| Execution and records | gather evidence and store reusable audit artifacts | `scripts/`, `templates/`, `audits/<slug>/` |
+
+Flow:
+
+```text
+user publication concerns
+  -> GO role criteria and 46 gates
+  -> scripts collect evidence and replay quickstarts
+  -> templates shape the report
+  -> audits/<slug>/ stores the result
+  -> final verdict labels the repository state
+```
 
 ## GO Roles
 
-- check if a repository is ready for GitHub publication
-- keep only user-needed, public-facing material
-- catch unnecessary files and internal leftovers before release
-- verify public-facing files, setup, and quickstart
-- help the repository communicate its usefulness effectively
-- collect repeatable publication evidence
-- store audit outputs outside the product repository
-- support repeat audits with shared templates and checks
-- reduce manual publication review work
+GO roles are the internal criteria behind the eight user-value axes:
+
+- ready for GitHub publication
+- only user-needed material is exposed
+- unnecessary files and leftovers are caught before release
+- the repository communicates its usefulness effectively
+- setup and quickstart actually work
+- publication evidence is repeatable
+- audit outputs stay outside the product repository
+- repeat audits are supported
+- manual publication review work is reduced
 
 | Role | Action |
 |---|---|

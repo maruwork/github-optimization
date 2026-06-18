@@ -56,6 +56,7 @@ When both are available, prefer the bash collector as the authoritative cross-pl
 The PowerShell wrapper reuses that path so Windows invocation and Unix invocation stay aligned.
 On Windows, the wrapper should prefer Git Bash over the WSL shim so `gitleaks`, `gh`, and coreutils remain available.
 For authoritative Windows evidence, run the wrapper from a normal Windows PowerShell host terminal.
+If a managed sandbox exposes a WinGet `gitleaks.exe` path differently from the host terminal, keep that raw output but score from the successful host-terminal or equivalent transcript.
 
 ## What They Collect
 

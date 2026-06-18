@@ -9,6 +9,19 @@ Define the internal pass criteria behind the short `GO Roles` list in `README.md
 The README states the user-facing role.
 This file states how the shelf should judge that the role was actually fulfilled.
 
+The product framing starts from eight user-value axes:
+
+1. reduce pre-publication uncertainty
+2. find missing public files and GitHub settings
+3. detect internal files, AI control files, caches, secret-risk files, and misplaced audit artifacts
+4. check whether README, help, and maintainer information answer a new user's first questions
+5. verify install, setup, and quickstart with execution transcripts
+6. record GitHub-side decisions for CI, Dependabot, CodeQL, secret scanning, and related automation
+7. store audit results outside the product repository
+8. support repeat audits and delta audits with the same criteria
+
+GO roles are the internal judgment layer beneath those axes. A role may support more than one user-value axis, and a user-value axis may require several roles.
+
 Use this file with:
 
 - `regulation/gates/GATE_REGISTRY.md`

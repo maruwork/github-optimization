@@ -117,6 +117,9 @@ If the raw collector blocks because the current execution environment cannot exe
 - score the gate from the successful transcript row, not from the raw blocked bundle alone
 - add a short note that the blocked raw result was an execution-environment artifact rather than a repository defect
 
+For Windows collector evidence, prefer a normal Windows PowerShell host terminal as the authoritative route.
+If a managed sandbox reports a WinGet `gitleaks.exe` path as a directory but the host terminal transcript passes, keep both records and score from the host-terminal transcript.
+
 If `gitleaks` is unavailable, do not score `G-01` `pass`.
 Record the missing-tool state and treat Tier 1 as blocked until a baseline secret-scan transcript exists.
 

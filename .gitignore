@@ -2,11 +2,11 @@
 audits/minimal-docs-repo/
 audits/github-optimization/
 
-# Audit results — local workspace only (not pushed to GitHub)
+# Audit results - local workspace only (not pushed to GitHub)
 audits/**/*
 !audits/README.md
 
-# Shelf build history — not part of regulation
+# Shelf build history - not part of regulation
 design/
 roadmap/
 tasks/

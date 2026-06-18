@@ -4,6 +4,25 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.0] - 2026-06-18
+
+### Added
+
+- GO role criteria and coverage references for the public value model
+- quickstart fixture coverage for manifest env, legacy run, and path assertions
+- `.gitattributes` LF normalization for shell scripts
+
+### Changed
+
+- README now frames the shelf around eight publication-readiness concerns
+- evidence rules distinguish raw machine evidence from final gate scoring transcripts
+- Windows collector guidance now treats normal Windows PowerShell host-terminal evidence as authoritative for managed-sandbox path artifacts
+
+### Fixed
+
+- audit evidence wording no longer treats a managed sandbox WinGet path artifact as a repository defect after host-terminal proof exists
+- tracked documentation text is ASCII-normalized to avoid terminal mojibake
+
 ## [1.1.14] - 2026-06-17
 
 ### Added
@@ -22,7 +41,7 @@ The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
 ### Changed
 
-- `README.md` rewritten to match `OUTPUT_PATHS.md`, `REGULATION_INDEX.md`, and full script pipeline (v1.1.6–1.1.12 scope)
+- `README.md` rewritten to match `OUTPUT_PATHS.md`, `REGULATION_INDEX.md`, and full script pipeline (v1.1.6 to 1.1.12 scope)
 
 ## [1.1.12] - 2026-06-17
 
@@ -88,8 +107,8 @@ The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
 ### Added
 
-- `scripts/check-gitignore-consistency.*` — tracked vs `.gitignore` index checks (`G-04`)
-- `scripts/run-delta-audit.*` — delta re-audit orchestrator per `RE_AUDIT_POLICY.md`
+- `scripts/check-gitignore-consistency.*` - tracked vs `.gitignore` index checks (`G-04`)
+- `scripts/run-delta-audit.*` - delta re-audit orchestrator per `RE_AUDIT_POLICY.md`
 - `regulation/reference/GITIGNORE_CONSISTENCY.md`
 - `templates/delta-audit-record.md.template`
 

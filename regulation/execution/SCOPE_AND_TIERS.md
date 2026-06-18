@@ -8,7 +8,7 @@ Define what this common tool owns, what it recommends, and what belongs to proje
 
 Use this file to avoid mixing GitHub public-prep checks with full product-release audits.
 
-## Tier 1 — Minimum Public-Prep Baseline
+## Tier 1 - Minimum Public-Prep Baseline
 
 **Owned by this tool. Required before public release.**
 
@@ -27,7 +27,7 @@ Read:
 - `checklists/publication-decision-checklist.md`
 - `regulation/gates/PUBLIC_PREP_GATE.md`
 
-## Tier 2 — Release Quality
+## Tier 2 - Release Quality
 
 **Recommended for repositories that ship runnable tools, not required for every public repository.**
 
@@ -42,7 +42,7 @@ Read:
 
 - `checklists/release-quality-checklist.md`
 
-## Tier 3 — Product Readiness
+## Tier 3 - Product Readiness
 
 **Required only for audit mode `strict-product`.**
 

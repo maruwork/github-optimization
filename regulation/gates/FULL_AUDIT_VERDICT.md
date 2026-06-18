@@ -6,7 +6,7 @@ Status: Active
 
 Convert Tier 1, Tier 2, and Tier 3 gate results into one final label.
 
-Use after `regulation/execution/AUDIT_RUNBOOK.md` Steps 7–10.
+Use after `regulation/execution/AUDIT_RUNBOOK.md` Steps 7 to 10.
 
 Gate count: 46 (`regulation/gates/GATE_REGISTRY.md`)
 Waiver rules: `regulation/reference/WAIVER_POLICY.md`

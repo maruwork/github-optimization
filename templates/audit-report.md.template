@@ -94,6 +94,7 @@ Use one subsection per hosted-settings claim bundle. Store the exact `gh api`, `
 
 Keep the raw collector output here. This does not replace the transcript sections above.
 If the raw bundle shows an execution-environment artifact, preserve it and score from the explicit successful transcript row that verified the same claim.
+For Windows collector evidence, record whether the scoring transcript came from a normal Windows PowerShell host terminal or another validated route.
 
 <!-- GO_MACHINE_EVIDENCE_START -->
 ```text

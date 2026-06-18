@@ -67,6 +67,6 @@ Filled audit artifacts must not be tracked; they belong in `audits/<slug>/` on d
 
 ## Result Rule
 
-- `blocked` count `0` → screening `PASS`
-- any `blocked` row → screening `BLOCKED` (exit code 1)
-- `review` rows alone → screening `PASS_WITH_REVIEW`
+- `blocked` count `0` -> screening `PASS`
+- any `blocked` row -> screening `BLOCKED` (exit code 1)
+- `review` rows alone -> screening `PASS_WITH_REVIEW`

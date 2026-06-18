@@ -10,7 +10,7 @@ The responsible AI reads the Required set below. Everything in Excluded is not r
 
 Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 
-## Required — Generic Regulation
+## Required - Generic Regulation
 
 ### Entry
 
@@ -115,7 +115,7 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 - `templates/README.md`
 - all `templates/*.template` referenced by `templates/README.md`
 
-## Excluded — Not Generic Regulation
+## Excluded - Not Generic Regulation
 
 | Path | Reason |
 |---|---|

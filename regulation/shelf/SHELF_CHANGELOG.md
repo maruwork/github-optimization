@@ -15,12 +15,16 @@
 - README, checklists, gates, and execution rules now treat role communication, rerun evidence, and reduced manual review as formal audit conditions
 - hosted issue-template evidence can now be verified from repository contents when Community Profile omits the template entry
 - publication-evidence rules now require a direct rerun contract and a minimum evidence bundle
+- README and GO role criteria now use the same eight publication-readiness user-value axes
+- evidence rules now distinguish raw collector output from final gate scoring transcripts when a managed sandbox produces a host-specific tool-path artifact
 
 ### Fixed
 
 - PowerShell and bash evidence scripts now harden Git access against `safe.directory` and global-ignore environment drift
 - quickstart runners now support shared `env`, post-run path assertions, and legacy manifest `run`
 - secret-scan evidence now records an explicit blocked state when `gitleaks` is unavailable or cannot execute
+- root `CHANGELOG.md` latest section now matches shelf version `1.2.0`
+- tracked documentation text is ASCII-normalized to avoid terminal mojibake
 
 All notable changes to the generic regulation shelf.
 

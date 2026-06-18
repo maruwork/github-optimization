@@ -45,7 +45,7 @@ If the assigner does not specify mode, default to `release` for runnable tools a
 The self-check is complete only when all of the following exist:
 
 - filled `audits/<repository-slug>/audit-report.md` in this shelf
-- Tier 1 gate table scored (`G-01` … `G-22`)
+- Tier 1 gate table scored (`G-01` to `G-22`)
 - Tier 2 gate table scored or formally deferred with `audits/<repository-slug>/tier2-defer-record.md`
 - Tier 3 gate table scored when mode is `strict-product`
 - final label from `regulation/gates/FULL_AUDIT_VERDICT.md`
@@ -68,11 +68,11 @@ For multiple repositories in one assignment, read `regulation/execution/MULTI_RE
 
 Use only when they help repeatability:
 
-- `scripts/run-full-audit.*` — preferred entry for scaffold + evidence
-- `scripts/validate-regulation-index.*` — shelf self-check before auditing targets
+- `scripts/run-full-audit.*` - preferred entry for scaffold + evidence
+- `scripts/validate-regulation-index.*` - shelf self-check before auditing targets
 - `scripts/collect-audit-evidence.*`
 - `audit.manifest.yml` in the target repository
 - `scripts/run-audit-quickstart.*`
-- `scripts/tests/run-regulation-tests.*` — after shelf edits
+- `scripts/tests/run-regulation-tests.*` - after shelf edits
 
 These are helpers. They do not replace reading the regulation shelf.
