@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.5] - 2026-06-18
+
+### Fixed
+
+- Quickstart fixture environment names no longer use token-like wording, reducing secret-risk false positives during all-file audits.
+
 ## [1.2.4] - 2026-06-18
 
 ### Fixed

@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.5 - 2026-06-18
+
+### Fixed
+
+- Quickstart fixture environment names no longer use token-like wording, reducing secret-risk false positives during all-file audits.
+
 ## 1.2.4 - 2026-06-18
 
 ### Fixed
