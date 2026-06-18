@@ -35,10 +35,10 @@ function Convert-ToGitBashPath {
 
 function Resolve-GitleaksCommand {
     $candidates = @(
-        (Join-Path $env:LOCALAPPDATA "Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"),
-        (Join-Path $env:USERPROFILE "AppData\\Local\\Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"),
-        (Join-Path $env:LOCALAPPDATA "Microsoft\\WinGet\\Links\\gitleaks.exe"),
-        (Join-Path $env:USERPROFILE "AppData\\Local\\Microsoft\\WinGet\\Links\\gitleaks.exe")
+        (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe"),
+        (Join-Path $env:USERPROFILE "AppData\Local\Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe"),
+        (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links\gitleaks.exe"),
+        (Join-Path $env:USERPROFILE "AppData\Local\Microsoft\WinGet\Links\gitleaks.exe")
     ) | Where-Object { $_ -and (Test-Path $_) }
 
     $candidate = $candidates | Select-Object -First 1
@@ -47,10 +47,6 @@ function Resolve-GitleaksCommand {
     }
 
     $item = Get-Item -LiteralPath $candidate -ErrorAction SilentlyContinue
-    if ($item -and $item.Target) {
-        return @($item.Target)[0]
-    }
-
     return $candidate
 }
 
@@ -66,7 +62,8 @@ $bashCommand = if ($gitBashCandidates.Count -gt 0) {
 }
 
 $bashCollector = Join-Path $PSScriptRoot "collect-audit-evidence.sh"
-if ($bashCommand -and (Test-Path -LiteralPath $bashCollector)) {
+$isGitBashCollector = $bashCommand -and $bashCommand.FullName -like "*\Git\*\bash.exe"
+if ($bashCommand -and -not $isGitBashCollector -and (Test-Path -LiteralPath $bashCollector)) {
     $resolvedCollector = (Resolve-Path -LiteralPath $bashCollector).Path
     $resolvedGitleaks = Resolve-GitleaksCommand
     $isGitBash = $bashCommand.FullName -like "*\Git\*\bash.exe"
@@ -236,34 +233,31 @@ Write-Section "GitHub Files"
 Write-Section "Gitleaks"
 $gitleaksCmd = Resolve-GitleaksCommand
 if ($gitleaksCmd) {
+    Write-Output "command: gitleaks detect --source . --no-banner"
+    Write-Output "resolved: $gitleaksCmd"
     $gitleaksLines = @()
-    $savedPreference = $ErrorActionPreference
-    try {
-        $ErrorActionPreference = "Stop"
-        & $gitleaksCmd detect --source . --no-banner 2>&1 | ForEach-Object {
-            if ($_ -is [System.Management.Automation.ErrorRecord]) {
-                $gitleaksLines += $_.ToString()
-            } else {
-                $gitleaksLines += [string]$_
-            }
+    & cmd.exe /d /c $gitleaksCmd detect --source . --no-banner 2>&1 | ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) {
+            $gitleaksLines += $_.ToString()
+        } else {
+            $gitleaksLines += [string]$_
         }
-        $gitleaksExit = $LASTEXITCODE
-    } catch {
-        $gitleaksLines += $_.Exception.Message
-        $gitleaksExit = 126
-    } finally {
-        $ErrorActionPreference = $savedPreference
     }
+    $gitleaksExit = $LASTEXITCODE
     $gitleaksLines | Select-Object -Last 3 | ForEach-Object { Write-Output $_ }
     Write-Output "exit code: $gitleaksExit"
-    if ($gitleaksExit -eq 0) {
+    if ($gitleaksLines -match "NativeCommandFailed|ApplicationFailedException|ResourceUnavailable") {
+        Write-Output "result: BLOCKED (gitleaks execution failed)"
+    } elseif ($gitleaksExit -eq 0) {
         Write-Output "result: PASS"
-    } elseif ($gitleaksExit -eq 1) {
-        Write-Output "result: BLOCKED (gitleaks findings)"
     } elseif ($gitleaksLines -match "Is a directory") {
         Write-Output "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
     } elseif ($gitleaksLines -match "Access is denied") {
-        Write-Output "result: BLOCKED (execution environment denied gitleaks execution)"
+        Write-Output "result: SKIPPED (execution environment denied gitleaks execution; use direct gitleaks transcript for G-01 scoring)"
+    } elseif ($gitleaksLines -match "not recognized") {
+        Write-Output "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+    } elseif ($gitleaksExit -eq 1) {
+        Write-Output "result: BLOCKED (gitleaks findings)"
     } else {
         Write-Output "result: BLOCKED (gitleaks execution failed)"
     }

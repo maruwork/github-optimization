@@ -37,6 +37,11 @@ else
   SLUG="$(basename "$REPO_PATH" | tr '[:upper:]' '[:lower:]')"
 fi
 
+if [[ ! "$SLUG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$SLUG" == *..* ]]; then
+  echo "Invalid audit slug: $SLUG" >&2
+  exit 2
+fi
+
 AUDIT_DIR="$SHELF/audits/$SLUG"
 REPORT_PATH="$AUDIT_DIR/audit-report.md"
 REPORT_REL="audits/$SLUG/audit-report.md"
@@ -65,6 +70,14 @@ set_report_machine_evidence() {
   ' "$path" >"$path.tmp" && mv "$path.tmp" "$path"
 }
 
+prepare_audit_dir() {
+  if [[ "$AUDIT_DIR" == "$SHELF"/audits/* ]]; then
+    (cd "$SHELF" && mkdir -p "audits/$SLUG")
+  else
+    mkdir -p "$AUDIT_DIR"
+  fi
+}
+
 echo "=== Full Audit Orchestrator ==="
 echo "Shelf: $SHELF"
 echo "Repository: $REPO_PATH"
@@ -78,7 +91,7 @@ if [[ "$SKIP_SHELF_VALIDATION" != "1" ]]; then
   bash "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
 fi
 
-mkdir -p "$AUDIT_DIR"
+prepare_audit_dir
 TEMPLATE_PATH="$SHELF/templates/audit-report.md.template"
 
 REPORT_IS_FINAL=0

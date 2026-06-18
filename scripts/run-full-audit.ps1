@@ -33,6 +33,11 @@ if ($AuditSlug) {
     $slug = (Split-Path $RepoPath -Leaf).ToLower()
 }
 
+if ($slug -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$' -or $slug.Contains("..")) {
+    [Console]::Error.WriteLine("Invalid audit slug: $slug")
+    exit 2
+}
+
 $auditDir = Join-Path $Shelf "audits\$slug"
 $reportPath = Join-Path $auditDir "audit-report.md"
 $reportRel = "audits/$slug/audit-report.md"

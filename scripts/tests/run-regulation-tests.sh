@@ -76,7 +76,12 @@ evidence_out="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$TRACKED_IGNORE
 evidence_code=$?
 set -e
 if [[ "$evidence_code" -eq 0 ]] && echo "$evidence_out" | grep -q "=== Root Files ==="; then
-  echo "  PASS"
+  if echo "$evidence_out" | grep -Eq "result: BLOCKED \(execution environment .*gitleaks"; then
+    echo "  FAIL: gitleaks execution-environment artifact must be SKIPPED or scored from another transcript"
+    failures=$((failures + 1))
+  else
+    echo "  PASS"
+  fi
 else
   echo "  FAIL: expected exit 0 and Root Files section, got exit $evidence_code"
   failures=$((failures + 1))

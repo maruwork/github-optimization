@@ -110,6 +110,9 @@ Assert-Pass "collect-audit-evidence completes after blocked gitignore" {
     $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $trackedIgnoredFixture 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE" }
     if ($out -notmatch "=== Root Files ===") { throw "evidence transcript truncated before Root Files" }
+    if ($out -match "result: BLOCKED \(execution environment .*gitleaks") {
+        throw "gitleaks execution-environment artifact must be SKIPPED or scored from another transcript"
+    }
 }
 
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)

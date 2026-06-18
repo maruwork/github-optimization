@@ -39,6 +39,13 @@ AUDIT_DIR="$SHELF/audits/$SLUG"
 REPORT_PATH="$AUDIT_DIR/audit-report.md"
 DELTA_PATH="$AUDIT_DIR/delta-audit-record.md"
 
+validate_slug() {
+  if [[ ! "$SLUG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$SLUG" == *..* ]]; then
+    echo "Invalid audit slug: $SLUG" >&2
+    exit 2
+  fi
+}
+
 parse_prior_head() {
   local file="$1"
   local line
@@ -48,6 +55,16 @@ parse_prior_head() {
     return 0
   fi
   return 1
+}
+
+validate_slug
+
+prepare_audit_dir() {
+  if [[ "$AUDIT_DIR" == "$SHELF"/audits/* ]]; then
+    (cd "$SHELF" && mkdir -p "audits/$SLUG")
+  else
+    mkdir -p "$AUDIT_DIR"
+  fi
 }
 
 echo "=== Delta Audit Orchestrator ==="
@@ -102,7 +119,7 @@ fi
 DELTA_MODE="allowed"
 [[ ${#invalidations[@]} -gt 0 ]] && DELTA_MODE="upgrade-to-full"
 
-mkdir -p "$AUDIT_DIR"
+prepare_audit_dir
 cp "$SHELF/templates/delta-audit-record.md.template" "$DELTA_PATH"
 
 echo

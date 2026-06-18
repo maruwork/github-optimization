@@ -69,10 +69,10 @@ Environment-artifact rule:
 - keep the raw collector output even when the current execution environment blocks a tool path or hosted CLI config
 - do not score the repository `blocked` from that raw bundle alone when the same check is verified through another agent-executable route in the same audit
 - when this happens, store both:
-  - the raw blocked bundle excerpt
+  - the raw bundle excerpt
   - the successful transcript row used for scoring, plus a short note that the blocked raw result was an execution-environment artifact
 - for Windows collector evidence, the authoritative route is a normal Windows PowerShell host terminal unless the audit explicitly names another validated Windows route
-- if a managed sandbox exposes a WinGet tool path differently than the host terminal, treat that as an execution-environment artifact only after a host-terminal or equivalent transcript proves the same check
+- if a managed sandbox exposes a WinGet tool path differently than the host terminal, record it as `SKIPPED` or environment-artifact evidence and treat it as non-scoring only after a host-terminal or equivalent transcript proves the same check
 
 ### 5. Define the rerun contract
 

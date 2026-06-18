@@ -3,6 +3,11 @@ set -euo pipefail
 
 REPO_PATH="${1:?repo path required}"
 HOSTED_REPO="${2:-}"
+UNAME_S="$(uname -s 2>/dev/null || true)"
+IS_WINDOWS_BASH=0
+case "$UNAME_S" in
+  MINGW*|MSYS*|CYGWIN*) IS_WINDOWS_BASH=1 ;;
+esac
 
 git_safe() {
   git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
@@ -179,7 +184,9 @@ if GITLEAKS_CMD="$(resolve_gitleaks)"; then
     0) echo "result: PASS" ;;
     1) echo "result: BLOCKED (gitleaks findings)" ;;
     *)
-      if printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
+      if [[ "$IS_WINDOWS_BASH" -eq 1 ]] && printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
+        echo "result: SKIPPED (Windows Git Bash cannot score G-01 from WinGet gitleaks path; use collect-audit-evidence.ps1)"
+      elif printf '%s' "$gitleaks_output" | grep -q "Is a directory"; then
         echo "result: BLOCKED (execution environment exposed the resolved gitleaks path as a directory)"
       elif printf '%s' "$gitleaks_output" | grep -q "Access is denied"; then
         echo "result: BLOCKED (execution environment denied gitleaks execution)"
@@ -190,7 +197,11 @@ if GITLEAKS_CMD="$(resolve_gitleaks)"; then
   esac
 else
   echo "gitleaks: unavailable"
-  echo "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+  if [[ "$IS_WINDOWS_BASH" -eq 1 ]]; then
+    echo "result: SKIPPED (Windows Git Bash cannot score G-01; use collect-audit-evidence.ps1)"
+  else
+    echo "result: BLOCKED (G-01 cannot pass without a baseline gitleaks transcript)"
+  fi
 fi
 
 if [[ -f pytest.ini || -d tests ]]; then

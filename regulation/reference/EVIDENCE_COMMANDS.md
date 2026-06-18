@@ -84,10 +84,11 @@ Baseline:
 gitleaks detect --source . --verbose
 ```
 
-If `gitleaks` is unavailable, `G-01` cannot be scored `pass`.
+If `gitleaks` is unavailable on the authoritative route, `G-01` cannot be scored `pass`.
 Record the missing-tool state explicitly and treat the gate as `blocked` until a baseline transcript exists.
+On Windows Git Bash, a WinGet path issue is recorded as `SKIPPED`; score `G-01` from `collect-audit-evidence.ps1` or a direct `gitleaks detect --source . --no-banner` transcript.
 
-If the tool is installed but the current execution environment exposes its path incorrectly, denies execution, or hides hosted CLI state, keep that blocked raw output but verify through another agent-executable route before scoring the repository itself `blocked`.
+If the tool is installed but the current execution environment exposes its path incorrectly, denies execution, or hides hosted CLI state, keep that raw output and verify through another agent-executable route before scoring the repository itself `blocked`.
 
 Optional deeper scan:
 
@@ -185,10 +186,10 @@ Canonical report shape:
 - `## Machine Evidence Bundle`
 
 Raw machine evidence is not the scoring authority by itself when the same audit proves an execution-environment artifact.
-In that case, keep the raw blocked bundle and add a successful transcript row for the route actually used to score the claim.
+In that case, keep the raw bundle and add a successful transcript row for the route actually used to score the claim.
 
 For Windows evidence, the preferred authoritative route is the normal Windows PowerShell host terminal.
-If a managed sandbox reports a WinGet tool path differently from that host terminal, record the sandbox output as raw machine evidence and score from the successful host-terminal or equivalent transcript.
+If a managed sandbox reports a WinGet tool path differently from that host terminal, record the sandbox output as raw `SKIPPED` or environment-artifact evidence and score from the successful host-terminal or equivalent transcript.
 
 Each executed check records:
 

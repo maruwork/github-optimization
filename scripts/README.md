@@ -23,7 +23,7 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 | `check-gitignore-consistency.sh` | Linux/macOS bash - `.gitignore` vs index consistency |
 | `run-delta-audit.ps1` | Windows PowerShell - delta re-audit orchestrator |
 | `run-delta-audit.sh` | Linux/macOS bash - delta re-audit orchestrator |
-| `collect-audit-evidence.ps1` | Windows PowerShell wrapper; delegates to bash companion when available |
+| `collect-audit-evidence.ps1` | Windows PowerShell native collector |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
 | `run-audit-quickstart.sh` | Linux/macOS bash |
@@ -52,11 +52,10 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 ./collect-audit-evidence.sh /path/to/repo owner/repo
 ```
 
-When both are available, prefer the bash collector as the authoritative cross-platform evidence path.
-The PowerShell wrapper reuses that path so Windows invocation and Unix invocation stay aligned.
-On Windows, the wrapper should prefer Git Bash over the WSL shim so `gitleaks`, `gh`, and coreutils remain available.
-For authoritative Windows evidence, run the wrapper from a normal Windows PowerShell host terminal.
-If a managed sandbox exposes a WinGet `gitleaks.exe` path differently from the host terminal, keep that raw output but score from the successful host-terminal or equivalent transcript.
+Use `collect-audit-evidence.ps1` as the authoritative Windows evidence path.
+Use `collect-audit-evidence.sh` for Linux/macOS bash evidence.
+Windows Git Bash may report `Gitleaks` as `SKIPPED`; score `G-01` from the Windows PowerShell collector or a direct `gitleaks detect --source . --no-banner` transcript.
+If a managed sandbox denies a WinGet `gitleaks.exe` path, keep that raw `SKIPPED` output and score from the successful direct transcript.
 
 ## What They Collect
 
@@ -68,7 +67,7 @@ If a managed sandbox exposes a WinGet `gitleaks.exe` path differently from the h
 - latest CI run summary when `gh` is available
 - hosted metadata and Community Profile when `gh` is available
 - security feature state when `gh` is available
-- Gitleaks result when `gitleaks` is available; otherwise an explicit blocked state for `G-01`
+- Gitleaks result when `gitleaks` is available; Windows Git Bash may emit `SKIPPED` and defer `G-01` scoring to PowerShell or a direct transcript
 - large tracked files over 512KB (`G-22`)
 - pytest result when `pytest` is available (`R-12` baseline)
 - hosted issue-template contents when issues are enabled and GitHub Community Profile omits the template entry
@@ -100,8 +99,8 @@ Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 Scripts do not replace full-file read review or gate scoring.
 They replace human-operated evidence gathering and shelf self-validation.
 
-`collect-audit-evidence.*` can leave a gate in a visibly blocked state.
-Example: if `gitleaks` is unavailable, the script records that `G-01` cannot pass yet.
+`collect-audit-evidence.*` can leave a gate in a visibly blocked state when a required tool is unavailable on the authoritative route.
+Windows Git Bash is not the authoritative route for `G-01`; it records `SKIPPED` for Windows-only Gitleaks path issues.
 
 `run-full-audit.*` captures the raw machine evidence bundle into the scaffolded report.
 The agent still must complete read coverage, per-claim transcript rows, and gate scoring before closing the audit.
