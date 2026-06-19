@@ -36,12 +36,14 @@ References:
 
 Record before Step 1:
 
-- repository local path
+- repository slug or display name
 - hosted URL (`owner/repo`)
 - audit date
 - executor (`agent:<name>` by default)
 - audit mode: `public-prep` | `release` | `strict-product`
 - audit phase: `pre-public` | `post-public`
+
+Do not copy machine-local absolute paths into tracked or shareable artifacts.
 
 | Mode | Required tiers |
 |---|---|

@@ -12,6 +12,8 @@ if (-not $ShelfPath) {
     }
 }
 
+$shelfLabel = Split-Path $ShelfPath -Leaf
+
 $indexPath = Join-Path $ShelfPath "regulation/REGULATION_INDEX.md"
 if (-not (Test-Path $indexPath)) {
     Write-Error "regulation/REGULATION_INDEX.md not found at $ShelfPath"
@@ -63,7 +65,7 @@ if (Test-Path $gatePath) {
 }
 
 Write-Output "=== Regulation Index Validation ==="
-Write-Output "Shelf: $ShelfPath"
+Write-Output "Shelf: $shelfLabel"
 Write-Output "Required paths checked: $(($required | Select-Object -Unique).Count)"
 
 if ($failures.Count -eq 0) {

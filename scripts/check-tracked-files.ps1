@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 Push-Location $RepoPath
+$repoLabel = Split-Path $RepoPath -Leaf
 
 function Invoke-Git {
     param(
@@ -101,7 +102,7 @@ if ($rootEntries.Count -gt 12) {
 }
 
 Write-Output "=== Tracked File Screening ==="
-Write-Output "Repository: $RepoPath"
+Write-Output "Repository: $repoLabel"
 Write-Output "Mode: $(if ($isShelf) { 'regulation-shelf' } else { 'product' })"
 Write-Output "Tracked files: $($files.Count)"
 

@@ -7,7 +7,6 @@ Output path: `audits/<repository-slug>/delta-audit-record.md`
 ## Target
 
 - repository:
-- local path:
 - hosted URL:
 - audited at:
 - executor:

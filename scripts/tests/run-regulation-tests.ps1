@@ -169,6 +169,20 @@ Assert-Pass "collect-audit-evidence treats gitleaks access-denied artifact as sk
     }
 }
 
+Assert-Pass "collect-audit-evidence redacts local absolute paths" {
+    $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $Shelf 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+    foreach ($leak in @(
+            $Shelf,
+            $env:USERPROFILE,
+            [System.IO.Path]::GetTempPath()
+        )) {
+        if ($leak -and $out.Contains($leak)) {
+            throw "found local absolute path leak: $leak`n$out"
+        }
+    }
+}
+
 Assert-Pass "collect-audit-evidence handles non-ASCII tracked paths in large-file scan" {
     $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-unicode-fixture-" + [System.Guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Path $tempRepo | Out-Null
@@ -523,8 +537,8 @@ Assert-Pass "collect-audit-evidence retries public gh api with isolated GH_CONFI
         "if /I ""%target%""==""repos/example/gh-config-retry/actions/runs?per_page=3"" goto runs",
         "goto runs",
         ":denied",
-        "echo warning: failed to load config: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
-        "echo failed to create root command: failed to read configuration: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
+        "echo warning: failed to load config: open ^<GH_CONFIG_DIR^>/config.yml: Access is denied. 1>&2",
+        "echo failed to create root command: failed to read configuration: open ^<GH_CONFIG_DIR^>/config.yml: Access is denied. 1>&2",
         "exit /b 1",
         ":repo",
         "echo {""description"":""retry-ok"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
@@ -605,8 +619,8 @@ Assert-Pass "collect-audit-evidence does not treat gh auth-required retry failur
         "echo Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token. 1>&2",
         "exit /b 4",
         ":denied",
-        "echo warning: failed to load config: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
-        "echo failed to create root command: failed to read configuration: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
+        "echo warning: failed to load config: open ^<GH_CONFIG_DIR^>/config.yml: Access is denied. 1>&2",
+        "echo failed to create root command: failed to read configuration: open ^<GH_CONFIG_DIR^>/config.yml: Access is denied. 1>&2",
         "exit /b 1"
     )
     $previousPath = $env:PATH

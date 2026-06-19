@@ -12,7 +12,7 @@ Read: `../regulation/shelf/OUTPUT_PATHS.md`
 
 ## Repository
 
-- local path:
+- repository:
 - hosted URL:
 - reviewed at:
 

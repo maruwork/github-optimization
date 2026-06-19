@@ -6,6 +6,7 @@ VERBOSE="${VERBOSE:-0}"
 
 cd "$REPO_PATH"
 REPO_PATH="$(pwd)"
+REPO_LABEL="$(basename "$REPO_PATH")"
 
 git_safe() {
   git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
@@ -93,7 +94,7 @@ if [[ "$root_count" -gt 12 ]]; then
 fi
 
 echo "=== Tracked File Screening ==="
-echo "Repository: $REPO_PATH"
+echo "Repository: $REPO_LABEL"
 if [[ "$is_shelf" -eq 1 ]]; then echo "Mode: regulation-shelf"; else echo "Mode: product"; fi
 echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 

@@ -8,10 +8,24 @@ IS_WINDOWS_BASH=0
 case "$UNAME_S" in
   MINGW*|MSYS*|CYGWIN*) IS_WINDOWS_BASH=1 ;;
 esac
+REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+REPO_LABEL="$(basename "$REPO_PATH")"
+
+redact_path() {
+  local text="$1"
+  local result="$text"
+  for prefix in "$REPO_PATH" "${GITHUB_OPTIMIZATION_ROOT:-}" "${USERPROFILE:-}" "${HOME:-}" "${TMPDIR:-}" "/tmp"; do
+    [[ -n "$prefix" ]] || continue
+    result="${result//$prefix/<REDACTED_PATH>}"
+  done
+  printf '%s' "$result"
+}
 
 git_safe() {
   git -c core.excludesFile=/dev/null -c core.quotepath=false -c "safe.directory=$REPO_PATH" "$@"
 }
+
+cd "$REPO_PATH"
 
 gh_auth_required() {
   local text="${1:-}"
@@ -119,36 +133,39 @@ resolve_gitleaks() {
     printf '%s\n' "$GITLEAKS_CMD"
     return 0
   fi
+  local -a candidate_roots=()
   local candidate
   local resolved
   local windows_path
   local normalized
-  for windows_path in "${LOCALAPPDATA:-}" "${USERPROFILE:-}"; do
+  for windows_path in "${LOCALAPPDATA:-}" "${USERPROFILE:-}" "${HOME:-}"; do
     [[ -n "$windows_path" ]] || continue
     normalized="${windows_path//\\//}"
     if [[ "$normalized" =~ ^([A-Za-z]):/(.*)$ ]]; then
-      candidate="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}/Microsoft/WinGet/Links/gitleaks.exe"
-      resolved="$(resolve_existing_path "$candidate" || true)"
-      if [[ -n "$resolved" && -x "$resolved" ]]; then
-        printf '%s\n' "$resolved"
-        return 0
-      fi
+      normalized="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}"
     fi
+    normalized="${normalized%/}"
+    [[ -n "$normalized" ]] || continue
+    case "$normalized" in
+      */AppData/Local)
+        candidate_roots+=("$normalized")
+        ;;
+      *)
+        candidate_roots+=("$normalized/AppData/Local")
+        ;;
+    esac
   done
-  for candidate in \
-    "${HOME:-}/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe" \
-    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
-    /c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
-    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Packages/*/gitleaks.exe \
-    /c/Users/*/AppData/Local/Microsoft/WinGet/Packages/*/gitleaks.exe \
-    /mnt/c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe \
-    /c/Users/*/AppData/Local/Microsoft/WinGet/Links/gitleaks.exe
-  do
-    [[ -e "$candidate" ]] || continue
-    resolved="$(resolve_existing_path "$candidate" || true)"
-    [[ -n "$resolved" && -x "$resolved" ]] || continue
-    printf '%s\n' "$resolved"
-    return 0
+  for windows_path in "${candidate_roots[@]}"; do
+    for candidate in \
+      "$windows_path/Microsoft/WinGet/Links/gitleaks.exe" \
+      "$windows_path"/Microsoft/WinGet/Packages/*/gitleaks.exe
+    do
+      [[ -e "$candidate" ]] || continue
+      resolved="$(resolve_existing_path "$candidate" || true)"
+      [[ -n "$resolved" && -x "$resolved" ]] || continue
+      printf '%s\n' "$resolved"
+      return 0
+    done
   done
   if command -v gitleaks >/dev/null 2>&1; then
     resolved="$(resolve_existing_path "$(command -v gitleaks)" || true)"
@@ -178,22 +195,20 @@ blocked() {
   echo "result: BLOCKED $1"
 }
 
-cd "$REPO_PATH"
-
 section "Repository"
-echo "Path: $REPO_PATH"
+echo "Repository: $REPO_LABEL"
 if [[ -n "$HOSTED_REPO" ]]; then
   echo "Hosted: $HOSTED_REPO"
 fi
 echo "collector: scripts/collect-audit-evidence.sh"
-echo "working directory: $REPO_PATH"
+echo "working directory: repository root"
 
 section "Git"
-echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH rev-parse HEAD"
+echo "command: git rev-parse HEAD"
 git_safe rev-parse HEAD
-echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH describe --tags --always"
+echo "command: git describe --tags --always"
 git_safe describe --tags --always 2>/dev/null || true
-echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH ls-files | wc -l"
+echo "command: git ls-files | wc -l"
 echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
@@ -251,7 +266,8 @@ done
 
 section "Gitleaks"
 if GITLEAKS_CMD="$(resolve_gitleaks)"; then
-  echo "command: $GITLEAKS_CMD detect --source . --no-banner"
+  echo "command: gitleaks detect --source . --no-banner"
+  echo "resolved: $(redact_path "$GITLEAKS_CMD")"
   set +e
   gitleaks_output="$("$GITLEAKS_CMD" detect --source . --no-banner 2>&1)"
   gitleaks_code=$?
@@ -371,7 +387,7 @@ MANIFEST_PATH="$REPO_PATH/audit.manifest.yml"
 QUICKSTART_SCRIPT="$(cd "$(dirname "$0")" && pwd)/run-audit-quickstart.sh"
 if [[ -f "$MANIFEST_PATH" && -f "$QUICKSTART_SCRIPT" ]]; then
   section "Quickstart"
-  echo "command: bash $QUICKSTART_SCRIPT $REPO_PATH"
+  echo "command: bash scripts/run-audit-quickstart.sh <repo>"
   set +e
   bash "$QUICKSTART_SCRIPT" "$REPO_PATH"
   qs_code=$?

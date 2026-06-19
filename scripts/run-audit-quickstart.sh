@@ -2,6 +2,7 @@
 set -euo pipefail
 
 REPO_PATH="${1:?repo path required}"
+REPO_PATH="$(cd "$REPO_PATH" && pwd)"
 MANIFEST_PATH="${2:-$REPO_PATH/audit.manifest.yml}"
 
 if [[ ! -f "$MANIFEST_PATH" ]]; then
@@ -39,7 +40,11 @@ resolve_cmd() {
 }
 
 echo "=== Quickstart Manifest ==="
-echo "Manifest: $MANIFEST_PATH"
+if [[ "$MANIFEST_PATH" == "$REPO_PATH/"* ]]; then
+  echo "Manifest: ${MANIFEST_PATH#"$REPO_PATH/"}"
+else
+  echo "Manifest: custom manifest"
+fi
 
 WORKDIR="$(awk -F': *' '/^workdir:/{print $2; exit}' "$MANIFEST_PATH")"
 WORKDIR="$(trim_manifest_value "$WORKDIR")"
@@ -76,9 +81,9 @@ if [[ "$WORKDIR" == "isolated" ]]; then
   TEMP_ROOT="$(mktemp -d -t audit-quickstart.XXXXXX)"
   cp -a "$REPO_PATH/." "$TEMP_ROOT/"
   RUN_ROOT="$TEMP_ROOT"
-  echo "Isolated workdir: $RUN_ROOT"
+  echo "Isolated workdir: temp copy"
 else
-  echo "In-place workdir: $RUN_ROOT"
+  echo "In-place workdir: repository root"
 fi
 
 failures=0

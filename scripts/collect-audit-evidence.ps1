@@ -6,6 +6,8 @@ param(
 
 $resolvedRepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 $RepoPath = $resolvedRepoPath
+$RepoLabel = Split-Path $RepoPath -Leaf
+$ShelfPath = Split-Path $PSScriptRoot -Parent
 
 function Convert-ToBashPath {
     param([string]$Path)
@@ -355,8 +357,32 @@ function Write-Section($title) {
     Write-Output "=== $title ==="
 }
 
+function Get-RedactedPath {
+    param([string]$Text)
+    if (-not $Text) { return $Text }
+
+    $result = $Text
+    if ($RepoPath) {
+        $result = $result -replace [regex]::Escape($RepoPath.TrimEnd('\')), '<REPO_PATH>'
+    }
+    if ($ShelfPath) {
+        $result = $result -replace [regex]::Escape($ShelfPath.TrimEnd('\')), '<SHELF_PATH>'
+    }
+    if ($env:USERPROFILE) {
+        $result = $result -replace [regex]::Escape($env:USERPROFILE.TrimEnd('\')), '<HOME>'
+    }
+    if ($HOME) {
+        $result = $result -replace [regex]::Escape($HOME.TrimEnd('\')), '<HOME>'
+    }
+    $tempPath = [System.IO.Path]::GetTempPath()
+    if ($tempPath) {
+        $result = $result -replace [regex]::Escape($tempPath.TrimEnd('\')), '<TMP>'
+    }
+    return $result
+}
+
 Write-Section "Repository"
-Write-Output "Path: $RepoPath"
+Write-Output "Repository: $RepoLabel"
 if ($HostedRepo) { Write-Output "Hosted: $HostedRepo" }
 
 Write-Section "Git"
@@ -415,7 +441,7 @@ Write-Section "Gitleaks"
 $gitleaksCmd = Resolve-GitleaksCommand
 if ($gitleaksCmd) {
     Write-Output "command: gitleaks detect --source . --no-banner"
-    Write-Output "resolved: $gitleaksCmd"
+    Write-Output ("resolved: " + (Get-RedactedPath $gitleaksCmd))
     $gitleaksLines = @()
     & cmd.exe /d /c $gitleaksCmd detect --source . --no-banner 2>&1 | ForEach-Object {
         if ($_ -is [System.Management.Automation.ErrorRecord]) {
@@ -530,7 +556,7 @@ $quickstartScript = Join-Path $PSScriptRoot "run-audit-quickstart.ps1"
 if ((Test-Path $manifestPath) -and (Test-Path $quickstartScript)) {
     Write-Section "Quickstart"
     $quickstartOutput = & $quickstartScript -RepoPath $RepoPath 2>&1
-    $quickstartOutput | ForEach-Object { Write-Output $_ }
+    $quickstartOutput | ForEach-Object { Write-Output (Get-RedactedPath ([string]$_)) }
     if ($LASTEXITCODE -ne 0) {
         Pop-Location
         exit $LASTEXITCODE

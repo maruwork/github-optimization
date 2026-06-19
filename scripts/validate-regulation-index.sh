@@ -3,6 +3,7 @@ set -euo pipefail
 
 SHELF_PATH="${1:-${GITHUB_OPTIMIZATION_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}}"
 INDEX="$SHELF_PATH/regulation/REGULATION_INDEX.md"
+SHELF_LABEL="$(basename "$SHELF_PATH")"
 
 if [[ ! -f "$INDEX" ]]; then
   echo "regulation/REGULATION_INDEX.md not found at $SHELF_PATH" >&2
@@ -64,7 +65,7 @@ fi
 
 unique_count=${#SEEN[@]}
 echo "=== Regulation Index Validation ==="
-echo "Shelf: $SHELF_PATH"
+echo "Shelf: $SHELF_LABEL"
 echo "Required paths checked: $unique_count"
 
 if [[ "$failures" -eq 0 ]]; then

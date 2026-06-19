@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 
 if (-not $ManifestPath) {
     $ManifestPath = Join-Path $RepoPath "audit.manifest.yml"
@@ -37,10 +38,20 @@ function Get-QuickstartCommand([string]$Block) {
     return ""
 }
 
+function Test-PathPrefix([string]$Path, [string]$Prefix) {
+    if (-not $Path -or -not $Prefix) { return $false }
+    return $Path.StartsWith($Prefix.TrimEnd('\'), [System.StringComparison]::OrdinalIgnoreCase)
+}
+
 $lines = Get-Content $ManifestPath
 $raw = $lines -join "`n"
 Write-Output "=== Quickstart Manifest ==="
-Write-Output "Manifest: $ManifestPath"
+$manifestDisplay = if (Test-PathPrefix $ManifestPath $RepoPath) {
+    $ManifestPath.Substring($RepoPath.TrimEnd('\').Length).TrimStart('\')
+} else {
+    "custom manifest"
+}
+Write-Output "Manifest: $manifestDisplay"
 
 $workdir = "in-place"
 if ($raw -match '(?m)^workdir:\s*(.+)$') { $workdir = Get-ManifestValue $Matches[1] }
@@ -82,9 +93,9 @@ if ($workdir -eq "isolated") {
             Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $tempRoot $_.Name) -Recurse -Force
         }
     $runRoot = $tempRoot
-    Write-Output "Isolated workdir: $runRoot"
+    Write-Output "Isolated workdir: temp copy"
 } else {
-    Write-Output "In-place workdir: $runRoot"
+    Write-Output "In-place workdir: repository root"
 }
 
 $commandBlocks = [regex]::Split($raw, '(?m)^\s*-\s+id:\s*')

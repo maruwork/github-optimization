@@ -121,6 +121,21 @@ else
   echo "  FAIL: expected SKIPPED access-denied gitleaks artifact, got exit $access_denied_code"
   failures=$((failures + 1))
 fi
+echo "TEST: collect-audit-evidence redacts local absolute paths"
+set +e
+redact_out="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$SHELF" 2>&1)"
+redact_code=$?
+set -e
+if [[ "$redact_code" -eq 0 ]] \
+  && [[ "$redact_out" != *"$SHELF"* ]] \
+  && [[ -z "${HOME:-}" || "$redact_out" != *"$HOME"* ]] \
+  && [[ -z "${TMPDIR:-}" || "$redact_out" != *"${TMPDIR%/}"* ]]; then
+  echo "  PASS"
+else
+  echo "  FAIL: local absolute path leaked or collector failed"
+  printf '%s\n' "$redact_out"
+  failures=$((failures + 1))
+fi
 echo "TEST: collect-audit-evidence handles non-ASCII tracked paths in large-file scan"
 unicode_fixture="$(mktemp -d)"
 printf '%s\n' "fixture" >"$unicode_fixture/README.md"
@@ -223,8 +238,8 @@ if [[ "${1:-}" != "api" ]]; then
   exit 1
 fi
 if [[ -z "${GH_CONFIG_DIR:-}" ]]; then
-  printf '%s\n' 'warning: failed to load config: open C:\Users\sandbox\AppData\Roaming\GitHub CLI\config.yml: Access is denied.' >&2
-  printf '%s\n' 'failed to create root command: failed to read configuration: open C:\Users\sandbox\AppData\Roaming\GitHub CLI\config.yml: Access is denied.' >&2
+  printf '%s\n' 'warning: failed to load config: open <GH_CONFIG_DIR>/config.yml: Access is denied.' >&2
+  printf '%s\n' 'failed to create root command: failed to read configuration: open <GH_CONFIG_DIR>/config.yml: Access is denied.' >&2
   exit 1
 fi
 printf '%s\n' 'To get started with GitHub CLI, please run:  gh auth login' >&2

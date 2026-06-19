@@ -7,7 +7,6 @@ Output path default: `audits/<repository-slug>/audit-report.md`
 ## Target
 
 - repository:
-- local path:
 - hosted URL:
 - audited at:
 - executor:

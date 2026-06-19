@@ -6,6 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 Push-Location $RepoPath
+$repoLabel = Split-Path $RepoPath -Leaf
 
 function Invoke-Git {
     param(
@@ -66,7 +67,7 @@ foreach ($rel in $ignoredTracked) {
 }
 
 Write-Output "=== Gitignore Consistency ==="
-Write-Output "Repository: $RepoPath"
+Write-Output "Repository: $repoLabel"
 Write-Output "Tracked files: $((Invoke-Git ls-files | Measure-Object).Count)"
 
 $blocked = @($findings | Where-Object { $_.Severity -eq "blocked" })

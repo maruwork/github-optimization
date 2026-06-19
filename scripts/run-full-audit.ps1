@@ -41,6 +41,8 @@ if ($slug -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$' -or $slug.Contains("..")) {
 $auditDir = Join-Path $Shelf "audits\$slug"
 $reportPath = Join-Path $auditDir "audit-report.md"
 $reportRel = "audits/$slug/audit-report.md"
+$shelfLabel = Split-Path $Shelf -Leaf
+$repoLabel = Split-Path $RepoPath -Leaf
 
 function Set-ReportMachineEvidence {
     param(
@@ -59,8 +61,8 @@ function Set-ReportMachineEvidence {
 }
 
 Write-Output "=== Full Audit Orchestrator ==="
-Write-Output "Shelf: $Shelf"
-Write-Output "Repository: $RepoPath"
+Write-Output "Shelf: $shelfLabel"
+Write-Output "Repository: $repoLabel"
 Write-Output "Audit slug: $slug"
 Write-Output "Hosted: $HostedRepo"
 Write-Output "Audit mode: $AuditMode"

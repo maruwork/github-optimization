@@ -4,6 +4,7 @@ set -euo pipefail
 REPO_PATH="${1:?repo path required}"
 cd "$REPO_PATH"
 REPO_PATH="$(pwd)"
+REPO_LABEL="$(basename "$REPO_PATH")"
 
 git_safe() {
   git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
@@ -46,7 +47,7 @@ while IFS= read -r rel; do
 done < <(git_safe ls-files -ci --exclude-standard 2>/dev/null || true)
 
 echo "=== Gitignore Consistency ==="
-echo "Repository: $REPO_PATH"
+echo "Repository: $REPO_LABEL"
 echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 blocked=0

@@ -31,6 +31,7 @@ else
 fi
 
 REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+REPO_LABEL="$(basename "$REPO_PATH")"
 git_safe() {
   git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
 }
@@ -68,8 +69,8 @@ prepare_audit_dir() {
 }
 
 echo "=== Delta Audit Orchestrator ==="
-echo "Shelf: $SHELF"
-echo "Repository: $REPO_PATH"
+echo "Shelf: $(basename "$SHELF")"
+echo "Repository: $REPO_LABEL"
 echo "Audit slug: $SLUG"
 echo "Audit mode: $AUDIT_MODE"
 

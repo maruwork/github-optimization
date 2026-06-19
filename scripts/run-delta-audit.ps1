@@ -42,6 +42,8 @@ $reportPath = Join-Path $auditDir "audit-report.md"
 $deltaPath = Join-Path $auditDir "delta-audit-record.md"
 $deltaRel = "audits/$slug/delta-audit-record.md"
 $reportRel = "audits/$slug/audit-report.md"
+$shelfLabel = Split-Path $Shelf -Leaf
+$repoLabel = Split-Path $RepoPath -Leaf
 
 function Invoke-Git {
     param(
@@ -59,8 +61,8 @@ function Get-PriorHeadFromReport([string]$text) {
 }
 
 Write-Output "=== Delta Audit Orchestrator ==="
-Write-Output "Shelf: $Shelf"
-Write-Output "Repository: $RepoPath"
+Write-Output "Shelf: $shelfLabel"
+Write-Output "Repository: $repoLabel"
 Write-Output "Audit slug: $slug"
 Write-Output "Audit mode: $AuditMode"
 

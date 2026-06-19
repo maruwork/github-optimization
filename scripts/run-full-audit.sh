@@ -30,6 +30,7 @@ else
 fi
 
 REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+REPO_LABEL="$(basename "$REPO_PATH")"
 
 if [[ -n "$AUDIT_SLUG" ]]; then
   SLUG="$(echo "$AUDIT_SLUG" | tr '[:upper:]' '[:lower:]')"
@@ -79,8 +80,8 @@ prepare_audit_dir() {
 }
 
 echo "=== Full Audit Orchestrator ==="
-echo "Shelf: $SHELF"
-echo "Repository: $REPO_PATH"
+echo "Shelf: $(basename "$SHELF")"
+echo "Repository: $REPO_LABEL"
 echo "Audit slug: $SLUG"
 echo "Hosted: $HOSTED_REPO"
 echo "Audit mode: $AUDIT_MODE"
