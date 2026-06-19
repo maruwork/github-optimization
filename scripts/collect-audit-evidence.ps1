@@ -202,6 +202,18 @@ function Test-GhConfigAccessDenied {
     ($Text -match "config\.yml: Access is denied")
 }
 
+function Test-GhAuthRequired {
+    param([string]$Text)
+
+    if (-not $Text) {
+        return $false
+    }
+
+    return ($Text -match "gh auth login") -or
+    ($Text -match "GH_TOKEN") -or
+    ($Text -match "authentication required")
+}
+
 function Invoke-GhApiCommand {
     param(
         [string]$CommandPath,
@@ -265,8 +277,13 @@ function Invoke-PublicGitHubApi {
                 return New-GitHubApiResult -Success $true -State "OK" -Value (ConvertFrom-JsonCompat -Json $raw) -HttpStatus 200
             }
             $ghStatus = Get-GitHubApiErrorStatus -Json $raw
-            if ($ghAttempt.ExitCode -eq 4 -or $ghStatus -eq 404) {
+            if ($ghStatus -eq 404) {
                 return New-GitHubApiResult -Success $false -State "ABSENT" -HttpStatus 404
+            }
+            if (Test-GhAuthRequired -Text $ghAttempt.Stderr) {
+                if ($env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -eq "1") {
+                    return New-GitHubApiResult -Success $false -State "API_BLOCKED"
+                }
             }
             if ($env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -eq "1") {
                 return New-GitHubApiResult -Success $false -State "API_BLOCKED"

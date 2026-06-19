@@ -13,6 +13,14 @@ git_safe() {
   git -c core.excludesFile=/dev/null -c core.quotepath=false -c "safe.directory=$REPO_PATH" "$@"
 }
 
+gh_auth_required() {
+  local text="${1:-}"
+  if [[ -z "$text" ]]; then
+    return 1
+  fi
+  printf '%s' "$text" | grep -Eqi 'gh auth login|GH_TOKEN|authentication required'
+}
+
 github_api() {
   local path="$1"
   local gh_output=""
@@ -45,11 +53,13 @@ github_api() {
       printf '%s\n' "$gh_output"
       return 0
     fi
-    if [[ "$gh_status" -eq 4 ]]; then
-      return 4
-    fi
     if printf '%s' "$gh_output" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"?404"?' ; then
       return 4
+    fi
+    if gh_auth_required "$gh_stderr"; then
+      if [[ "${GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK:-0}" == "1" ]]; then
+        return 2
+      fi
     fi
     if [[ "${GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK:-0}" == "1" ]]; then
       return 2

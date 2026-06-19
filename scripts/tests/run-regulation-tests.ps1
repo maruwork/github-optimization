@@ -74,6 +74,21 @@ function Initialize-TrackedIgnoredFixture {
     }
 }
 
+function Initialize-MinimalDocsFixture {
+    Remove-Item -LiteralPath (Join-Path $fixture ".git") -Recurse -Force -ErrorAction SilentlyContinue
+
+    Push-Location $fixture
+    try {
+        git -c "safe.directory=$fixture" init | Out-Null
+        git -c "safe.directory=$fixture" add README.md LICENSE SECURITY.md .gitignore
+        if ($LASTEXITCODE -ne 0) { throw "failed to add minimal-docs fixture files" }
+        git -c "safe.directory=$fixture" -c user.email="fixture@test" -c user.name="fixture" commit -m "init minimal docs fixture" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "failed to commit minimal-docs fixture" }
+    } finally {
+        Pop-Location
+    }
+}
+
 function Remove-GeneratedTestArtifacts {
     $generatedPaths = @(
         (Join-Path $Shelf "audits\$deltaDryRunSlug"),
@@ -94,6 +109,7 @@ function Remove-GeneratedTestArtifacts {
 }
 
 Remove-GeneratedTestArtifacts
+Initialize-MinimalDocsFixture
 
 Assert-ExitCode "validate-regulation-index" 0 {
     & (Join-Path $Shelf "scripts\validate-regulation-index.ps1") -ShelfPath $Shelf
@@ -205,9 +221,9 @@ Assert-Pass "collect-audit-evidence parses hosted JSON on Windows PowerShell 5.1
         "set ""target=%~2""",
         "if /I ""%target%""==""repos/example/compat"" goto repo",
         "if /I ""%target%""==""repos/example/compat/community/profile"" goto community",
-        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/bug_report.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/feature_request.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/config.yml"" exit /b 4",
+        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/compat/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
         "if /I ""%target%""==""repos/example/compat/actions/runs?per_page=3"" goto runs",
         "goto runs",
         ":repo",
@@ -216,6 +232,9 @@ Assert-Pass "collect-audit-evidence parses hosted JSON on Windows PowerShell 5.1
         ":community",
         "echo {""health_percentage"":100,""files"":{""issue_template"":null}}",
         "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
         ":runs",
         "echo {""workflow_runs"":[]}",
         "exit /b 0"
@@ -342,7 +361,7 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         "if /I ""%target%""==""repos/example/partial"" goto repo",
         "if /I ""%target%""==""repos/example/partial/community/profile"" goto community",
         "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto bug",
-        "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/feature_request.md"" exit /b 4",
+        "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
         "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/config.yml"" goto config",
         "goto runs",
         ":repo",
@@ -354,6 +373,9 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         ":bug",
         "echo {""path"":"".github/ISSUE_TEMPLATE/bug_report.md""}",
         "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
         ":config",
         "echo {""path"":"".github/ISSUE_TEMPLATE/config.yml""}",
         "exit /b 0",
@@ -416,9 +438,9 @@ Assert-Pass "collect-audit-evidence preserves caller GH_CONFIG_DIR for public gh
         "set ""target=%~2""",
         "if /I ""%target%""==""repos/example/gh-config"" goto repo",
         "if /I ""%target%""==""repos/example/gh-config/community/profile"" goto community",
-        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/bug_report.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/feature_request.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/config.yml"" exit /b 4",
+        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/gh-config/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
         "if /I ""%target%""==""repos/example/gh-config/actions/runs?per_page=3"" goto runs",
         "goto runs",
         ":repo",
@@ -427,6 +449,9 @@ Assert-Pass "collect-audit-evidence preserves caller GH_CONFIG_DIR for public gh
         ":community",
         "echo {""health_percentage"":100,""files"":{""issue_template"":null}}",
         "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
         ":runs",
         "echo {""workflow_runs"":[]}",
         "exit /b 0"
@@ -492,9 +517,9 @@ Assert-Pass "collect-audit-evidence retries public gh api with isolated GH_CONFI
         "set ""target=%~2""",
         "if /I ""%target%""==""repos/example/gh-config-retry"" goto repo",
         "if /I ""%target%""==""repos/example/gh-config-retry/community/profile"" goto community",
-        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/bug_report.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/feature_request.md"" exit /b 4",
-        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/config.yml"" exit /b 4",
+        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/gh-config-retry/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
         "if /I ""%target%""==""repos/example/gh-config-retry/actions/runs?per_page=3"" goto runs",
         "goto runs",
         ":denied",
@@ -507,6 +532,9 @@ Assert-Pass "collect-audit-evidence retries public gh api with isolated GH_CONFI
         ":community",
         "echo {""health_percentage"":100,""files"":{""issue_template"":null}}",
         "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
         ":runs",
         "echo {""workflow_runs"":[]}",
         "exit /b 0"
@@ -534,6 +562,79 @@ Assert-Pass "collect-audit-evidence retries public gh api with isolated GH_CONFI
         }
         if ($null -ne $previousGhConfigDir -and $env:GH_CONFIG_DIR -ne $previousGhConfigDir) {
             throw "collector must restore caller GH_CONFIG_DIR after retry"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        if ($null -ne $previousGhConfigDir) {
+            $env:GH_CONFIG_DIR = $previousGhConfigDir
+        } else {
+            Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence does not treat gh auth-required retry failures as ABSENT" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-gh-auth-required-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-auth-required-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init gh auth required fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "if not defined GH_CONFIG_DIR goto denied",
+        ":auth",
+        "echo To get started with GitHub CLI, please run:  gh auth login 1>&2",
+        "echo Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token. 1>&2",
+        "exit /b 4",
+        ":denied",
+        "echo warning: failed to load config: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
+        "echo failed to create root command: failed to read configuration: open C:\\Users\\sandbox\\AppData\\Roaming\\GitHub CLI\\config.yml: Access is denied. 1>&2",
+        "exit /b 1"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    $previousGhConfigDir = $env:GH_CONFIG_DIR
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/gh-auth-required" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 1) { throw "expected exit 1, got $LASTEXITCODE`n$out" }
+        foreach ($needle in @(
+                'result: BLOCKED (API_BLOCKED: hosted metadata unavailable)',
+                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
+                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
+                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/config.yml"',
+                'result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)',
+                'result: BLOCKED (API_BLOCKED: latest CI metadata unavailable)'
+            )) {
+            if ($out -notmatch [regex]::Escape($needle)) {
+                throw "missing output: $needle`n$out"
+            }
+        }
+        if ($out -match '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/') {
+            throw "gh auth-required retry must not be downgraded to ABSENT`n$out"
+        }
+        if ($null -ne $previousGhConfigDir -and $env:GH_CONFIG_DIR -ne $previousGhConfigDir) {
+            throw "collector must restore caller GH_CONFIG_DIR after auth-required retry"
         }
     } finally {
         $env:PATH = $previousPath

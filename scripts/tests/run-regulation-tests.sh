@@ -43,6 +43,13 @@ init_tracked_ignored() {
   fixture_git "$TRACKED_IGNORED" -c user.email=fixture@test -c user.name=fixture commit -m "init tracked-ignored fixture"
 }
 
+init_minimal_docs_fixture() {
+  rm -rf "$FIXTURE/.git"
+  fixture_git "$FIXTURE" init >/dev/null
+  fixture_git "$FIXTURE" add README.md LICENSE SECURITY.md .gitignore
+  fixture_git "$FIXTURE" -c user.email=fixture@test -c user.name=fixture commit -m "init minimal docs fixture" >/dev/null
+}
+
 FIXTURE="$SHELF/scripts/tests/fixtures/minimal-docs-repo"
 TRACKED_IGNORED="$SHELF/scripts/tests/fixtures/tracked-ignored-repo"
 DELTA_DRY_RUN_SLUG="delta-orchestrator-dry-run"
@@ -67,6 +74,7 @@ fixture_git() {
 }
 
 cleanup_generated
+init_minimal_docs_fixture
 
 run_pass "validate-regulation-index" bash "$SHELF/scripts/validate-regulation-index.sh" "$SHELF"
 run_exit "check-tracked-files on shelf" 0 bash "$SHELF/scripts/check-tracked-files.sh" "$SHELF"
@@ -163,12 +171,15 @@ case "${2:-}" in
     printf '%s\n' '{"health_percentage":100,"files":{"issue_template":null}}'
     ;;
   repos/example/compat/contents/.github/ISSUE_TEMPLATE/bug_report.md)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
     exit 4
     ;;
   repos/example/compat/contents/.github/ISSUE_TEMPLATE/feature_request.md)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
     exit 4
     ;;
   repos/example/compat/contents/.github/ISSUE_TEMPLATE/config.yml)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
     exit 4
     ;;
   repos/example/compat/actions/runs?per_page=3)
@@ -194,6 +205,50 @@ if [[ "$hosted_code" -eq 0 ]] \
 else
   echo "  FAIL: expected ABSENT issue-template evidence and NO_RUNS CI state"
   printf '%s\n' "$hosted_out"
+  failures=$((failures + 1))
+fi
+echo "TEST: collect-audit-evidence does not treat gh auth-required retry failures as ABSENT"
+auth_required_fixture="$(mktemp -d)"
+printf '%s\n' "fixture" >"$auth_required_fixture/README.md"
+printf '%s\n' "fixture" >"$auth_required_fixture/LICENSE"
+printf '%s\n' "fixture" >"$auth_required_fixture/SECURITY.md"
+printf '' >"$auth_required_fixture/.gitignore"
+fixture_git "$auth_required_fixture" init >/dev/null
+fixture_git "$auth_required_fixture" add README.md LICENSE SECURITY.md .gitignore
+fixture_git "$auth_required_fixture" -c user.email=fixture@test -c user.name=fixture commit -m "init auth required fixture" >/dev/null
+fake_gh_dir="$(mktemp -d)"
+cat >"$fake_gh_dir/gh" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" != "api" ]]; then
+  exit 1
+fi
+if [[ -z "${GH_CONFIG_DIR:-}" ]]; then
+  printf '%s\n' 'warning: failed to load config: open C:\Users\sandbox\AppData\Roaming\GitHub CLI\config.yml: Access is denied.' >&2
+  printf '%s\n' 'failed to create root command: failed to read configuration: open C:\Users\sandbox\AppData\Roaming\GitHub CLI\config.yml: Access is denied.' >&2
+  exit 1
+fi
+printf '%s\n' 'To get started with GitHub CLI, please run:  gh auth login' >&2
+printf '%s\n' 'Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.' >&2
+exit 4
+EOF
+chmod +x "$fake_gh_dir/gh"
+set +e
+auth_required_out="$(PATH="$fake_gh_dir:$PATH" GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK=1 bash "$SHELF/scripts/collect-audit-evidence.sh" "$auth_required_fixture" example/auth-required 2>&1)"
+auth_required_code=$?
+set -e
+rm -rf "$auth_required_fixture" "$fake_gh_dir"
+if [[ "$auth_required_code" -eq 1 ]] \
+  && echo "$auth_required_out" | grep -Fq 'result: BLOCKED (API_BLOCKED: hosted metadata unavailable)' \
+  && echo "$auth_required_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/bug_report.md","result":"API_BLOCKED"' \
+  && echo "$auth_required_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/feature_request.md","result":"API_BLOCKED"' \
+  && echo "$auth_required_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/config.yml","result":"API_BLOCKED"' \
+  && echo "$auth_required_out" | grep -Fq 'result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)' \
+  && echo "$auth_required_out" | grep -Fq 'result: BLOCKED (API_BLOCKED: latest CI metadata unavailable)' \
+  && ! echo "$auth_required_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/bug_report.md","result":"ABSENT"'; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected auth-required retry to stay API_BLOCKED"
+  printf '%s\n' "$auth_required_out"
   failures=$((failures + 1))
 fi
 echo "TEST: collect-audit-evidence marks hosted issue templates as NOT_APPLICABLE when issues are disabled"
@@ -270,6 +325,7 @@ case "${2:-}" in
     printf '%s\n' '{"path":".github/ISSUE_TEMPLATE/bug_report.md"}'
     ;;
   repos/example/partial/contents/.github/ISSUE_TEMPLATE/feature_request.md)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
     exit 4
     ;;
   repos/example/partial/contents/.github/ISSUE_TEMPLATE/config.yml)
@@ -465,9 +521,9 @@ else
   printf '%s\n' "$gh_404_out"
   failures=$((failures + 1))
 fi
-PRESENT_HEAD="$(git -C "$SHELF" rev-parse HEAD)"
+PRESENT_HEAD="$(git -C "$SHELF" -c "safe.directory=$SHELF" rev-parse HEAD)"
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
-MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" rev-parse "v1.1.4^{commit}")"
+MANIFEST_PRIOR_HEAD="$(git -C "$SHELF" -c "safe.directory=$SHELF" rev-parse "v1.1.4^{commit}")"
 SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit allowed (no changes)" 0 \
   bash "$SHELF/scripts/run-delta-audit.sh" "$SHELF" "" release "$DELTA_DRY_RUN_SLUG" "$PRESENT_HEAD"
 SKIP_SHELF_VALIDATION=1 run_exit "run-delta-audit invalidates manifest change" 2 \
