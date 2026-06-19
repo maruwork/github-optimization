@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.12 - 2026-06-19
+
+### Fixed
+
+- GitHub Actions workflows now track the current official `actions/checkout` release (`v7`), closing the remaining stale Dependabot update on the public repo.
+
 ## 1.2.11 - 2026-06-19
 
 ### Fixed

@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.12] - 2026-06-19
+
+### Fixed
+
+- GitHub Actions workflows now track the current official `actions/checkout` release (`v7`), closing the remaining stale Dependabot update on the public repo.
+
 ## [1.2.11] - 2026-06-19
 
 ### Fixed

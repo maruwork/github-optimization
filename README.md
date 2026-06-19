@@ -2,7 +2,7 @@
 
 Status: Active
 
-Shelf version: `1.2.11` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.2.12` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
