@@ -212,9 +212,13 @@ hosted_code=$?
 set -e
 rm -rf "$hosted_fixture" "$fake_gh_dir"
 if [[ "$hosted_code" -eq 0 ]] \
+  && echo "$hosted_out" | grep -Fq '"description":"fixture repo"' \
+  && echo "$hosted_out" | grep -Fq '"health_percentage":100' \
+  && echo "$hosted_out" | grep -Fq '"secret_scanning":{"status":"enabled"}' \
   && echo "$hosted_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/bug_report.md","result":"ABSENT"' \
   && echo "$hosted_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/feature_request.md","result":"ABSENT"' \
   && echo "$hosted_out" | grep -Fq '"requested":".github/ISSUE_TEMPLATE/config.yml","result":"ABSENT"' \
+  && ! echo "$hosted_out" | grep -Eq '"permissions":|"updated_at":|"total_count":' \
   && echo "$hosted_out" | grep -Fq 'result: NO_RUNS (workflow files exist but the GitHub Actions runs API returned 0 runs)'; then
   echo "  PASS"
 else

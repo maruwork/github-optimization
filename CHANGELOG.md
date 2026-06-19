@@ -4,6 +4,13 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.10] - 2026-06-19
+
+### Fixed
+
+- Branch version metadata now reflects the current `master` state instead of advertising the previous `v1.2.9` release after additional commits landed.
+- The Git Bash collector now projects hosted metadata and latest CI evidence down to the same compact schema used by the PowerShell collector, removing duplicate raw repo payload churn from dogfood transcripts.
+
 ## [1.2.9] - 2026-06-19
 
 ### Fixed

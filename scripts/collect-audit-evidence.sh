@@ -21,6 +21,67 @@ redact_path() {
   printf '%s' "$result"
 }
 
+json_python() {
+  if command -v python3 >/dev/null 2>&1; then
+    command -v python3
+    return 0
+  fi
+  if command -v python >/dev/null 2>&1; then
+    command -v python
+    return 0
+  fi
+  return 1
+}
+
+json_project() {
+  local mode="$1"
+  local py
+  local input
+  py="$(json_python)" || return 1
+  input="$(cat)"
+  JSON_PROJECT_INPUT="$input" "$py" - "$mode" <<'PY'
+import json
+import os
+import sys
+
+mode = sys.argv[1]
+obj = json.loads(os.environ["JSON_PROJECT_INPUT"])
+
+if mode == "repo":
+    out = {
+        "description": obj.get("description"),
+        "topics": obj.get("topics"),
+        "homepage": obj.get("homepage"),
+        "visibility": obj.get("visibility"),
+        "has_issues": obj.get("has_issues"),
+    }
+elif mode == "community":
+    out = {
+        "health_percentage": obj.get("health_percentage"),
+        "files": obj.get("files"),
+    }
+elif mode == "security":
+    out = obj.get("security_and_analysis")
+elif mode == "runs":
+    out = []
+    for item in (obj.get("workflow_runs") or [])[:3]:
+        out.append(
+            {
+                "name": item.get("name"),
+                "event": item.get("event"),
+                "status": item.get("status"),
+                "conclusion": item.get("conclusion"),
+                "head_branch": item.get("head_branch"),
+                "html_url": item.get("html_url"),
+            }
+        )
+else:
+    raise SystemExit(2)
+
+json.dump(out, sys.stdout, separators=(",", ":"))
+PY
+}
+
 git_safe() {
   git -c core.excludesFile=/dev/null -c core.quotepath=false -c "safe.directory=$REPO_PATH" "$@"
 }
@@ -324,9 +385,12 @@ if [[ -n "$HOSTED_REPO" ]]; then
   security_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
   security_status=$?
   if [[ "$repo_status" -eq 0 && "$community_status" -eq 0 && "$security_status" -eq 0 ]]; then
-    printf '%s\n' "$repo_json"
-    printf '%s\n' "$community_json"
-    printf '%s\n' "$security_json"
+    projected_repo="$(printf '%s' "$repo_json" | json_project repo)"
+    projected_community="$(printf '%s' "$community_json" | json_project community)"
+    projected_security="$(printf '%s' "$security_json" | json_project security)"
+    printf '%s\n' "$projected_repo"
+    printf '%s\n' "$projected_community"
+    printf '%s\n' "$projected_security"
   else
     blocked "(API_BLOCKED: hosted metadata unavailable)"
   fi
@@ -375,7 +439,8 @@ if [[ -n "$HOSTED_REPO" ]]; then
         echo "result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)"
       fi
     else
-      printf '%s\n' "$runs_json"
+      printf '%s' "$runs_json" | json_project runs
+      printf '\n'
     fi
   else
     blocked "(API_BLOCKED: latest CI metadata unavailable)"

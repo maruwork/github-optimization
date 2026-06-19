@@ -262,6 +262,8 @@ Assert-Pass "collect-audit-evidence parses hosted JSON on Windows PowerShell 5.1
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
         foreach ($pattern in @(
                 [regex]::Escape('"description":"fixture repo"'),
+                [regex]::Escape('"health_percentage":100'),
+                [regex]::Escape('"secret_scanning":{"status":"enabled"}'),
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"ABSENT").*\}',
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"ABSENT").*\}',
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"ABSENT").*\}',
@@ -276,6 +278,9 @@ Assert-Pass "collect-audit-evidence parses hosted JSON on Windows PowerShell 5.1
         }
         if ($out -match "result: BLOCKED \(API_BLOCKED") {
             throw "hosted API should not be blocked in fake gh success path`n$out"
+        }
+        if ($out -match '"permissions":|"updated_at":|"total_count":') {
+            throw "hosted collector output should stay compact across platforms`n$out"
         }
     } finally {
         $env:PATH = $previousPath
