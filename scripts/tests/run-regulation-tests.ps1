@@ -390,14 +390,14 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/partial" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                '"path":".github/ISSUE_TEMPLATE/bug_report.md","result":"PASS","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                '"path":null,"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
-                '"path":".github/ISSUE_TEMPLATE/config.yml","result":"PASS","requested":".github/ISSUE_TEMPLATE/config.yml"',
-                '"name":"CI","event":"push","status":"completed","conclusion":"success","head_branch":"main","html_url":"https://example.test/runs/1"'
+        foreach ($pattern in @(
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"PASS")(?=.*"path":"\.github/ISSUE_TEMPLATE/bug_report\.md").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"ABSENT")(?=.*"path":null).*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"PASS")(?=.*"path":"\.github/ISSUE_TEMPLATE/config\.yml").*\}',
+                [regex]::Escape('"name":"CI","event":"push","status":"completed","conclusion":"success","head_branch":"main","html_url":"https://example.test/runs/1"')
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($out -match "result: NO_RUNS|result: NOT_CONFIGURED") {

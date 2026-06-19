@@ -1,5 +1,12 @@
 # Shelf Changelog
 
+## 1.2.8 - 2026-06-19
+
+### Fixed
+
+- Windows regression coverage no longer depends on JSON property order when hosted issue-template evidence is emitted.
+- The hosted issue-template self-check now stays green on GitHub Actions Windows runners after release-tag timing and PowerShell serializer differences.
+
 ## 1.2.7 - 2026-06-19
 
 ### Fixed
