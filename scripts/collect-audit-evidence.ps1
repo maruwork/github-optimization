@@ -134,16 +134,113 @@ function Invoke-Git {
         [Parameter(ValueFromRemainingArguments = $true)]
         [string[]]$GitArgs
     )
-    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+    & git -c "core.excludesFile=NUL" -c "core.quotepath=false" -c "safe.directory=$RepoPath" @GitArgs
 }
 
-function Initialize-GhConfig {
-    $base = if ($env:TEMP) { $env:TEMP } else { "C:\tmp" }
-    $ghConfigDir = Join-Path $base "github-optimization-gh"
-    if (-not (Test-Path -LiteralPath $ghConfigDir)) {
-        New-Item -ItemType Directory -Path $ghConfigDir -Force | Out-Null
+function ConvertFrom-JsonCompat {
+    param([string]$Json)
+
+    $command = Get-Command ConvertFrom-Json -ErrorAction Stop
+    if ($command.Parameters.ContainsKey("Depth")) {
+        return $Json | ConvertFrom-Json -Depth 50
     }
-    return $ghConfigDir
+    return $Json | ConvertFrom-Json
+}
+
+function New-GitHubApiResult {
+    param(
+        [bool]$Success,
+        [string]$State,
+        [object]$Value = $null,
+        [int]$HttpStatus = 0
+    )
+
+    [pscustomobject]@{
+        Success    = $Success
+        State      = $State
+        Value      = $Value
+        HttpStatus = $HttpStatus
+    }
+}
+
+function Get-GitHubApiErrorStatus {
+    param([string]$Json)
+
+    if (-not $Json) {
+        return 0
+    }
+
+    try {
+        $parsed = ConvertFrom-JsonCompat -Json $Json
+    } catch {
+        return 0
+    }
+
+    if (-not $parsed) {
+        return 0
+    }
+
+    $statusValue = $parsed.PSObject.Properties["status"]
+    if (-not $statusValue) {
+        return 0
+    }
+
+    $statusCode = 0
+    [void][int]::TryParse([string]$statusValue.Value, [ref]$statusCode)
+    return $statusCode
+}
+
+function Test-GhConfigAccessDenied {
+    param([string]$Text)
+
+    if (-not $Text) {
+        return $false
+    }
+
+    return ($Text -match "failed to load config") -or
+    ($Text -match "failed to read configuration") -or
+    ($Text -match "config\.yml: Access is denied")
+}
+
+function Invoke-GhApiCommand {
+    param(
+        [string]$CommandPath,
+        [string]$RelativePath,
+        [string]$ConfigDir = $null
+    )
+
+    $stderrFile = [System.IO.Path]::GetTempFileName()
+    $hadGhConfigDir = Test-Path Env:GH_CONFIG_DIR
+    $previousGhConfigDir = $env:GH_CONFIG_DIR
+    try {
+        if ($PSBoundParameters.ContainsKey("ConfigDir")) {
+            if ($ConfigDir) {
+                $env:GH_CONFIG_DIR = $ConfigDir
+            } else {
+                Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+            }
+        }
+
+        $raw = (& $CommandPath api $RelativePath 2>$stderrFile) -join "`n"
+        $stderr = if (Test-Path -LiteralPath $stderrFile) {
+            Get-Content -LiteralPath $stderrFile -Raw -ErrorAction SilentlyContinue
+        } else {
+            ""
+        }
+
+        [pscustomobject]@{
+            Raw      = $raw
+            Stderr   = $stderr
+            ExitCode = $LASTEXITCODE
+        }
+    } finally {
+        if ($hadGhConfigDir) {
+            $env:GH_CONFIG_DIR = $previousGhConfigDir
+        } else {
+            Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $stderrFile -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Invoke-PublicGitHubApi {
@@ -151,21 +248,38 @@ function Invoke-PublicGitHubApi {
 
     $ghCommand = Get-Command gh -ErrorAction SilentlyContinue
     if ($ghCommand -and $ghCommand.Source) {
-        $previousConfigDir = $env:GH_CONFIG_DIR
         try {
-            $env:GH_CONFIG_DIR = Initialize-GhConfig
-            $raw = (& $ghCommand.Source api $RelativePath 2>$null) -join "`n"
-            if ($LASTEXITCODE -eq 0 -and $raw) {
-                return $raw | ConvertFrom-Json -Depth 50
+            $ghAttempt = Invoke-GhApiCommand -CommandPath $ghCommand.Source -RelativePath $RelativePath
+            if (($ghAttempt.ExitCode -ne 0) -and (-not (Test-Path Env:GH_CONFIG_DIR)) -and (Test-GhConfigAccessDenied -Text $ghAttempt.Stderr)) {
+                $isolatedGhConfig = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-gh-" + [System.Guid]::NewGuid().ToString("N"))
+                New-Item -ItemType Directory -Path $isolatedGhConfig | Out-Null
+                try {
+                    $ghAttempt = Invoke-GhApiCommand -CommandPath $ghCommand.Source -RelativePath $RelativePath -ConfigDir $isolatedGhConfig
+                } finally {
+                    Remove-Item -LiteralPath $isolatedGhConfig -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+
+            $raw = $ghAttempt.Raw
+            if ($ghAttempt.ExitCode -eq 0 -and $raw) {
+                return New-GitHubApiResult -Success $true -State "OK" -Value (ConvertFrom-JsonCompat -Json $raw) -HttpStatus 200
+            }
+            $ghStatus = Get-GitHubApiErrorStatus -Json $raw
+            if ($ghAttempt.ExitCode -eq 4 -or $ghStatus -eq 404) {
+                return New-GitHubApiResult -Success $false -State "ABSENT" -HttpStatus 404
+            }
+            if ($env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -eq "1") {
+                return New-GitHubApiResult -Success $false -State "API_BLOCKED"
             }
         } catch {
-        } finally {
-            if ($null -ne $previousConfigDir) {
-                $env:GH_CONFIG_DIR = $previousConfigDir
-            } else {
-                Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
+            if ($env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -eq "1") {
+                return New-GitHubApiResult -Success $false -State "API_BLOCKED"
             }
         }
+    }
+
+    if ($env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -eq "1") {
+        return New-GitHubApiResult -Success $false -State "API_BLOCKED"
     }
 
     $curlCandidates = @()
@@ -180,17 +294,38 @@ function Invoke-PublicGitHubApi {
             continue
         }
 
-        $raw = (& $curlPath -fsSL "https://api.github.com/$RelativePath" 2>$null) -join "`n"
-        if ($LASTEXITCODE -eq 0 -and $raw) {
-            return $raw | ConvertFrom-Json -Depth 50
+        $bodyFile = [System.IO.Path]::GetTempFileName()
+        try {
+            $statusText = (& $curlPath -sS -L -H "User-Agent: github-optimization-audit" -o $bodyFile -w "%{http_code}" "https://api.github.com/$RelativePath" 2>$null) -join ""
+            $httpStatus = 0
+            [void][int]::TryParse($statusText, [ref]$httpStatus)
+            $raw = if (Test-Path -LiteralPath $bodyFile) { Get-Content -LiteralPath $bodyFile -Raw -ErrorAction SilentlyContinue } else { "" }
+            if ($httpStatus -ge 200 -and $httpStatus -lt 300 -and $raw) {
+                return New-GitHubApiResult -Success $true -State "OK" -Value (ConvertFrom-JsonCompat -Json $raw) -HttpStatus $httpStatus
+            }
+            if ($httpStatus -eq 404) {
+                return New-GitHubApiResult -Success $false -State "ABSENT" -HttpStatus $httpStatus
+            }
+        } finally {
+            Remove-Item -LiteralPath $bodyFile -Force -ErrorAction SilentlyContinue
         }
     }
 
     try {
-        return Invoke-RestMethod -Uri "https://api.github.com/$RelativePath" -Headers @{ "User-Agent" = "github-optimization-audit" }
+        $response = Invoke-WebRequest -Uri "https://api.github.com/$RelativePath" -Headers @{ "User-Agent" = "github-optimization-audit" } -UseBasicParsing
+        if ($response.Content) {
+            return New-GitHubApiResult -Success $true -State "OK" -Value (ConvertFrom-JsonCompat -Json $response.Content) -HttpStatus ([int]$response.StatusCode)
+        }
     } catch {
-        return $null
+        $statusCode = 0
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+        if ($statusCode -eq 404) {
+            return New-GitHubApiResult -Success $false -State "ABSENT" -HttpStatus 404
+        }
     }
+    return New-GitHubApiResult -Success $false -State "API_BLOCKED"
 }
 
 function Write-JsonCompact {
@@ -301,44 +436,58 @@ if ((Test-Path "pytest.ini") -or (Test-Path "tests")) {
 }
 
 if ($HostedRepo) {
-    $null = Initialize-GhConfig
     Write-Section "Hosted Metadata"
     $repo = Invoke-PublicGitHubApi "repos/$HostedRepo"
     $community = Invoke-PublicGitHubApi "repos/$HostedRepo/community/profile"
-    if ($repo -and $community) {
+    $security = Invoke-PublicGitHubApi "repos/$HostedRepo"
+    if ($repo.Success -and $community.Success -and $security.Success) {
         Write-JsonCompact @{
-            description = $repo.description
-            topics      = $repo.topics
-            homepage    = $repo.homepage
-            visibility  = $repo.visibility
-            has_issues  = $repo.has_issues
+            description = $repo.Value.description
+            topics      = $repo.Value.topics
+            homepage    = $repo.Value.homepage
+            visibility  = $repo.Value.visibility
+            has_issues  = $repo.Value.has_issues
         }
         Write-JsonCompact @{
-            health_percentage = $community.health_percentage
-            files             = $community.files
+            health_percentage = $community.Value.health_percentage
+            files             = $community.Value.files
         }
-        Write-JsonCompact $repo.security_and_analysis
+        Write-JsonCompact $security.Value.security_and_analysis
     } else {
-        Write-CollectorBlocked "(hosted metadata unavailable)"
+        Write-CollectorBlocked "(API_BLOCKED: hosted metadata unavailable)"
     }
     Write-Section "Hosted Issue Templates"
-    foreach ($path in @(
-            ".github/ISSUE_TEMPLATE/bug_report.md",
-            ".github/ISSUE_TEMPLATE/feature_request.md",
-            ".github/ISSUE_TEMPLATE/config.yml"
-        )) {
-        $content = Invoke-PublicGitHubApi "repos/$HostedRepo/contents/$path"
-        if ($content) {
-            Write-JsonCompact @{ path = $content.path }
+    if ($repo.Success -and -not $repo.Value.has_issues) {
+        Write-Output "result: NOT_APPLICABLE (issues disabled)"
+    } else {
+        $issueApiBlocked = $false
+        foreach ($path in @(
+                ".github/ISSUE_TEMPLATE/bug_report.md",
+                ".github/ISSUE_TEMPLATE/feature_request.md",
+                ".github/ISSUE_TEMPLATE/config.yml"
+            )) {
+            $content = Invoke-PublicGitHubApi "repos/$HostedRepo/contents/$path"
+            if ($content.Success) {
+                Write-JsonCompact @{ path = $content.Value.path; requested = $path; result = "PASS" }
+            } elseif ($content.State -eq "ABSENT") {
+                Write-JsonCompact @{ path = $null; requested = $path; result = "ABSENT" }
+            } else {
+                $issueApiBlocked = $true
+                Write-JsonCompact @{ path = $null; requested = $path; result = "API_BLOCKED" }
+            }
+        }
+        if ($issueApiBlocked) {
+            Write-CollectorBlocked "(API_BLOCKED: hosted issue-template lookup unavailable)"
         } else {
-            $script:CollectorBlocked = $true
-            Write-JsonCompact @{ path = $null; requested = $path; result = "BLOCKED" }
         }
     }
     Write-Section "Latest CI"
     $runs = Invoke-PublicGitHubApi "repos/$HostedRepo/actions/runs?per_page=3"
-    if ($runs -and $runs.workflow_runs) {
-        $projectedRuns = @($runs.workflow_runs | Select-Object -First 3 | ForEach-Object {
+    $workflowFilesPresent = (Get-ChildItem -LiteralPath (Join-Path $RepoPath ".github\workflows") -File -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
+    if ($runs.Success) {
+        $workflowRuns = @($runs.Value.workflow_runs)
+        if ($workflowRuns.Count -gt 0) {
+            $projectedRuns = @($workflowRuns | Select-Object -First 3 | ForEach-Object {
                 [pscustomobject]@{
                     name        = $_.name
                     event       = $_.event
@@ -348,9 +497,14 @@ if ($HostedRepo) {
                     html_url    = $_.html_url
                 }
             })
-        Write-JsonCompact $projectedRuns
+            Write-JsonCompact $projectedRuns
+        } elseif ($workflowFilesPresent) {
+            Write-Output "result: NO_RUNS (workflow files exist but the GitHub Actions runs API returned 0 runs)"
+        } else {
+            Write-Output "result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)"
+        }
     } else {
-        Write-CollectorBlocked "(latest CI metadata unavailable)"
+        Write-CollectorBlocked "(API_BLOCKED: latest CI metadata unavailable)"
     }
 }
 

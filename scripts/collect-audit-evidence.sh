@@ -10,21 +10,75 @@ case "$UNAME_S" in
 esac
 
 git_safe() {
-  git -c core.excludesFile=/dev/null -c "safe.directory=$REPO_PATH" "$@"
+  git -c core.excludesFile=/dev/null -c core.quotepath=false -c "safe.directory=$REPO_PATH" "$@"
 }
 
 github_api() {
   local path="$1"
+  local gh_output=""
+  local gh_status=0
+  local gh_stderr=""
+  local gh_stderr_file=""
+  local gh_retry_dir=""
   if command -v gh >/dev/null 2>&1; then
-    if gh api "$path" 2>/dev/null; then
+    gh_stderr_file="$(mktemp)"
+    set +e
+    gh_output="$(gh api "$path" 2>"$gh_stderr_file")"
+    gh_status=$?
+    set -e
+    gh_stderr="$(cat "$gh_stderr_file" 2>/dev/null || true)"
+    rm -f "$gh_stderr_file"
+    gh_stderr_file=""
+    if [[ "$gh_status" -ne 0 ]] \
+      && [[ -z "${GH_CONFIG_DIR:-}" ]] \
+      && printf '%s' "$gh_stderr" | grep -Eq 'failed to load config|failed to read configuration|config\.yml: Access is denied'; then
+      gh_retry_dir="$(mktemp -d)"
+      set +e
+      gh_output="$(GH_CONFIG_DIR="$gh_retry_dir" gh api "$path" 2>"$gh_retry_dir/stderr.log")"
+      gh_status=$?
+      set -e
+      gh_stderr="$(cat "$gh_retry_dir/stderr.log" 2>/dev/null || true)"
+      rm -rf "$gh_retry_dir"
+      gh_retry_dir=""
+    fi
+    if [[ "$gh_status" -eq 0 ]]; then
+      printf '%s\n' "$gh_output"
       return 0
     fi
+    if [[ "$gh_status" -eq 4 ]]; then
+      return 4
+    fi
+    if printf '%s' "$gh_output" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"?404"?' ; then
+      return 4
+    fi
+    if [[ "${GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK:-0}" == "1" ]]; then
+      return 2
+    fi
+  fi
+  if [[ "${GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK:-0}" == "1" ]]; then
+    return 2
   fi
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL -H "User-Agent: github-optimization-audit" "https://api.github.com/$path"
-    return $?
+    local body_file
+    local status
+    body_file="$(mktemp)"
+    status="$(curl -sS -L -H "User-Agent: github-optimization-audit" -o "$body_file" -w "%{http_code}" "https://api.github.com/$path" 2>/dev/null || true)"
+    case "$status" in
+      2??)
+        cat "$body_file"
+        rm -f "$body_file"
+        return 0
+        ;;
+      404)
+        rm -f "$body_file"
+        return 4
+        ;;
+      *)
+        rm -f "$body_file"
+        ;;
+    esac
   fi
-  return 127
+  return 2
 }
 
 resolve_existing_path() {
@@ -125,11 +179,11 @@ echo "collector: scripts/collect-audit-evidence.sh"
 echo "working directory: $REPO_PATH"
 
 section "Git"
-echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH rev-parse HEAD"
+echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH rev-parse HEAD"
 git_safe rev-parse HEAD
-echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH describe --tags --always"
+echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH describe --tags --always"
 git_safe describe --tags --always 2>/dev/null || true
-echo "command: git -c core.excludesFile=/dev/null -c safe.directory=$REPO_PATH ls-files | wc -l"
+echo "command: git -c core.excludesFile=/dev/null -c core.quotepath=false -c safe.directory=$REPO_PATH ls-files | wc -l"
 echo "Tracked files: $(git_safe ls-files | wc -l | tr -d ' ')"
 
 SCREEN_SCRIPT="$(cd "$(dirname "$0")" && pwd)/check-tracked-files.sh"
@@ -241,46 +295,64 @@ if [[ -n "$HOSTED_REPO" ]]; then
   repo_status=$?
   community_json="$(github_api "repos/$HOSTED_REPO/community/profile" 2>/dev/null)"
   community_status=$?
-  if [[ "$repo_status" -eq 0 && "$community_status" -eq 0 ]]; then
+  security_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
+  security_status=$?
+  if [[ "$repo_status" -eq 0 && "$community_status" -eq 0 && "$security_status" -eq 0 ]]; then
     printf '%s\n' "$repo_json"
     printf '%s\n' "$community_json"
-    printf '%s\n' "$repo_json"
+    printf '%s\n' "$security_json"
   else
-    blocked "(hosted metadata unavailable)"
+    blocked "(API_BLOCKED: hosted metadata unavailable)"
   fi
   section "Hosted Issue Templates"
   echo "commands: contents/.github/ISSUE_TEMPLATE/{bug_report.md,feature_request.md,config.yml}"
-  for issue_path in \
-    ".github/ISSUE_TEMPLATE/bug_report.md" \
-    ".github/ISSUE_TEMPLATE/feature_request.md" \
-    ".github/ISSUE_TEMPLATE/config.yml"
-  do
-    issue_json="$(github_api "repos/$HOSTED_REPO/contents/$issue_path" 2>/dev/null)"
-    if [[ "$?" -eq 0 ]]; then
-      printf '%s\n' "$issue_json"
-    else
-      collector_blocked=1
-      printf '{"path":null,"requested":"%s","result":"BLOCKED"}\n' "$issue_path"
+  if printf '%s' "$repo_json" | tr -d '[:space:]' | grep -q '"has_issues":false'; then
+    echo "result: NOT_APPLICABLE (issues disabled)"
+  else
+    issue_api_blocked=0
+    for issue_path in \
+      ".github/ISSUE_TEMPLATE/bug_report.md" \
+      ".github/ISSUE_TEMPLATE/feature_request.md" \
+      ".github/ISSUE_TEMPLATE/config.yml"
+    do
+      issue_json="$(github_api "repos/$HOSTED_REPO/contents/$issue_path" 2>/dev/null)"
+      issue_status=$?
+      if [[ "$issue_status" -eq 0 ]]; then
+        printf '{"path":"%s","requested":"%s","result":"PASS"}\n' \
+          "$(printf '%s' "$issue_json" | tr -d '\r\n' | sed -n 's/.*"path":"\([^"]*\)".*/\1/p')" \
+          "$issue_path"
+      elif [[ "$issue_status" -eq 4 ]]; then
+        printf '{"path":null,"requested":"%s","result":"ABSENT"}\n' "$issue_path"
+      else
+        issue_api_blocked=1
+        printf '{"path":null,"requested":"%s","result":"API_BLOCKED"}\n' "$issue_path"
+      fi
+    done
+    if [[ "$issue_api_blocked" -ne 0 ]]; then
+      blocked "(API_BLOCKED: hosted issue-template lookup unavailable)"
     fi
-  done
+  fi
   section "Latest CI"
   echo "command: gh run list -R $HOSTED_REPO --limit 3 (or public actions runs API fallback)"
-  if command -v gh >/dev/null 2>&1; then
-    if ! gh run list -R "$HOSTED_REPO" --limit 3 2>/dev/null; then
-      runs_json="$(github_api "repos/$HOSTED_REPO/actions/runs?per_page=3" 2>/dev/null)"
-      if [[ "$?" -eq 0 ]]; then
-        printf '%s\n' "$runs_json"
+  runs_json="$(github_api "repos/$HOSTED_REPO/actions/runs?per_page=3" 2>/dev/null)"
+  runs_status=$?
+  workflow_files_present=0
+  if compgen -G ".github/workflows/*" >/dev/null 2>&1; then
+    workflow_files_present=1
+  fi
+  if [[ "$runs_status" -eq 0 ]]; then
+    compact_runs="$(printf '%s' "$runs_json" | tr -d '\r\n[:space:]')"
+    if printf '%s' "$compact_runs" | grep -q '"workflow_runs":\[\]'; then
+      if [[ "$workflow_files_present" -eq 1 ]]; then
+        echo "result: NO_RUNS (workflow files exist but the GitHub Actions runs API returned 0 runs)"
       else
-        blocked "(latest CI metadata unavailable)"
+        echo "result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)"
       fi
+    else
+      printf '%s\n' "$runs_json"
     fi
   else
-    runs_json="$(github_api "repos/$HOSTED_REPO/actions/runs?per_page=3" 2>/dev/null)"
-    if [[ "$?" -eq 0 ]]; then
-      printf '%s\n' "$runs_json"
-    else
-      blocked "(latest CI metadata unavailable)"
-    fi
+    blocked "(API_BLOCKED: latest CI metadata unavailable)"
   fi
   set -e
 fi

@@ -147,7 +147,10 @@ echo
 echo "Scaffolded: audits/$SLUG/delta-audit-record.md"
 echo
 echo "=== Machine Evidence ==="
+set +e
 bash "$SHELF/scripts/collect-audit-evidence.sh" "$REPO_PATH" "$HOSTED_REPO"
+EVIDENCE_EXIT=$?
+set -e
 
 echo
 echo "=== Agent Steps Remaining ==="
@@ -160,6 +163,10 @@ else
   echo "4. Update audits/$SLUG/audit-report.md and fill delta-audit-record.md"
 fi
 echo "5. Refresh R-02, R-09 when audit mode is release or strict-product"
+if [[ "$EVIDENCE_EXIT" -ne 0 ]]; then
+  echo
+  echo "orchestrator: machine evidence captured; collector exit $EVIDENCE_EXIT reflects target findings or quickstart failures (review before scoring gates)"
+fi
 
 if [[ "$DELTA_MODE" == "upgrade-to-full" ]]; then
   exit 2

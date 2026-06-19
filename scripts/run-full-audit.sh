@@ -146,8 +146,7 @@ echo "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/RE_AUDIT
 
 if [[ "$EVIDENCE_EXIT" -ne 0 ]]; then
   echo
-  echo "orchestrator: evidence script exited $EVIDENCE_EXIT (review output before scoring gates)"
-  exit "$EVIDENCE_EXIT"
+  echo "orchestrator: machine evidence captured; collector exit $EVIDENCE_EXIT reflects target findings or quickstart failures (review before scoring gates)"
 fi
 
 echo

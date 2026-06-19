@@ -163,6 +163,7 @@ try {
     Write-Output ""
     Write-Output "=== Machine Evidence ==="
     & $evidenceScript -RepoPath $RepoPath -HostedRepo $HostedRepo
+    $evidenceExit = $LASTEXITCODE
 
     Write-Output ""
     Write-Output "=== Agent Steps Remaining ==="
@@ -175,6 +176,10 @@ try {
         Write-Output "4. Update $reportRel and fill $deltaRel"
     }
     Write-Output "5. Refresh R-02, R-09 when audit mode is release or strict-product"
+    if ($evidenceExit -ne 0) {
+        Write-Output ""
+        Write-Output "orchestrator: machine evidence captured; collector exit $evidenceExit reflects target findings or quickstart failures (review before scoring gates)"
+    }
 
     if ($deltaMode -eq "upgrade-to-full") {
         exit 2

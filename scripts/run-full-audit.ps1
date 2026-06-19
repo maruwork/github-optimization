@@ -129,8 +129,7 @@ Write-Output "Read: regulation/execution/AUDIT_RUNBOOK.md, regulation/execution/
 
 if ($evidenceExit -ne 0) {
     Write-Output ""
-    Write-Output "orchestrator: evidence script exited $evidenceExit (review output before scoring gates)"
-    exit $evidenceExit
+    Write-Output "orchestrator: machine evidence captured; collector exit $evidenceExit reflects target findings or quickstart failures (review before scoring gates)"
 }
 
 Write-Output ""

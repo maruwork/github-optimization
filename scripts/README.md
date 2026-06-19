@@ -34,10 +34,13 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 
 `collect-audit-evidence.*` exits `0` only when the collector produced no `result: BLOCKED` rows and no quickstart failure.
 It may still print `result: SKIPPED` for non-scoring execution-environment artifacts such as Windows Git Bash or managed-sandbox WinGet `gitleaks.exe` issues.
+When `gh` cannot read the default GitHub CLI config during public hosted evidence collection, the collector retries with an isolated temporary `GH_CONFIG_DIR` and then restores the caller environment.
 Any real `result: BLOCKED` row makes the collector exit non-zero after it finishes printing the transcript.
 
 `run-full-audit.*` and `run-delta-audit.*` are scaffold/evidence orchestrators, not final verdict engines.
-An orchestrator exit `0` means the scaffold and machine-evidence phase completed; the agent still must complete full-file read coverage, transcript mapping, gate scoring, waivers, and final verdict assignment.
+An orchestrator exit `0` means the scaffold and machine-evidence phase completed, even when the captured collector transcript contains `result: BLOCKED` rows for the target repository.
+Those target findings stay in the report as raw machine evidence; the agent still must complete full-file read coverage, transcript mapping, gate scoring, waivers, and final verdict assignment.
+`run-delta-audit.*` still exits `2` when delta invalidation upgrades the run to a required full re-audit.
 
 ## Usage
 
@@ -65,6 +68,7 @@ Use `collect-audit-evidence.ps1` as the authoritative Windows evidence path.
 Use `collect-audit-evidence.sh` for Linux/macOS bash evidence.
 Windows Git Bash may report `Gitleaks` as `SKIPPED`; score `G-01` from the Windows PowerShell collector or a direct `gitleaks detect --source . --no-banner` transcript.
 If a managed sandbox denies a WinGet `gitleaks.exe` path, keep that raw `SKIPPED` output and score from the successful direct transcript.
+If hosted metadata still reports `API_BLOCKED` inside a managed sandbox, rerun the same command in a normal Windows PowerShell host terminal before scoring hosted GitHub evidence.
 
 ## What They Collect
 
@@ -77,6 +81,7 @@ If a managed sandbox denies a WinGet `gitleaks.exe` path, keep that raw `SKIPPED
 - hosted metadata and Community Profile when `gh` is available
 - security feature state when `gh` is available
 - Gitleaks result when `gitleaks` is available; Windows Git Bash may emit `SKIPPED` and defer `G-01` scoring to PowerShell or a direct transcript
+- public GitHub API evidence via `gh api` with temporary-config retry when the default GitHub CLI config path is unreadable
 - large tracked files over 512KB (`G-22`)
 - pytest result when `pytest` is available (`R-12` baseline)
 - hosted issue-template contents when issues are enabled and GitHub Community Profile omits the template entry
