@@ -1,5 +1,13 @@
 # Shelf Changelog
 
+## 1.2.7 - 2026-06-19
+
+### Fixed
+
+- `gh` public-API retries no longer misclassify auth-required failures as `ABSENT`; the collectors keep them as `API_BLOCKED` unless a real 404 payload is present.
+- PowerShell and Git Bash regression suites now cover the auth-required retry path and fixture initialization needed to keep shelf self-check deterministic after reruns.
+- Audit orchestrator and collector docs now align with the current hosted-evidence and exit-semantics behavior.
+
 ## 1.2.6 - 2026-06-18
 
 ### Fixed
