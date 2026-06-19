@@ -74,8 +74,9 @@ Create and push the shelf repository:
 ```powershell
 cd C:\path\to\github-optimization
 gh repo create github-optimization --private --source=. --remote=origin --push
-git tag -a v1.1.0 -m "Generic regulation shelf v1.1.0"
-git push origin v1.1.0
+$version = (Get-Content regulation/shelf/SHELF_VERSION.md | Where-Object { $_ -match '^\d+\.\d+\.\d+$' } | Select-Object -First 1)
+git tag -a "v$version" -m "Generic regulation shelf v$version"
+git push origin "v$version"
 ```
 
 After the remote exists, re-run hosted gates `G-13` to `G-18` in `post-public` phase per `regulation/execution/AUDIT_PHASE_POLICY.md`.

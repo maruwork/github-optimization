@@ -2,7 +2,7 @@
 
 Status: Active
 
-Verified on: 2026-06-17
+Verified on: 2026-06-19
 
 Review cadence: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
@@ -54,6 +54,7 @@ Keep the outcomes instead:
 
 ## Notes
 
+- `2026-06-19`: verified collectors, hosted evidence projection, and regression suites at shelf version `1.2.11`
 - `Gitleaks` is still usable, but its maintainers state that it is feature complete and future releases are for security patches only.
 - `TruffleHog` is active and broader than a baseline local secret scan, but it is heavier and should not replace the simpler baseline by default.
 - `git-secrets` still works, but it depends on per-repository hook installation, so it is not the easiest baseline for every repository.

@@ -36,7 +36,8 @@ Waiver rules: `regulation/reference/WAIVER_POLICY.md`
 |---|---|---|---|
 | blocked | any | any | `PUBLIC_PREP_BLOCKED` |
 | pass | blocked | not evaluated | `RELEASE_BLOCKED` |
-| pass | pass/deferred | not evaluated | `PUBLIC_PREP_PASS` or `RELEASE_READY` |
+| pass | deferred (whole tier) | not evaluated | `PUBLIC_PREP_PASS` |
+| pass | pass | not evaluated | `RELEASE_READY` |
 | pass | pass | blocked | `STRICT_PRODUCT_BLOCKED` |
 | pass | pass | pass | `STRICT_PRODUCT_PASS` |
 
@@ -44,6 +45,7 @@ Notes:
 
 - whole Tier 2 `DEFERRED` keeps final label at `PUBLIC_PREP_PASS`
 - `RELEASE_READY` requires Tier 2 `PASS`, not deferred
+- mixed Tier 2 states should be resolved to one tier verdict before using this table
 
 ## Evaluation Wording
 

@@ -4,6 +4,14 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.11] - 2026-06-19
+
+### Fixed
+
+- GitHub-hosted hardening is now aligned with the shelf's own public-release expectations, including secret scanning, push protection, Dependabot security updates, and protected `master` status checks.
+- The PowerShell collector no longer carries an unreachable Git Bash branch-selection path, and the Git Bash collector now projects hosted JSON via stdin-backed temporary input instead of environment-variable payload transfer.
+- Verdict, distribution, workflow, and verification docs now reflect the current release state without stale examples or ambiguous decision-table wording.
+
 ## [1.2.10] - 2026-06-19
 
 ### Fixed

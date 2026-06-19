@@ -22,19 +22,6 @@ function Convert-ToBashPath {
     return $normalized -replace "/+", "/"
 }
 
-function Convert-ToGitBashPath {
-    param([string]$Path)
-
-    $normalized = $Path -replace "\\", "/"
-    if ($normalized -match "^([A-Za-z]):/(.*)$") {
-        $drive = $matches[1].ToLowerInvariant()
-        $rest = ($matches[2] -replace "/+", "/").TrimStart("/")
-        return "/$drive/$rest"
-    }
-
-    return $normalized -replace "/+", "/"
-}
-
 function Resolve-GitleaksCommand {
     foreach ($commandName in @("gitleaks", "gitleaks.exe")) {
         $command = Get-Command $commandName -ErrorAction SilentlyContinue
@@ -83,37 +70,13 @@ $bashCollector = Join-Path $PSScriptRoot "collect-audit-evidence.sh"
 $isGitBashCollector = $bashCommand -and $bashCommand.FullName -like "*\Git\*\bash.exe"
 if ($bashCommand -and -not $isGitBashCollector -and (Test-Path -LiteralPath $bashCollector)) {
     $resolvedCollector = (Resolve-Path -LiteralPath $bashCollector).Path
-    $resolvedGitleaks = Resolve-GitleaksCommand
-    $isGitBash = $bashCommand.FullName -like "*\Git\*\bash.exe"
-    if ($isGitBash) {
-        $bashScriptPath = Convert-ToGitBashPath $resolvedCollector
-        $bashRepoPath = Convert-ToGitBashPath $RepoPath
-        $bashArgs = @("-lc", '"$0" "$@"', $bashScriptPath, $bashRepoPath)
-        if ($HostedRepo) {
-            $bashArgs += $HostedRepo
-        }
-        $previousGitleaks = $env:GITLEAKS_CMD
-        try {
-            if ($resolvedGitleaks) {
-                $env:GITLEAKS_CMD = Convert-ToGitBashPath $resolvedGitleaks
-            }
-            $bashOutput = & $bashCommand.FullName @bashArgs 2>&1
-        } finally {
-            if ($null -ne $previousGitleaks) {
-                $env:GITLEAKS_CMD = $previousGitleaks
-            } else {
-                Remove-Item Env:GITLEAKS_CMD -ErrorAction SilentlyContinue
-            }
-        }
-    } else {
-        $bashScriptPath = Convert-ToBashPath $resolvedCollector
-        $bashRepoPath = Convert-ToBashPath $RepoPath
-        $bashArgs = @($bashScriptPath, $bashRepoPath)
-        if ($HostedRepo) {
-            $bashArgs += $HostedRepo
-        }
-        $bashOutput = & $bashCommand.Source @bashArgs 2>&1
+    $bashScriptPath = Convert-ToBashPath $resolvedCollector
+    $bashRepoPath = Convert-ToBashPath $RepoPath
+    $bashArgs = @($bashScriptPath, $bashRepoPath)
+    if ($HostedRepo) {
+        $bashArgs += $HostedRepo
     }
+    $bashOutput = & $bashCommand.Source @bashArgs 2>&1
     $bashExit = $LASTEXITCODE
     if ($bashExit -eq 0) {
         $bashOutput | ForEach-Object { Write-Output $_ }

@@ -37,15 +37,20 @@ json_project() {
   local mode="$1"
   local py
   local input
+  local input_file
+  local status
   py="$(json_python)" || return 1
   input="$(cat)"
-  JSON_PROJECT_INPUT="$input" "$py" - "$mode" <<'PY'
+  input_file="$(mktemp)"
+  printf '%s' "$input" >"$input_file"
+  set +e
+  "$py" - "$mode" "$input_file" <<'PY'
 import json
-import os
 import sys
 
 mode = sys.argv[1]
-obj = json.loads(os.environ["JSON_PROJECT_INPUT"])
+with open(sys.argv[2], "r", encoding="utf-8") as fh:
+    obj = json.load(fh)
 
 if mode == "repo":
     out = {
@@ -80,6 +85,10 @@ else:
 
 json.dump(out, sys.stdout, separators=(",", ":"))
 PY
+  status=$?
+  set -e
+  rm -f "$input_file"
+  return "$status"
 }
 
 git_safe() {
