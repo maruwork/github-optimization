@@ -4,6 +4,13 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.9] - 2026-06-19
+
+### Fixed
+
+- Windows PowerShell regression assertions for hosted issue-template evidence are now order-insensitive across `ABSENT`, `PASS`, and `API_BLOCKED` cases.
+- Fixed-message assertions in the Windows collector regression suite now escape literal gate text correctly, so CI matches local verification.
+
 ## [1.2.8] - 2026-06-19
 
 ### Fixed

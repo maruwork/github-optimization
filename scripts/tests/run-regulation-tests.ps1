@@ -246,15 +246,15 @@ Assert-Pass "collect-audit-evidence parses hosted JSON on Windows PowerShell 5.1
         $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/compat" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                '"description":"fixture repo"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/config.yml"',
-                "result: NO_RUNS (workflow files exist but the GitHub Actions runs API returned 0 runs)"
+        foreach ($pattern in @(
+                [regex]::Escape('"description":"fixture repo"'),
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"ABSENT").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"ABSENT").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"ABSENT").*\}',
+                [regex]::Escape("result: NO_RUNS (workflow files exist but the GitHub Actions runs API returned 0 runs)")
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($out -match "ConvertFrom-Json : A parameter cannot be found that matches parameter name 'Depth'") {
@@ -465,13 +465,13 @@ Assert-Pass "collect-audit-evidence preserves caller GH_CONFIG_DIR for public gh
         $env:GH_CONFIG_DIR = $expectedGhConfigDir
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/gh-config" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                ('"description":"' + $expectedGhConfigDir + '"'),
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                "result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)"
+        foreach ($pattern in @(
+                [regex]::Escape(('"description":"' + $expectedGhConfigDir + '"')),
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"ABSENT").*\}',
+                [regex]::Escape("result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)")
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($env:GH_CONFIG_DIR -ne $expectedGhConfigDir) {
@@ -548,13 +548,13 @@ Assert-Pass "collect-audit-evidence retries public gh api with isolated GH_CONFI
         Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/gh-config-retry" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                '"description":"retry-ok"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                'result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)'
+        foreach ($pattern in @(
+                [regex]::Escape('"description":"retry-ok"'),
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"ABSENT").*\}',
+                [regex]::Escape('result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)')
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($out -match 'API_BLOCKED') {
@@ -618,16 +618,16 @@ Assert-Pass "collect-audit-evidence does not treat gh auth-required retry failur
         Remove-Item Env:GH_CONFIG_DIR -ErrorAction SilentlyContinue
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/gh-auth-required" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 1) { throw "expected exit 1, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                'result: BLOCKED (API_BLOCKED: hosted metadata unavailable)',
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/config.yml"',
-                'result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)',
-                'result: BLOCKED (API_BLOCKED: latest CI metadata unavailable)'
+        foreach ($pattern in @(
+                [regex]::Escape('result: BLOCKED (API_BLOCKED: hosted metadata unavailable)'),
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"API_BLOCKED").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"API_BLOCKED").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"API_BLOCKED").*\}',
+                [regex]::Escape('result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)'),
+                [regex]::Escape('result: BLOCKED (API_BLOCKED: latest CI metadata unavailable)')
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($out -match '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/') {
@@ -694,14 +694,14 @@ Assert-Pass "collect-audit-evidence records API_BLOCKED when hosted issue templa
         $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/issue-api-blocked" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 1) { throw "expected exit 1, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
-                '"result":"API_BLOCKED","requested":".github/ISSUE_TEMPLATE/config.yml"',
-                "result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)"
+        foreach ($pattern in @(
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"API_BLOCKED").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"API_BLOCKED").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"API_BLOCKED").*\}',
+                [regex]::Escape("result: BLOCKED (API_BLOCKED: hosted issue-template lookup unavailable)")
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
     } finally {
@@ -840,14 +840,14 @@ Assert-Pass "collect-audit-evidence treats gh 404 issue-template responses as ab
         $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
         $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $fixture -HostedRepo "example/repo" 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
-        foreach ($needle in @(
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/bug_report.md"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/feature_request.md"',
-                '"result":"ABSENT","requested":".github/ISSUE_TEMPLATE/config.yml"',
-                'result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)'
+        foreach ($pattern in @(
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"ABSENT").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"ABSENT").*\}',
+                '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"ABSENT").*\}',
+                [regex]::Escape('result: NOT_CONFIGURED (no local GitHub Actions workflow files detected and the runs API returned 0 runs)')
             )) {
-            if ($out -notmatch [regex]::Escape($needle)) {
-                throw "missing output: $needle`n$out"
+            if ($out -notmatch $pattern) {
+                throw "missing output pattern: $pattern`n$out"
             }
         }
         if ($out -match 'API_BLOCKED') {
