@@ -10,8 +10,8 @@ Status: Active
 
 ## Where To Ask
 
-- reproducible defects: open a bug report
-- feature proposals: open a feature request
+- reproducible defects: open the bug report template at `https://github.com/maruwork/github-optimization/issues/new?template=bug_report.md`
+- feature proposals: open the feature request template at `https://github.com/maruwork/github-optimization/issues/new?template=feature_request.md`
 - security issues: follow `SECURITY.md`
 
 ## What To Include

@@ -2,7 +2,7 @@
 
 ## Scope
 
-This repository is a generic regulation shelf for AI self-check, not a product runtime.
+This repository contains the GitHub publication audit toolkit itself, not the repositories it audits and not a product runtime.
 
 ## Changes That Belong Here
 
@@ -14,6 +14,7 @@ This repository is a generic regulation shelf for AI self-check, not a product r
 
 - project-specific audit reports
 - live execution results from ADOP, VEIL, or other product repositories
+- repository fixes that belong in the audited target repository instead of this toolkit
 - product roadmaps
 
 ## Pull Request Checklist

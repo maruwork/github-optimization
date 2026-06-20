@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.15] - 2026-06-21
+
+### Changed
+
+- Public contributor and support guidance now describes this repository as the GitHub publication audit toolkit itself and points users straight to the exact bug-report and feature-request issue templates instead of making them guess where to file.
+
 ## [1.2.14] - 2026-06-20
 
 ### Fixed

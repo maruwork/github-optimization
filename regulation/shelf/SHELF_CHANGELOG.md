@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.15 - 2026-06-21
+
+### Changed
+
+- Public-facing contributor and support guidance now matches the GitHub landing description and gives exact bug-report and feature-request issue-template entry points.
+
 ## 1.2.14 - 2026-06-20
 
 ### Fixed
