@@ -46,6 +46,7 @@ Completeness proof: `regulation/REGULATION_COMPLETENESS.md`
 - `regulation/reference/EVIDENCE_COMMANDS.md`
 - `regulation/reference/HOSTED_SETTINGS_BOUNDARY.md`
 - `regulation/reference/AUDIT_MANIFEST_POLICY.md`
+- `regulation/reference/AUDIT_COMPLETION_DEFINITION.md`
 - `regulation/reference/GO_ROLE_CRITERIA.md`
 - `regulation/reference/GO_ROLE_COVERAGE.md`
 - `regulation/reference/JUDGMENT_GUIDE.md`

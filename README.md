@@ -27,20 +27,39 @@ This shelf answers those questions by turning them into one repeatable audit flo
 
 ## What It Can Reliably Do
 
+If you use this shelf correctly, this is what you should expect it to do well:
+
 - collect publication evidence from the target repository and hosted GitHub state
-- map that evidence to the 46 gates and required audit tiers
-- distinguish between clear `pass` / `blocked` cases and `review` cases that still need explicit judgment
-- verify setup and quickstart claims with execution transcripts instead of README prose alone
-- record the audit in `audits/<slug>/` so the same repository can be re-audited with the same criteria later
+- organize that evidence against the 46 gates and the selected audit tier
+- separate straightforward `pass` / `blocked` cases from `review` cases that still need explicit judgment
+- verify setup, install, and quickstart claims with execution transcripts instead of trusting README prose alone
+- scaffold and populate audit records under `audits/<slug>/` so the judgment trail is reusable
 - support repeat audits and delta audits without redefining the gate model each time
 
 ## What It Does Not Do
 
-- act as a universal auto-grading bot that replaces audit judgment
-- silently fix or rewrite the target repository as an auto-fixer
-- serve as a general-purpose DevSecOps platform
+If you need any of the behaviors below, use other tools or explicit human review instead of expecting this shelf to do them:
+
+- replace audit judgment with a universal auto-grading bot
+- silently fix, rewrite, or clean up the target repository as an auto-fixer
+- act as a general-purpose DevSecOps platform outside GitHub publication readiness
 - declare a repository publishable or unpublishable from a single CI result alone
-- treat `run-full-audit.*` as the final scorer; the audit is incomplete until read coverage, transcripts, gate tables, waivers, and final label are filled
+- treat `run-full-audit.*` as the final scorer; the audit is incomplete until the required audit records and judgments are closed
+
+## Definition of Complete
+
+Completion is a real stopping condition, not a vague feeling that the review has probably gone far enough.
+
+In this shelf, `complete` means **equilibrium**:
+
+- no required audit work remains open for the chosen audit mode
+- the final label is defensible from the report and cited transcripts
+- remaining work, if any, belongs to fixing the target repository rather than continuing the audit itself
+
+A completed audit can still end in `blocked`.
+Coverage matters, but completion is not defined as the point where coverage simply stops growing.
+
+Canonical definition: `regulation/reference/AUDIT_COMPLETION_DEFINITION.md`
 
 ## What It Does
 
@@ -146,7 +165,7 @@ Script reference and usage examples: `scripts/README.md`
 
 `run-full-audit.*` and `run-delta-audit.*` do not mechanically complete the final audit verdict.
 They create or update audit artifacts, collect machine evidence, and then list the remaining agent judgment steps.
-The audit is complete only after the read log, transcripts, gate tables, waivers, and final label are filled.
+The audit is complete only after the required audit records and judgments are closed under the completion definition.
 They now prefer the hosted repository name for `audits/<slug>/` resolution, which avoids worktree-directory slugs when a remote is configured.
 Latest CI evidence now prefers a selected primary CI workflow on the default branch. Selection order is: manifest override, explicit `ci.yml` / `ci.yaml`, heuristic local workflow candidate, hosted workflow inventory candidate, then overall runs fallback. When a heuristic local candidate has no default-branch runs but a hosted inventory candidate does, the collector upgrades to the hosted candidate. The collector also emits `selected_workflow_path` and `workflow_selection` so candidate branch-filter / startup-failure runs stay distinguishable from hard failures during gate review.
 

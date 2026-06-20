@@ -219,6 +219,13 @@ Write facts, gate tables, evaluation, final label, and fix tasks.
 
 ## Finished Means
 
+Canonical completion definition: `regulation/reference/AUDIT_COMPLETION_DEFINITION.md`
+
+Use the checklist below as the execution shorthand for that definition.
+
+Completion here means audit equilibrium and closure, not repository perfection.
+A finished audit may still end in `blocked`.
+
 - [ ] `G-21` read log complete
 - [ ] read exceptions explicitly recorded or `none`
 - [ ] read coverage recorded
@@ -233,7 +240,7 @@ Write facts, gate tables, evaluation, final label, and fix tasks.
 - [ ] final label assigned
 - [ ] every `blocked` row has a fix task
 
-Completeness reference: `regulation/REGULATION_COMPLETENESS.md`
+Shelf completeness reference: `regulation/REGULATION_COMPLETENESS.md`
 
 ## What This Runbook Does Not Do
 

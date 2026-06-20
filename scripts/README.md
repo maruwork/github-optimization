@@ -141,9 +141,6 @@ This corpus is intentionally narrower than the no-network regression suite:
 - it is expected to require network access
 - it focuses on external validity of `R-02`, not on full audit pass/fail status of those repositories
 
-For volatile latest-run states, keep observational dogfooding snapshots in `scripts/corpus/public-r02-observed-live-cases.json` instead of promoting them directly into the gating corpus.
-This is the right place for live `branch_filter_candidate`, `in_progress`, or temporary hard-failure examples whose exact classification may change as upstream repositories publish new runs.
-
 ## Limitation
 
 Scripts do not replace full-file read review or gate scoring.

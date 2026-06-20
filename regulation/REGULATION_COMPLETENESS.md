@@ -46,6 +46,7 @@ Use this file to confirm the regulation set is complete for agent self-check.
 | GO role list lacked gate coverage audit | coverage audit | `regulation/reference/GO_ROLE_COVERAGE.md` |
 | source anchors were too weak to defend later | URL + checked-date source register | `regulation/reference/GO_ROLE_CRITERIA.md` |
 | shell script line endings depended on local Git defaults | `.gitattributes` LF policy | `.gitattributes` |
+| audit completion lacked a single stopping-state definition | canonical completion definition | `regulation/reference/AUDIT_COMPLETION_DEFINITION.md`, `regulation/execution/AUDIT_RUNBOOK.md`, `README.md` |
 
 ## Completeness Checklist
 
@@ -77,6 +78,7 @@ Use this file to confirm the regulation set is complete for agent self-check.
 - [x] gitleaks evidence script is PowerShell-clean
 - [x] GO role criteria and coverage files exist
 - [x] external source register exists for GO role criteria
+- [x] audit completion definition exists as a canonical regulation file
 
 ## Remaining Non-Goals
 
