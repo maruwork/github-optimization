@@ -91,7 +91,7 @@ If hosted metadata still reports `API_BLOCKED` inside a managed sandbox, rerun t
 - gitignore consistency (`git ls-files -ci --exclude-standard`)
 - HEAD and describe
 - root/github file presence
-- latest CI workflow summary when `gh` is available, preferring the selected primary CI workflow on the default branch (manifest override, `ci.yml` / `ci.yaml`, heuristic local candidate, hosted workflow inventory candidate, then overall-runs fallback) and including timing, job count, coarse classification, `R-02` provisional assessment, `selected_workflow_path`, `workflow_selection`, and candidate signals when available
+- latest CI workflow summary when `gh` is available, preferring the selected primary CI workflow on the default branch (manifest override, `ci.yml` / `ci.yaml`, heuristic local candidate, hosted workflow inventory candidate, then overall-runs fallback), upgrading to hosted inventory when a heuristic local candidate has no default-branch runs, and including timing, job count, coarse classification, `R-02` provisional assessment, `selected_workflow_path`, `workflow_selection`, and candidate signals when available
 - hosted metadata and Community Profile when `gh` is available
 - security feature state when `gh` is available
 - Gitleaks result when `gitleaks` is available; Windows Git Bash may emit `SKIPPED` and defer `G-01` scoring to PowerShell or a direct transcript
@@ -133,13 +133,16 @@ Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 ## Public Corpus
 
 Use `run-public-corpus.*` when `R-02` workflow-selection heuristics or classification rules change.
-It shallow-clones the public repositories listed in `scripts/corpus/public-r02-corpus.json`, runs the native collector, and checks whether `workflow_selection` plus `selected_workflow_path` match the curated expectation set.
+It shallow-clones the public repositories listed in `scripts/corpus/public-r02-corpus.json`, runs the native collector, and checks whether `workflow_selection` plus `selected_workflow_path` match the curated expectation set when a narrower workflow can be selected. `all_runs_fallback` is allowed to leave `selected_workflow_path` empty because the point of that classification is that no narrower workflow selection was available.
 
 This corpus is intentionally narrower than the no-network regression suite:
 
 - it validates behavior against live public GitHub repository data
 - it is expected to require network access
 - it focuses on external validity of `R-02`, not on full audit pass/fail status of those repositories
+
+For volatile latest-run states, keep observational dogfooding snapshots in `scripts/corpus/public-r02-observed-live-cases.json` instead of promoting them directly into the gating corpus.
+This is the right place for live `branch_filter_candidate`, `in_progress`, or temporary hard-failure examples whose exact classification may change as upstream repositories publish new runs.
 
 ## Limitation
 

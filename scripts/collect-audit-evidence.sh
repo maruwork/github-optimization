@@ -335,9 +335,13 @@ def score_candidate(relative_path: str, text: str) -> int:
         score += 800
     elif re.search(r"/(build|verify|checks?|validate|pipeline|go)\.ya?ml$", normalized):
         score += 700
+    elif re.search(r"/main\.ya?ml$", normalized):
+        score += 500
+    elif re.search(r"/workflow\.ya?ml$", normalized):
+        score += 450
     if re.search(r"(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$", normalized):
         score -= 800
-    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$", normalized):
+    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed|spell|typos?).*\.ya?ml$", normalized):
         score -= 500
 
     name_match = re.search(r'(?im)^\s*name\s*:\s*["\']?(?P<name>[^"\']+?)["\']?\s*$', text or "")
@@ -345,13 +349,15 @@ def score_candidate(relative_path: str, text: str) -> int:
         workflow_name = name_match.group("name").strip()
         if re.search(r"(?i)\bci\b", workflow_name):
             score += 500
+        elif re.search(r"(?i)\bmain\b", workflow_name):
+            score += 400
         elif re.search(r"(?i)\btests?\b", workflow_name):
             score += 450
         elif re.search(r"(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b", workflow_name):
             score += 350
         if re.search(r"(?i)\b(codeql|dependabot|scorecards|pages)\b", workflow_name):
             score -= 600
-        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b", workflow_name):
+        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed|spell|typos?)\b", workflow_name):
             score -= 450
 
     if re.search(r"(?im)^\s*(push|pull_request)\s*:", text or ""):
@@ -414,25 +420,34 @@ def score_candidate(relative_path: str, workflow_name: str, state: str) -> int:
         score += 800
     elif re.search(r"/(build|verify|checks?|validate|pipeline|go)\.ya?ml$", normalized):
         score += 700
+    elif re.search(r"/main\.ya?ml$", normalized):
+        score += 500
+    elif re.search(r"/workflow\.ya?ml$", normalized):
+        score += 450
     if re.search(r"(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$", normalized):
         score -= 800
-    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$", normalized):
+    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed|spell|typos?).*\.ya?ml$", normalized):
         score -= 500
 
     if workflow_name:
         if re.search(r"(?i)\bci\b", workflow_name):
             score += 500
+        elif re.search(r"(?i)\bmain\b", workflow_name):
+            score += 400
         elif re.search(r"(?i)\btests?\b", workflow_name):
             score += 450
         elif re.search(r"(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b", workflow_name):
             score += 350
         if re.search(r"(?i)\b(codeql|dependabot|scorecards|pages)\b", workflow_name):
             score -= 600
-        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b", workflow_name):
+        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed|spell|typos?)\b", workflow_name):
             score -= 450
 
-    if (state or "").lower() == "active":
+    normalized_state = (state or "").lower()
+    if normalized_state == "active":
         score += 25
+    elif normalized_state:
+        score -= 600
     return score
 
 descriptors = []
@@ -453,6 +468,35 @@ if not descriptors:
 ranked = sorted(descriptors, key=lambda item: (-item["score"], item["api_path"].lower()))
 if ranked and ranked[0]["score"] > 0:
     print(f'{ranked[0]["api_path"]}|hosted_workflow_inventory')
+PY
+}
+
+hosted_workflow_has_runs() {
+  local hosted_repo="$1"
+  local workflow_path="$2"
+  local default_branch="${3:-}"
+  local workflow_id=""
+  local runs_api_path=""
+  local runs_json=""
+  local py
+
+  [[ -n "$hosted_repo" && -n "$workflow_path" ]] || return 1
+  workflow_id="${workflow_path##*/}"
+  [[ -n "$workflow_id" ]] || return 1
+  if [[ -n "$default_branch" ]]; then
+    runs_api_path="repos/$hosted_repo/actions/workflows/$workflow_id/runs?branch=$default_branch"
+  else
+    runs_api_path="repos/$hosted_repo/actions/workflows/$workflow_id/runs?per_page=1"
+  fi
+  runs_json="$(github_api "$runs_api_path" 2>/dev/null || true)"
+  [[ -n "$runs_json" ]] || return 1
+  py="$(json_python)" || return 1
+  "$py" - "$runs_json" <<'PY'
+import json
+import sys
+
+obj = json.loads(sys.argv[1])
+raise SystemExit(0 if (obj.get("workflow_runs") or []) else 1)
 PY
 }
 
@@ -735,20 +779,41 @@ done
 PRIMARY_CI_WORKFLOW_PATH=""
 PRIMARY_CI_WORKFLOW_REASON="all_runs_fallback"
 PRIMARY_CI_WORKFLOW_ID=""
+HOSTED_PRIMARY_CI_WORKFLOW_PATH=""
+HOSTED_PRIMARY_CI_WORKFLOW_REASON=""
+default_branch=""
 if primary_ci_workflow_line="$(select_primary_ci_workflow 2>/dev/null || true)" && [[ -n "$primary_ci_workflow_line" ]]; then
   PRIMARY_CI_WORKFLOW_PATH="${primary_ci_workflow_line%%|*}"
   PRIMARY_CI_WORKFLOW_REASON="${primary_ci_workflow_line#*|}"
   PRIMARY_CI_WORKFLOW_ID="${PRIMARY_CI_WORKFLOW_PATH##*/}"
 fi
-if [[ -z "$PRIMARY_CI_WORKFLOW_PATH" && -n "$HOSTED_REPO" ]]; then
+if [[ -n "$HOSTED_REPO" ]]; then
+  repo_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null || true)"
+  if [[ -n "$repo_json" ]]; then
+    default_branch="$(printf '%s' "$repo_json" | json_extract_default_branch 2>/dev/null || true)"
+  fi
   workflows_json="$(github_api "repos/$HOSTED_REPO/actions/workflows" 2>/dev/null || true)"
   if [[ -n "$workflows_json" ]]; then
     if hosted_primary_ci_line="$(select_hosted_primary_ci_workflow "$workflows_json" 2>/dev/null || true)" && [[ -n "$hosted_primary_ci_line" ]]; then
-      PRIMARY_CI_WORKFLOW_PATH="${hosted_primary_ci_line%%|*}"
-      PRIMARY_CI_WORKFLOW_REASON="${hosted_primary_ci_line#*|}"
-      PRIMARY_CI_WORKFLOW_ID="${PRIMARY_CI_WORKFLOW_PATH##*/}"
+      HOSTED_PRIMARY_CI_WORKFLOW_PATH="${hosted_primary_ci_line%%|*}"
+      HOSTED_PRIMARY_CI_WORKFLOW_REASON="${hosted_primary_ci_line#*|}"
     fi
   fi
+fi
+if [[ -n "$PRIMARY_CI_WORKFLOW_PATH" && -n "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" ]] \
+  && [[ "$PRIMARY_CI_WORKFLOW_REASON" =~ ^(single_local_workflow|heuristic_local_workflow)$ ]] \
+  && [[ "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" != "$PRIMARY_CI_WORKFLOW_PATH" ]] \
+  && ! hosted_workflow_has_runs "$HOSTED_REPO" "$PRIMARY_CI_WORKFLOW_PATH" "$default_branch" \
+  && hosted_workflow_has_runs "$HOSTED_REPO" "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" "$default_branch"; then
+  PRIMARY_CI_WORKFLOW_PATH="$HOSTED_PRIMARY_CI_WORKFLOW_PATH"
+  PRIMARY_CI_WORKFLOW_REASON="$HOSTED_PRIMARY_CI_WORKFLOW_REASON"
+fi
+if [[ -z "$PRIMARY_CI_WORKFLOW_PATH" && -n "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" ]]; then
+  PRIMARY_CI_WORKFLOW_PATH="$HOSTED_PRIMARY_CI_WORKFLOW_PATH"
+  PRIMARY_CI_WORKFLOW_REASON="$HOSTED_PRIMARY_CI_WORKFLOW_REASON"
+fi
+if [[ -n "$PRIMARY_CI_WORKFLOW_PATH" ]]; then
+  PRIMARY_CI_WORKFLOW_ID="${PRIMARY_CI_WORKFLOW_PATH##*/}"
 fi
 
 section "GitHub Files"
@@ -824,8 +889,12 @@ if [[ -n "$HOSTED_REPO" ]]; then
   section "Hosted Metadata"
   echo "commands: repos/$HOSTED_REPO ; repos/$HOSTED_REPO/community/profile ; repos/$HOSTED_REPO security_and_analysis"
   set +e
-  repo_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
-  repo_status=$?
+  if [[ -z "${repo_json:-}" ]]; then
+    repo_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
+    repo_status=$?
+  else
+    repo_status=0
+  fi
   community_json="$(github_api "repos/$HOSTED_REPO/community/profile" 2>/dev/null)"
   community_status=$?
   security_json="$(github_api "repos/$HOSTED_REPO" 2>/dev/null)"
@@ -923,6 +992,29 @@ if [[ -n "$HOSTED_REPO" ]]; then
           exit 1
         fi
         rm -f "$raw_runs_file"
+        filtered_runs_json="$(cat "$runs_file")"
+        compact_filtered_runs="$(printf '%s' "$filtered_runs_json" | tr -d '\r\n[:space:]')"
+        if [[ -n "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" ]] \
+          && [[ "$PRIMARY_CI_WORKFLOW_REASON" =~ ^(single_local_workflow|heuristic_local_workflow)$ ]] \
+          && [[ "$HOSTED_PRIMARY_CI_WORKFLOW_PATH" != "$PRIMARY_CI_WORKFLOW_PATH" ]] \
+          && printf '%s' "$compact_filtered_runs" | grep -q '"workflow_runs":\[\]'; then
+          hosted_override_id="${HOSTED_PRIMARY_CI_WORKFLOW_PATH##*/}"
+          if [[ -n "$default_branch" ]]; then
+            hosted_override_runs_api_path="repos/$HOSTED_REPO/actions/workflows/$hosted_override_id/runs?branch=$default_branch"
+          else
+            hosted_override_runs_api_path="repos/$HOSTED_REPO/actions/workflows/$hosted_override_id/runs?per_page=3"
+          fi
+          hosted_override_runs_json="$(github_api "$hosted_override_runs_api_path" 2>/dev/null || true)"
+          if [[ -n "$hosted_override_runs_json" ]]; then
+            compact_hosted_override_runs="$(printf '%s' "$hosted_override_runs_json" | tr -d '\r\n[:space:]')"
+            if ! printf '%s' "$compact_hosted_override_runs" | grep -q '"workflow_runs":\[\]'; then
+              PRIMARY_CI_WORKFLOW_PATH="$HOSTED_PRIMARY_CI_WORKFLOW_PATH"
+              PRIMARY_CI_WORKFLOW_REASON="$HOSTED_PRIMARY_CI_WORKFLOW_REASON"
+              PRIMARY_CI_WORKFLOW_ID="${PRIMARY_CI_WORKFLOW_PATH##*/}"
+              printf '%s' "$hosted_override_runs_json" >"$runs_file"
+            fi
+          fi
+        fi
       else
         printf '%s' "$runs_json" >"$runs_file"
       fi

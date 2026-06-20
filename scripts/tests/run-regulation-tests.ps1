@@ -900,6 +900,47 @@ Assert-Pass "collect-audit-evidence prefers go test workflow over govulncheck in
     }
 }
 
+Assert-Pass "collect-audit-evidence prefers main workflow over spell-check in heuristic selection" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-spell-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\workflow.yml") -Value @(
+        "name: Main workflow",
+        "on:",
+        "  push:",
+        "  pull_request:"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\spell-check.yml") -Value @(
+        "name: Spell Check",
+        "on: [pull_request]"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/workflow.yml .github/workflows/spell-check.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init spell selection fixture" | Out-Null
+    Pop-Location
+
+    try {
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch [regex]::Escape("primary_ci_workflow: .github/workflows/workflow.yml")) {
+            throw "collector did not select workflow.yml as primary CI workflow`n$out"
+        }
+        if ($out -notmatch [regex]::Escape("primary_ci_selection: heuristic_local_workflow")) {
+            throw "collector did not report heuristic_local_workflow for workflow.yml`n$out"
+        }
+        if ($out -match [regex]::Escape("primary_ci_workflow: .github/workflows/spell-check.yml")) {
+            throw "collector did not prefer main workflow over spell-check`n$out"
+        }
+    } finally {
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Assert-Pass "collect-audit-evidence honors audit manifest primary_ci_workflow override" {
     $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))
     $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))
@@ -1074,6 +1115,103 @@ Assert-Pass "collect-audit-evidence falls back to hosted workflow inventory when
         ).Count
         if ($workflowApiCalls -ne 1) {
             throw "collector should resolve hosted workflow inventory exactly once, saw $workflowApiCalls calls`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $workflowCallLog -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence upgrades zero-run local heuristic to hosted workflow inventory" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-hosted-override-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-hosted-override-" + [System.Guid]::NewGuid().ToString("N"))
+    $workflowCallLog = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-hosted-override-calls-" + [System.Guid]::NewGuid().ToString("N") + ".log")
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\macos.yml") -Value @(
+        "name: Test fzf on macOS",
+        "on:",
+        "  push:",
+        "    branches: [ main ]"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\linux.yml") -Value @(
+        "name: build",
+        "on:",
+        "  push:",
+        "    branches: [ main ]"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/macos.yml .github/workflows/linux.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init hosted override fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        ">>""$workflowCallLog"" echo %target%",
+        "echo %target% | findstr /C:""repos/example/hosted-override/actions/workflows/linux.yml/runs?branch=main"" >nul && goto linuxworkflow",
+        "echo %target% | findstr /C:""repos/example/hosted-override/actions/workflows/macos.yml/runs?branch=main"" >nul && goto macosworkflow",
+        "echo %target% | findstr /C:""repos/example/hosted-override/actions/runs/935/jobs"" >nul && goto linuxjobs",
+        "if /I ""%target%""==""repos/example/hosted-override"" goto repo",
+        "if /I ""%target%""==""repos/example/hosted-override/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/hosted-override/actions/workflows"" goto workflows",
+        "if /I ""%target%""==""repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-override/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""hosted override fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":workflows",
+        "echo {""total_count"":2,""workflows"":[{""name"":""Test fzf on macOS"",""path"":""/.github/workflows/macos.yml"",""state"":""disabled_manually""},{""name"":""build"",""path"":""/.github/workflows/linux.yml"",""state"":""active""}]}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":macosworkflow",
+        "echo {""workflow_runs"":[]}",
+        "exit /b 0",
+        ":linuxworkflow",
+        "echo {""workflow_runs"":[{""id"":935,""name"":""build"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/linux.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":935,""name"":""build"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/linux.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":linuxjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/hosted-override" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"build")(?=.*"selected_workflow_path":"\.github/workflows/linux\.yml")(?=.*"workflow_selection":"hosted_workflow_inventory").*\}') {
+            throw "collector did not surface hosted override selection in Latest CI output`n$out"
+        }
+        if ($out -match 'selected_workflow_path":"\.github/workflows/macos\.yml"') {
+            throw "collector should not keep the zero-run local heuristic workflow selected`n$out"
         }
     } finally {
         $env:PATH = $previousPath

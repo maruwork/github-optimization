@@ -96,6 +96,25 @@ function Invoke-CorpusGit {
     }
 }
 
+function Get-CloneFailureMetadata {
+    param(
+        [string[]]$CloneOutput
+    )
+
+    $text = ($CloneOutput | ForEach-Object { [string]$_ }) -join "`n"
+    if ($text -match 'Filename too long|unable to create file .*Filename too long') {
+        return [pscustomobject]@{
+            Reason = "clone_failed_long_path"
+            Detail = "filename_too_long"
+        }
+    }
+
+    return [pscustomobject]@{
+        Reason = "clone_failed"
+        Detail = ""
+    }
+}
+
 $corpus = ConvertFrom-JsonCompat -Json (Get-Content -LiteralPath $CorpusPath -Raw)
 $entries = @($corpus.entries)
 if ($EntryId.Count -gt 0) {
@@ -138,14 +157,19 @@ foreach ($entry in $entries) {
     $cloneOutput = Invoke-CorpusGit clone --depth 1 $cloneUrl $clonePath 2>&1
     $cloneExit = $LASTEXITCODE
     if ($cloneExit -ne 0) {
+        $cloneFailure = Get-CloneFailureMetadata -CloneOutput $cloneOutput
         $failures++
         Write-Output "  FAIL: clone failed"
+        if ($cloneFailure.Detail) {
+            Write-Output "  failure detail: $($cloneFailure.Detail)"
+        }
         $cloneOutput | ForEach-Object { Write-Output "  $_" }
         $results.Add([pscustomobject]@{
             id              = $id
             repo            = $repo
             result          = "FAIL"
-            failure_reason  = "clone_failed"
+            failure_reason  = $cloneFailure.Reason
+            failure_detail  = $cloneFailure.Detail
             clone_exit_code = $cloneExit
         }) | Out-Null
         continue
@@ -160,7 +184,7 @@ foreach ($entry in $entries) {
     if (-not $summary.workflow_selection) {
         $mismatches.Add("missing workflow_selection") | Out-Null
     }
-    if (-not $summary.selected_workflow_path) {
+    if (-not $summary.selected_workflow_path -and $summary.workflow_selection -ne "all_runs_fallback") {
         $mismatches.Add("missing selected_workflow_path") | Out-Null
     }
     if ($entry.PSObject.Properties["expected_workflow_selection"] -and $entry.expected_workflow_selection) {

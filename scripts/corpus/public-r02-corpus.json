@@ -21,6 +21,26 @@
       "expected_workflow_selection": "heuristic_local_workflow",
       "expected_selected_workflow_path": ".github/workflows/run-tests.yml",
       "notes": "No ci.yml is present; heuristic selection should prefer the named tests workflow."
+    },
+    {
+      "id": "fzf",
+      "repo": "junegunn/fzf",
+      "expected_workflow_selection": "hosted_workflow_inventory",
+      "expected_selected_workflow_path": ".github/workflows/linux.yml",
+      "notes": "A zero-run local heuristic candidate should yield to the active hosted workflow that still has default-branch runs."
+    },
+    {
+      "id": "starship",
+      "repo": "starship/starship",
+      "expected_workflow_selection": "heuristic_local_workflow",
+      "expected_selected_workflow_path": ".github/workflows/workflow.yml",
+      "notes": "Main CI should outrank spell-check and other ancillary workflows."
+    },
+    {
+      "id": "nuxt-awesome",
+      "repo": "nuxt/awesome",
+      "expected_workflow_selection": "all_runs_fallback",
+      "notes": "No narrower local or hosted workflow candidate is selected, so the corpus should preserve the overall-runs fallback case."
     }
   ]
 }

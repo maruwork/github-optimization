@@ -88,6 +88,8 @@ $ErrorActionPreference = "Continue"
 Push-Location $RepoPath
 $script:CollectorBlocked = $false
 $script:PrimaryCiWorkflow = $null
+$script:HostedRepoInfo = $null
+$script:HostedPrimaryCiWorkflow = $null
 
 function Write-CollectorBlocked {
     param([string]$Reason)
@@ -397,12 +399,14 @@ function Get-WorkflowSelectionScore {
         '/(run[-_])?tests?\.ya?ml$' { $score += 850; break }
         '/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$' { $score += 800; break }
         '/(build|verify|checks?|validate|pipeline|go)\.ya?ml$' { $score += 700; break }
+        '/main\.ya?ml$' { $score += 500; break }
+        '/workflow\.ya?ml$' { $score += 450; break }
     }
 
     if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
         $score -= 800
     }
-    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$') {
+    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed|spell|typos?).*\.ya?ml$') {
         $score -= 500
     }
 
@@ -412,6 +416,8 @@ function Get-WorkflowSelectionScore {
             $workflowName = $nameMatch.Groups["name"].Value.Trim()
             if ($workflowName -match '(?i)\bci\b') {
                 $score += 500
+            } elseif ($workflowName -match '(?i)\bmain\b') {
+                $score += 400
             } elseif ($workflowName -match '(?i)\btests?\b') {
                 $score += 450
             } elseif ($workflowName -match '(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b') {
@@ -421,7 +427,7 @@ function Get-WorkflowSelectionScore {
             if ($workflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
                 $score -= 600
             }
-            if ($workflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b') {
+            if ($workflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed|spell|typos?)\b') {
                 $score -= 450
             }
         }
@@ -538,18 +544,22 @@ function Get-HostedWorkflowSelectionScore {
         '/(run[-_])?tests?\.ya?ml$' { $score += 850; break }
         '/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$' { $score += 800; break }
         '/(build|verify|checks?|validate|pipeline|go)\.ya?ml$' { $score += 700; break }
+        '/main\.ya?ml$' { $score += 500; break }
+        '/workflow\.ya?ml$' { $score += 450; break }
     }
 
     if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
         $score -= 800
     }
-    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$') {
+    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed|spell|typos?).*\.ya?ml$') {
         $score -= 500
     }
 
     if ($WorkflowName) {
         if ($WorkflowName -match '(?i)\bci\b') {
             $score += 500
+        } elseif ($WorkflowName -match '(?i)\bmain\b') {
+            $score += 400
         } elseif ($WorkflowName -match '(?i)\btests?\b') {
             $score += 450
         } elseif ($WorkflowName -match '(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b') {
@@ -559,13 +569,16 @@ function Get-HostedWorkflowSelectionScore {
         if ($WorkflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
             $score -= 600
         }
-        if ($WorkflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b') {
+        if ($WorkflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed|spell|typos?)\b') {
             $score -= 450
         }
     }
 
-    if ($State -eq "active") {
+    $normalizedState = $State.ToLowerInvariant()
+    if ($normalizedState -eq "active") {
         $score += 25
+    } elseif ($normalizedState) {
+        $score -= 600
     }
 
     return $score
@@ -617,6 +630,36 @@ function Get-HostedPrimaryCiWorkflowCandidate {
     }
 
     return $null
+}
+
+function Test-HostedWorkflowHasRuns {
+    param(
+        [string]$HostedRepo,
+        [object]$WorkflowCandidate,
+        [string]$DefaultBranch
+    )
+
+    if (-not $HostedRepo -or -not $WorkflowCandidate) {
+        return $false
+    }
+
+    $workflowId = [System.IO.Path]::GetFileName([string]$WorkflowCandidate.ApiPath)
+    if (-not $workflowId) {
+        return $false
+    }
+
+    $runsPath = if ($DefaultBranch) {
+        "repos/$HostedRepo/actions/workflows/$workflowId/runs?branch=$([uri]::EscapeDataString($DefaultBranch))"
+    } else {
+        "repos/$HostedRepo/actions/workflows/$workflowId/runs?per_page=1"
+    }
+
+    $runs = Invoke-PublicGitHubApi $runsPath
+    if (-not $runs.Success) {
+        return $false
+    }
+
+    return @($runs.Value.workflow_runs).Count -gt 0
 }
 
 function Test-WorkflowRunHasBranchFilters {
@@ -878,9 +921,23 @@ Write-Section "Root Files"
     Write-Output "$_`: $(Test-Path $_)"
 }
 
+$script:HostedRepoInfo = if ($HostedRepo) { Invoke-PublicGitHubApi "repos/$HostedRepo" } else { $null }
+$hostedDefaultBranch = if ($script:HostedRepoInfo -and $script:HostedRepoInfo.Success) { [string]$script:HostedRepoInfo.Value.default_branch } else { "" }
 $script:PrimaryCiWorkflow = Get-PrimaryCiWorkflowCandidate -RepoRoot $RepoPath
-if ((-not $script:PrimaryCiWorkflow) -and $HostedRepo) {
-    $script:PrimaryCiWorkflow = Get-HostedPrimaryCiWorkflowCandidate -HostedRepo $HostedRepo
+if ($HostedRepo) {
+    $script:HostedPrimaryCiWorkflow = Get-HostedPrimaryCiWorkflowCandidate -HostedRepo $HostedRepo
+}
+if (
+    $script:PrimaryCiWorkflow -and
+    ($script:PrimaryCiWorkflow.Reason -in @("single_local_workflow", "heuristic_local_workflow")) -and
+    $script:HostedPrimaryCiWorkflow -and
+    ($script:HostedPrimaryCiWorkflow.ApiPath -ne $script:PrimaryCiWorkflow.ApiPath) -and
+    (-not (Test-HostedWorkflowHasRuns -HostedRepo $HostedRepo -WorkflowCandidate $script:PrimaryCiWorkflow -DefaultBranch $hostedDefaultBranch)) -and
+    (Test-HostedWorkflowHasRuns -HostedRepo $HostedRepo -WorkflowCandidate $script:HostedPrimaryCiWorkflow -DefaultBranch $hostedDefaultBranch)
+) {
+    $script:PrimaryCiWorkflow = $script:HostedPrimaryCiWorkflow
+} elseif ((-not $script:PrimaryCiWorkflow) -and $script:HostedPrimaryCiWorkflow) {
+    $script:PrimaryCiWorkflow = $script:HostedPrimaryCiWorkflow
 }
 
 Write-Section "GitHub Files"
@@ -941,7 +998,7 @@ if ((Test-Path "pytest.ini") -or (Test-Path "tests")) {
 
 if ($HostedRepo) {
     Write-Section "Hosted Metadata"
-    $repo = Invoke-PublicGitHubApi "repos/$HostedRepo"
+    $repo = if ($script:HostedRepoInfo) { $script:HostedRepoInfo } else { Invoke-PublicGitHubApi "repos/$HostedRepo" }
     $community = Invoke-PublicGitHubApi "repos/$HostedRepo/community/profile"
     $security = Invoke-PublicGitHubApi "repos/$HostedRepo"
     if ($repo.Success -and $community.Success -and $security.Success) {
@@ -1022,6 +1079,24 @@ if ($HostedRepo) {
                     (Get-WorkflowRunLocalPath -Run $_) -ieq $ciWorkflowRelativePath
                 }
             )
+            if (
+                ($workflowRuns.Count -eq 0) -and
+                $script:HostedPrimaryCiWorkflow -and
+                ($selectedWorkflow.Reason -in @("single_local_workflow", "heuristic_local_workflow")) -and
+                ($script:HostedPrimaryCiWorkflow.ApiPath -ne $selectedWorkflow.ApiPath)
+            ) {
+                $hostedWorkflowId = [System.IO.Path]::GetFileName([string]$script:HostedPrimaryCiWorkflow.ApiPath)
+                $hostedRunsPath = if ($encodedDefaultBranch) {
+                    "repos/$HostedRepo/actions/workflows/$hostedWorkflowId/runs?branch=$encodedDefaultBranch"
+                } else {
+                    "repos/$HostedRepo/actions/workflows/$hostedWorkflowId/runs?per_page=3"
+                }
+                $hostedRuns = Invoke-PublicGitHubApi $hostedRunsPath
+                if ($hostedRuns.Success -and @($hostedRuns.Value.workflow_runs).Count -gt 0) {
+                    $selectedWorkflow = $script:HostedPrimaryCiWorkflow
+                    $workflowRuns = @($hostedRuns.Value.workflow_runs)
+                }
+            }
         }
         if ($workflowRuns.Count -gt 0) {
             $projectedRuns = @($workflowRuns | Select-Object -First 3 | ForEach-Object {

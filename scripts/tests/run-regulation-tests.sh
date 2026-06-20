@@ -765,6 +765,42 @@ else
   printf '%s\n' "$go_selection_out"
   failures=$((failures + 1))
 fi
+echo "TEST: collect-audit-evidence prefers main workflow over spell-check in heuristic selection"
+spell_selection_fixture="$(mktemp -d)"
+fake_gh_dir="$(mktemp -d)"
+mkdir -p "$spell_selection_fixture/.github/workflows"
+printf '%s\n' "fixture" >"$spell_selection_fixture/README.md"
+printf '%s\n' "fixture" >"$spell_selection_fixture/LICENSE"
+printf '%s\n' "fixture" >"$spell_selection_fixture/SECURITY.md"
+printf '' >"$spell_selection_fixture/.gitignore"
+cat >"$spell_selection_fixture/.github/workflows/workflow.yml" <<'EOF'
+name: Main workflow
+on:
+  push:
+  pull_request:
+EOF
+cat >"$spell_selection_fixture/.github/workflows/spell-check.yml" <<'EOF'
+name: Spell Check
+on: [pull_request]
+EOF
+fixture_git "$spell_selection_fixture" init >/dev/null
+fixture_git "$spell_selection_fixture" add README.md LICENSE SECURITY.md .gitignore .github/workflows/workflow.yml .github/workflows/spell-check.yml
+fixture_git "$spell_selection_fixture" -c user.email=fixture@test -c user.name=fixture commit -m "init spell selection fixture" >/dev/null
+set +e
+spell_selection_out="$(bash "$SHELF/scripts/collect-audit-evidence.sh" "$spell_selection_fixture" 2>&1)"
+spell_selection_code=$?
+set -e
+rm -rf "$spell_selection_fixture" "$fake_gh_dir"
+if [[ "$spell_selection_code" -eq 0 ]] \
+  && echo "$spell_selection_out" | grep -Fq 'primary_ci_workflow: .github/workflows/workflow.yml' \
+  && echo "$spell_selection_out" | grep -Fq 'primary_ci_selection: heuristic_local_workflow' \
+  && ! echo "$spell_selection_out" | grep -Fq 'primary_ci_workflow: .github/workflows/spell-check.yml'; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected main workflow over spell-check"
+  printf '%s\n' "$spell_selection_out"
+  failures=$((failures + 1))
+fi
 echo "TEST: collect-audit-evidence honors audit manifest primary_ci_workflow override"
 manifest_selection_fixture="$(mktemp -d)"
 fake_gh_dir="$(mktemp -d)"
@@ -907,6 +943,83 @@ if [[ "$hosted_selection_code" -eq 0 ]] \
 else
   echo "  FAIL: expected hosted workflow inventory selection"
   printf '%s\n' "$hosted_selection_out"
+  failures=$((failures + 1))
+fi
+echo "TEST: collect-audit-evidence upgrades zero-run local heuristic to hosted workflow inventory"
+hosted_override_fixture="$(mktemp -d)"
+fake_gh_dir="$(mktemp -d)"
+mkdir -p "$hosted_override_fixture/.github/workflows"
+printf '%s\n' "fixture" >"$hosted_override_fixture/README.md"
+printf '%s\n' "fixture" >"$hosted_override_fixture/LICENSE"
+printf '%s\n' "fixture" >"$hosted_override_fixture/SECURITY.md"
+printf '' >"$hosted_override_fixture/.gitignore"
+cat >"$hosted_override_fixture/.github/workflows/macos.yml" <<'EOF'
+name: Test fzf on macOS
+on:
+  push:
+    branches: [ main ]
+EOF
+cat >"$hosted_override_fixture/.github/workflows/linux.yml" <<'EOF'
+name: build
+on:
+  push:
+    branches: [ main ]
+EOF
+fixture_git "$hosted_override_fixture" init >/dev/null
+fixture_git "$hosted_override_fixture" add README.md LICENSE SECURITY.md .gitignore .github/workflows/macos.yml .github/workflows/linux.yml
+fixture_git "$hosted_override_fixture" -c user.email=fixture@test -c user.name=fixture commit -m "init hosted override fixture" >/dev/null
+hosted_override_call_log="$(mktemp)"
+cat >"$fake_gh_dir/gh" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" != "api" ]]; then
+  exit 1
+fi
+printf '%s\n' "${2:-}" >>"$HOSTED_OVERRIDE_CALL_LOG"
+case "${2:-}" in
+  repos/example/hosted-override)
+    printf '%s\n' '{"description":"hosted override fixture","topics":[],"homepage":"","visibility":"public","has_issues":true,"default_branch":"main","security_and_analysis":{"secret_scanning":{"status":"enabled"}}}'
+    ;;
+  repos/example/hosted-override/community/profile)
+    printf '%s\n' '{"health_percentage":90,"files":{"issue_template":null}}'
+    ;;
+  repos/example/hosted-override/actions/workflows)
+    printf '%s\n' '{"total_count":2,"workflows":[{"name":"Test fzf on macOS","path":"/.github/workflows/macos.yml","state":"disabled_manually"},{"name":"build","path":"/.github/workflows/linux.yml","state":"active"}]}'
+    ;;
+  repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/bug_report.md|repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/feature_request.md|repos/example/hosted-override/contents/.github/ISSUE_TEMPLATE/config.yml)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
+    exit 4
+    ;;
+  repos/example/hosted-override/actions/workflows/macos.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[]}'
+    ;;
+  repos/example/hosted-override/actions/workflows/linux.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":935,"name":"build","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/linux.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/935"}]}'
+    ;;
+  repos/example/hosted-override/actions/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":935,"name":"build","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/linux.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/935"}]}'
+    ;;
+  repos/example/hosted-override/actions/runs/935/jobs?per_page=1)
+    printf '%s\n' '{"total_count":2}'
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+EOF
+chmod +x "$fake_gh_dir/gh"
+set +e
+hosted_override_out="$(PATH="$fake_gh_dir:$PATH" HOSTED_OVERRIDE_CALL_LOG="$hosted_override_call_log" GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK=1 bash "$SHELF/scripts/collect-audit-evidence.sh" "$hosted_override_fixture" example/hosted-override 2>&1)"
+hosted_override_code=$?
+set -e
+rm -rf "$hosted_override_fixture" "$fake_gh_dir"
+rm -f "$hosted_override_call_log"
+if [[ "$hosted_override_code" -eq 0 ]] \
+  && echo "$hosted_override_out" | grep -Fq '"selected_workflow_path":".github/workflows/linux.yml","workflow_selection":"hosted_workflow_inventory"' \
+  && ! echo "$hosted_override_out" | grep -Fq '"selected_workflow_path":".github/workflows/macos.yml"'; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected hosted override after zero-run local heuristic"
+  printf '%s\n' "$hosted_override_out"
   failures=$((failures + 1))
 fi
 echo "TEST: collect-audit-evidence marks branch-filter candidates for zero-job runs with filtered workflows"

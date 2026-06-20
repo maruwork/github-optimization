@@ -50,6 +50,27 @@ json_python() {
   return 1
 }
 
+classify_clone_failure() {
+  local clone_log="$1"
+  local py
+  py="$(json_python)" || return 1
+  "$py" - "$clone_log" <<'PY'
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8", errors="ignore") as fh:
+    text = fh.read()
+
+reason = "clone_failed"
+detail = ""
+if "Filename too long" in text:
+    reason = "clone_failed_long_path"
+    detail = "filename_too_long"
+
+print(reason)
+print(detail)
+PY
+}
+
 parse_corpus_entries() {
   local py
   py="$(json_python)" || return 1
@@ -170,9 +191,27 @@ while IFS=$'\t' read -r entry_id repo expected_selection expected_path notes; do
   echo
   echo "TEST: $entry_id ($repo)"
   if ! git clone --depth 1 "https://github.com/$repo.git" "$clone_path" >/tmp/github-optimization-clone.out 2>/tmp/github-optimization-clone.err; then
+    mapfile -t clone_failure_meta < <(classify_clone_failure /tmp/github-optimization-clone.err)
+    clone_failure_reason="${clone_failure_meta[0]:-clone_failed}"
+    clone_failure_detail="${clone_failure_meta[1]:-}"
     echo "  FAIL: clone failed"
+    [[ -n "$clone_failure_detail" ]] && echo "  failure detail: $clone_failure_detail"
     FAILURES=$((FAILURES + 1))
-    printf '{"id":"%s","repo":"%s","result":"FAIL","failure_reason":"clone_failed"}\n' "$entry_id" "$repo" >>"$RESULTS_FILE"
+    ENTRY_ID="$entry_id" REPO="$repo" FAILURE_REASON="$clone_failure_reason" FAILURE_DETAIL="$clone_failure_detail" "$(json_python)" - <<'PY' >>"$RESULTS_FILE"
+import json
+import os
+
+row = {
+    "id": os.environ["ENTRY_ID"],
+    "repo": os.environ["REPO"],
+    "result": "FAIL",
+    "failure_reason": os.environ["FAILURE_REASON"],
+}
+detail = os.environ.get("FAILURE_DETAIL", "")
+if detail:
+    row["failure_detail"] = detail
+print(json.dumps(row, separators=(",", ":")))
+PY
     continue
   fi
 
@@ -206,7 +245,9 @@ PY
 
   mismatches=()
   [[ -n "$workflow_selection" ]] || mismatches+=("missing workflow_selection")
-  [[ -n "$selected_workflow_path" ]] || mismatches+=("missing selected_workflow_path")
+  if [[ -z "$selected_workflow_path" && "$workflow_selection" != "all_runs_fallback" ]]; then
+    mismatches+=("missing selected_workflow_path")
+  fi
   if [[ -n "$expected_selection" && "$expected_selection" != "$workflow_selection" ]]; then
     mismatches+=("workflow_selection expected '$expected_selection' got '$workflow_selection'")
   fi

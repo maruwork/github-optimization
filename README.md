@@ -25,6 +25,23 @@ Users usually get stuck on the same questions before publishing:
 
 This shelf answers those questions by turning them into one repeatable audit flow.
 
+## What It Can Reliably Do
+
+- collect publication evidence from the target repository and hosted GitHub state
+- map that evidence to the 46 gates and required audit tiers
+- distinguish between clear `pass` / `blocked` cases and `review` cases that still need explicit judgment
+- verify setup and quickstart claims with execution transcripts instead of README prose alone
+- record the audit in `audits/<slug>/` so the same repository can be re-audited with the same criteria later
+- support repeat audits and delta audits without redefining the gate model each time
+
+## What It Does Not Do
+
+- act as a universal auto-grading bot that replaces audit judgment
+- silently fix or rewrite the target repository as an auto-fixer
+- serve as a general-purpose DevSecOps platform
+- declare a repository publishable or unpublishable from a single CI result alone
+- treat `run-full-audit.*` as the final scorer; the audit is incomplete until read coverage, transcripts, gate tables, waivers, and final label are filled
+
 ## What It Does
 
 It turns eight publication concerns into AI-executed evidence collection plus explicit gate judgment:
@@ -88,6 +105,10 @@ GO roles are the internal criteria behind the eight user-value axes:
 
 | Not for | Reason |
 |---|---|
+| universal auto-grading or fully automatic publication approval | this shelf gathers evidence and structures judgment, but final audit scoring still follows the runbook and gate tables |
+| silent auto-fixing of target repositories | the shelf is for audit execution and records, not unreviewed repository mutation |
+| general-purpose DevSecOps management | scope is GitHub publication readiness under this regulation, not broad platform governance |
+| single-signal publishability decisions | `R-02` and other gates require scoped evidence, transcript citation, and rule-based judgment rather than one CI result |
 | audit reports in product repos | scored artifacts belong in `audits/<slug>/` here |
 | live project examples (`VEIL_*`, `ADOP_*`, etc.) | generic shelf only; see `domain-option/` templates |
 | copying this folder into public product repos | unless the product documents shared governance |
@@ -127,7 +148,7 @@ Script reference and usage examples: `scripts/README.md`
 They create or update audit artifacts, collect machine evidence, and then list the remaining agent judgment steps.
 The audit is complete only after the read log, transcripts, gate tables, waivers, and final label are filled.
 They now prefer the hosted repository name for `audits/<slug>/` resolution, which avoids worktree-directory slugs when a remote is configured.
-Latest CI evidence now prefers a selected primary CI workflow on the default branch. Selection order is: manifest override, explicit `ci.yml` / `ci.yaml`, heuristic local workflow candidate, hosted workflow inventory candidate, then overall runs fallback. The collector also emits `selected_workflow_path` and `workflow_selection` so candidate branch-filter / startup-failure runs stay distinguishable from hard failures during gate review.
+Latest CI evidence now prefers a selected primary CI workflow on the default branch. Selection order is: manifest override, explicit `ci.yml` / `ci.yaml`, heuristic local workflow candidate, hosted workflow inventory candidate, then overall runs fallback. When a heuristic local candidate has no default-branch runs but a hosted inventory candidate does, the collector upgrades to the hosted candidate. The collector also emits `selected_workflow_path` and `workflow_selection` so candidate branch-filter / startup-failure runs stay distinguishable from hard failures during gate review.
 
 Regression tests after shelf edits:
 
