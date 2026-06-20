@@ -1,3 +1,8 @@
+param(
+    [ValidateSet("all", "ci-selection", "orchestrator")]
+    [string]$Suite = "all"
+)
+
 $ErrorActionPreference = "Stop"
 
 $Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) {
@@ -52,6 +57,7 @@ $deltaDryRunSlug = "delta-orchestrator-dry-run"
 $fixtureSlug = "minimal-docs-repo"
 $shelfDryRunSlug = "shelf-orchestrator-dry-run"
 $blockedFullAuditSlug = "tracked-ignored-orchestrator-dry-run"
+$remoteSlugDryRunSlug = "remote-slug-fixture"
 
 function Initialize-TrackedIgnoredFixture {
     Remove-Item -LiteralPath (Join-Path $trackedIgnoredFixture ".git") -Recurse -Force -ErrorAction SilentlyContinue
@@ -72,6 +78,10 @@ function Initialize-TrackedIgnoredFixture {
     } finally {
         Pop-Location
     }
+}
+
+function Test-SuiteEnabled([string]$Target) {
+    return $Suite -eq "all" -or $Suite -eq $Target
 }
 
 function Initialize-MinimalDocsFixture {
@@ -95,6 +105,7 @@ function Remove-GeneratedTestArtifacts {
         (Join-Path $Shelf "audits\$fixtureSlug"),
         (Join-Path $Shelf "audits\$shelfDryRunSlug"),
         (Join-Path $Shelf "audits\$blockedFullAuditSlug"),
+        (Join-Path $Shelf "audits\$remoteSlugDryRunSlug"),
         (Join-Path $fixture ".git"),
         (Join-Path $trackedIgnoredFixture ".git"),
         (Join-Path $trackedIgnoredFixture "local-only.secret"),
@@ -111,6 +122,7 @@ function Remove-GeneratedTestArtifacts {
 Remove-GeneratedTestArtifacts
 Initialize-MinimalDocsFixture
 
+if ($Suite -eq "all") {
 Assert-ExitCode "validate-regulation-index" 0 {
     & (Join-Path $Shelf "scripts\validate-regulation-index.ps1") -ShelfPath $Shelf
 }
@@ -377,6 +389,7 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         "@echo off",
         "if /I not ""%~1""==""api"" exit /b 1",
         "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/partial/actions/runs/123/jobs"" >nul && goto jobs",
         "if /I ""%target%""==""repos/example/partial"" goto repo",
         "if /I ""%target%""==""repos/example/partial/community/profile"" goto community",
         "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto bug",
@@ -384,7 +397,7 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         "if /I ""%target%""==""repos/example/partial/contents/.github/ISSUE_TEMPLATE/config.yml"" goto config",
         "goto runs",
         ":repo",
-        "echo {""description"":""partial template fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "echo {""description"":""partial template fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
         "exit /b 0",
         ":community",
         "echo {""health_percentage"":95,""files"":{""issue_template"":{}}}",
@@ -399,7 +412,10 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
         "echo {""path"":"".github/ISSUE_TEMPLATE/config.yml""}",
         "exit /b 0",
         ":runs",
-        "echo {""workflow_runs"":[{""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""head_branch"":""main"",""html_url"":""https://example.test/runs/1""}]}",
+        "echo {""workflow_runs"":[{""id"":123,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/1""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":4}",
         "exit /b 0"
     )
     $previousPath = $env:PATH
@@ -413,7 +429,7 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/bug_report\.md")(?=.*"result":"PASS")(?=.*"path":"\.github/ISSUE_TEMPLATE/bug_report\.md").*\}',
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/feature_request\.md")(?=.*"result":"ABSENT")(?=.*"path":null).*\}',
                 '(?s)\{(?=.*"requested":"\.github/ISSUE_TEMPLATE/config\.yml")(?=.*"result":"PASS")(?=.*"path":"\.github/ISSUE_TEMPLATE/config\.yml").*\}',
-                [regex]::Escape('"name":"CI","event":"push","status":"completed","conclusion":"success","head_branch":"main","html_url":"https://example.test/runs/1"')
+                '(?s)\{(?=.*"name":"CI")(?=.*"event":"push")(?=.*"status":"completed")(?=.*"conclusion":"success")(?=.*"run_attempt":1)(?=.*"run_started_at":"2026-06-20T10:00:00Z")(?=.*"updated_at":"2026-06-20T10:02:30Z")(?=.*"duration_seconds":150)(?=.*"jobs_total":4)(?=.*"evidence_scope":"default_branch")(?=.*"default_branch":"main")(?=.*"classification":"pass")(?=.*"r02_assessment":"pass")(?=.*"r02_reason":"latest_default_branch_run_green")(?=.*"head_branch":"main")(?=.*"html_url":"https://example.test/runs/1").*\}'
             )) {
             if ($out -notmatch $pattern) {
                 throw "missing output pattern: $pattern`n$out"
@@ -434,6 +450,854 @@ Assert-Pass "collect-audit-evidence preserves PASS and ABSENT issue-template evi
     }
 }
 
+}
+
+if (Test-SuiteEnabled "ci-selection") {
+Assert-Pass "collect-audit-evidence prefers the CI workflow over newer non-CI runs on the default branch" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-ci-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-ci-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init ci selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/ci-selection/actions/runs/900/jobs"" >nul && goto cijobs",
+        "if /I ""%target%""==""repos/example/ci-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/ci-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/ci-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/ci-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/ci-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/ci-selection/actions/workflows/ci.yml/runs?branch=main"" goto ciworkflow",
+        "if /I ""%target%""==""repos/example/ci-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""ci selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":ciworkflow",
+        "echo {""workflow_runs"":[{""id"":900,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/900""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":901,""name"":""Dependabot Updates"",""event"":""dynamic"",""status"":""completed"",""conclusion"":""failure"",""path"":""dynamic/dependabot/dependabot-updates"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:03:05Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/901""},{""id"":900,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/900""}]}",
+        "exit /b 0",
+        ":cijobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/ci-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":2)(?=.*"classification":"pass")(?=.*"r02_assessment":"pass")(?=.*"html_url":"https://example\.test/runs/900").*\}') {
+            throw "collector did not keep the CI workflow run as Latest CI`n$out"
+        }
+        if ($out -match 'https://example\.test/runs/901') {
+            throw "collector should not surface the newer non-CI run in Latest CI output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence selects a non-ci-named primary workflow when it is the only local CI candidate" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-verify-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-verify-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\verify.yml") -Value @(
+        "name: Verify",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  verify:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo verify"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/verify.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init verify selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/verify-selection/actions/runs/905/jobs"" >nul && goto verifyjobs",
+        "if /I ""%target%""==""repos/example/verify-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/verify-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/verify-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/verify-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/verify-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/verify-selection/actions/workflows/verify.yml/runs?branch=main"" goto verifyworkflow",
+        "if /I ""%target%""==""repos/example/verify-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""verify selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":verifyworkflow",
+        "echo {""workflow_runs"":[{""id"":905,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/905""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":906,""name"":""CodeQL"",""event"":""schedule"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/codeql.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:03:05Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/906""},{""id"":905,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/905""}]}",
+        "exit /b 0",
+        ":verifyjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/verify-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Verify")(?=.*"jobs_total":2)(?=.*"classification":"pass")(?=.*"selected_workflow_path":"\.github/workflows/verify\.yml")(?=.*"workflow_selection":"single_local_workflow").*\}') {
+            throw "collector did not keep the selected verify workflow run as Latest CI`n$out"
+        }
+        if ($out -match 'https://example\.test/runs/906') {
+            throw "collector should not surface the non-selected workflow run in Latest CI output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence prefers the heuristic primary workflow over non-ci analysis workflows" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-heuristic-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-heuristic-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\verify.yml") -Value @(
+        "name: Verify",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  verify:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo verify"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\codeql.yml") -Value @(
+        "name: CodeQL",
+        "on:",
+        "  schedule:",
+        "    - cron: '0 0 * * 0'"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/verify.yml .github/workflows/codeql.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init heuristic selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/heuristic-selection/actions/runs/915/jobs"" >nul && goto verifyjobs",
+        "if /I ""%target%""==""repos/example/heuristic-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/heuristic-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/heuristic-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/heuristic-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/heuristic-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/heuristic-selection/actions/workflows/verify.yml/runs?branch=main"" goto verifyworkflow",
+        "if /I ""%target%""==""repos/example/heuristic-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""heuristic selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":verifyworkflow",
+        "echo {""workflow_runs"":[{""id"":915,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/915""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":916,""name"":""CodeQL"",""event"":""schedule"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/codeql.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:03:05Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/916""},{""id"":915,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/915""}]}",
+        "exit /b 0",
+        ":verifyjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/heuristic-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Verify")(?=.*"selected_workflow_path":"\.github/workflows/verify\.yml")(?=.*"workflow_selection":"heuristic_local_workflow").*\}') {
+            throw "collector did not select the heuristic verify workflow`n$out"
+        }
+        if ($out -match 'https://example\.test/runs/916') {
+            throw "collector should not surface the non-primary analysis workflow run in Latest CI output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence honors audit manifest primary_ci_workflow override" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo "audit.manifest.yml") -Value @(
+        "version: 1",
+        "primary_ci_workflow: .github/workflows/release-gate.yml",
+        "workdir: in-place",
+        "commands:",
+        "  - id: noop",
+        "    run_windows: echo ok",
+        "    run_unix: echo ok",
+        "    expect_exit: 0"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\release-gate.yml") -Value @(
+        "name: Ship Window",
+        "on:",
+        "  workflow_dispatch:"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\codeql.yml") -Value @(
+        "name: CodeQL",
+        "on:",
+        "  schedule:",
+        "    - cron: '0 0 * * 0'"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore audit.manifest.yml .github/workflows/release-gate.yml .github/workflows/codeql.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init manifest selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/manifest-selection/actions/runs/925/jobs"" >nul && goto releasejobs",
+        "if /I ""%target%""==""repos/example/manifest-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/manifest-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/manifest-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/manifest-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/manifest-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/manifest-selection/actions/workflows/release-gate.yml/runs?branch=main"" goto releaseworkflow",
+        "if /I ""%target%""==""repos/example/manifest-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""manifest selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":releaseworkflow",
+        "echo {""workflow_runs"":[{""id"":925,""name"":""Ship Window"",""event"":""workflow_dispatch"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/release-gate.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/925""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":926,""name"":""CodeQL"",""event"":""schedule"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/codeql.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:03:05Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/926""},{""id"":925,""name"":""Ship Window"",""event"":""workflow_dispatch"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/release-gate.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/925""}]}",
+        "exit /b 0",
+        ":releasejobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/manifest-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Ship Window")(?=.*"selected_workflow_path":"\.github/workflows/release-gate\.yml")(?=.*"workflow_selection":"manifest_override").*\}') {
+            throw "collector did not honor manifest workflow override`n$out"
+        }
+        if ($out -match 'https://example\.test/runs/926') {
+            throw "collector should not surface the non-overridden workflow run in Latest CI output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence falls back to hosted workflow inventory when no local CI workflow is present" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-hosted-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-hosted-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $workflowCallLog = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-hosted-selection-calls-" + [System.Guid]::NewGuid().ToString("N") + ".log")
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init hosted selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        ">>""$workflowCallLog"" echo %target%",
+        "echo %target% | findstr /C:""repos/example/hosted-selection/actions/runs/935/jobs"" >nul && goto verifyjobs",
+        "if /I ""%target%""==""repos/example/hosted-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/hosted-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/hosted-selection/actions/workflows"" goto workflows",
+        "if /I ""%target%""==""repos/example/hosted-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/hosted-selection/actions/workflows/verify.yml/runs?branch=main"" goto verifyworkflow",
+        "if /I ""%target%""==""repos/example/hosted-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""hosted selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":workflows",
+        "echo {""total_count"":2,""workflows"":[{""name"":""CodeQL"",""path"":""/.github/workflows/codeql.yml"",""state"":""active""},{""name"":""Verify"",""path"":""/.github/workflows/verify.yml"",""state"":""active""}]}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":verifyworkflow",
+        "echo {""workflow_runs"":[{""id"":935,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":936,""name"":""CodeQL"",""event"":""schedule"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/codeql.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:03:05Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/936""},{""id"":935,""name"":""Verify"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/verify.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":verifyjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/hosted-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch [regex]::Escape("primary_ci_workflow: .github/workflows/verify.yml")) {
+            throw "collector did not surface hosted primary_ci_workflow in GitHub Files output`n$out"
+        }
+        if ($out -notmatch [regex]::Escape("primary_ci_selection: hosted_workflow_inventory")) {
+            throw "collector did not surface hosted primary_ci_selection in GitHub Files output`n$out"
+        }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Verify")(?=.*"selected_workflow_path":"\.github/workflows/verify\.yml")(?=.*"workflow_selection":"hosted_workflow_inventory").*\}') {
+            throw "collector did not honor hosted workflow inventory selection`n$out"
+        }
+        if ($out -match 'https://example\.test/runs/936') {
+            throw "collector should not surface the non-selected hosted workflow run in Latest CI output`n$out"
+        }
+        $workflowApiCalls = @(
+            Get-Content -LiteralPath $workflowCallLog -ErrorAction SilentlyContinue |
+            Where-Object { $_ -eq "repos/example/hosted-selection/actions/workflows" }
+        ).Count
+        if ($workflowApiCalls -ne 1) {
+            throw "collector should resolve hosted workflow inventory exactly once, saw $workflowApiCalls calls`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $workflowCallLog -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks branch-filter candidates for zero-job runs with filtered workflows" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-branch-filter-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-branch-filter-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value @(
+        "name: ci",
+        "on:",
+        "  push:",
+        "    branches:",
+        "      - main"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init branch filter fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/branch-filter/actions/runs/321/jobs"" >nul && goto jobs",
+        "if /I ""%target%""==""repos/example/branch-filter"" goto repo",
+        "if /I ""%target%""==""repos/example/branch-filter/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/branch-filter/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/branch-filter/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/branch-filter/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""branch filter fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":321,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""startup_failure"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:00:03Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/321""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":0}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/branch-filter" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"path":"/\.github/workflows/ci\.yml")(?=.*"jobs_total":0)(?=.*"evidence_scope":"default_branch")(?=.*"default_branch":"main")(?=.*"classification":"branch_filter_candidate")(?=.*"r02_assessment":"review")(?=.*"r02_reason":"branch_filter_candidate_requires_confirmation")(?=.*"signals":\["no_jobs_recorded","startup_failure","startup_failure_candidate","near_zero_duration","branch_filter_candidate"\]).*\}') {
+            throw "missing branch_filter_candidate output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks hard failures as blocked for R-02 on default branch" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-hard-failure-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-hard-failure-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init hard failure fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/hard-failure/actions/runs/654/jobs"" >nul && goto jobs",
+        "if /I ""%target%""==""repos/example/hard-failure"" goto repo",
+        "if /I ""%target%""==""repos/example/hard-failure/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/hard-failure/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hard-failure/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/hard-failure/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""hard failure fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":654,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/654""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":3}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/hard-failure" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":3)(?=.*"classification":"hard_failure")(?=.*"r02_assessment":"blocked")(?=.*"r02_reason":"latest_default_branch_run_failed").*\}') {
+            throw "missing hard-failure R-02 mapping`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks startup-failure candidates for manual review on default branch" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-startup-failure-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-startup-failure-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init startup failure fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/startup-failure/actions/runs/701/jobs"" >nul && goto jobs",
+        "if /I ""%target%""==""repos/example/startup-failure"" goto repo",
+        "if /I ""%target%""==""repos/example/startup-failure/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/startup-failure/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/startup-failure/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/startup-failure/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""startup failure fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":701,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""startup_failure"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:00:02Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/701""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":0}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/startup-failure" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":0)(?=.*"classification":"startup_failure_candidate")(?=.*"r02_assessment":"review")(?=.*"r02_reason":"startup_failure_candidate_requires_confirmation")(?=.*"signals":\["no_jobs_recorded","startup_failure","startup_failure_candidate","near_zero_duration"\]).*\}') {
+            throw "missing startup_failure_candidate output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks in-progress default-branch runs for manual review" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-in-progress-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-in-progress-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init in-progress fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/in-progress/actions/runs/702/jobs"" >nul && goto jobs",
+        "if /I ""%target%""==""repos/example/in-progress"" goto repo",
+        "if /I ""%target%""==""repos/example/in-progress/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/in-progress/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/in-progress/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/in-progress/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""in progress fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":702,""name"":""CI"",""event"":""push"",""status"":""in_progress"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:01:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/702""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":1}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/in-progress" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":1)(?=.*"classification":"in_progress")(?=.*"r02_assessment":"review")(?=.*"r02_reason":"default_branch_run_in_progress").*\}') {
+            throw "missing in_progress output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks non-blocking default-branch runs for manual review" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-non-blocking-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-non-blocking-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init non-blocking fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/non-blocking/actions/runs/703/jobs"" >nul && goto jobs",
+        "if /I ""%target%""==""repos/example/non-blocking"" goto repo",
+        "if /I ""%target%""==""repos/example/non-blocking/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/non-blocking/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/non-blocking/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/non-blocking/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""non blocking fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":703,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""skipped"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/703""}]}",
+        "exit /b 0",
+        ":jobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/non-blocking" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":2)(?=.*"classification":"non_blocking")(?=.*"r02_assessment":"review")(?=.*"r02_reason":"default_branch_run_non_green_non_blocking").*\}') {
+            throw "missing non_blocking output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence marks jobs-api-blocked runs as unknown for manual review" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-unknown-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-unknown-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\ci.yml") -Value "name: ci"
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/ci.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init unknown fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/unknown/actions/runs/704/jobs"" >nul && exit /b 1",
+        "if /I ""%target%""==""repos/example/unknown"" goto repo",
+        "if /I ""%target%""==""repos/example/unknown/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/unknown/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/unknown/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/unknown/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "goto runs",
+        ":repo",
+        "echo {""description"":""unknown fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runs",
+        "echo {""workflow_runs"":[{""id"":704,""name"":""CI"",""event"":""push"",""status"":""completed"",""conclusion"":""failure"",""path"":""/.github/workflows/ci.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/704""}]}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/unknown" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"CI")(?=.*"jobs_total":null)(?=.*"classification":"unknown")(?=.*"r02_assessment":"review")(?=.*"r02_reason":"insufficient_ci_evidence")(?=.*"signals":"jobs_api_blocked").*\}') {
+            throw "missing unknown classification output`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+}
+
+if ($Suite -eq "all") {
 Assert-Pass "collect-audit-evidence preserves caller GH_CONFIG_DIR for public gh api access" {
     $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-gh-config-fixture-" + [System.Guid]::NewGuid().ToString("N"))
     $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-config-" + [System.Guid]::NewGuid().ToString("N"))
@@ -883,6 +1747,9 @@ Assert-Pass "collect-audit-evidence treats gh 404 issue-template responses as ab
     }
 }
 
+}
+
+if (Test-SuiteEnabled "orchestrator") {
 $presentHead = (Invoke-TestGit -RepoPath $Shelf rev-parse HEAD)
 # v1.1.4 -> present always includes audit.manifest.yml change (v1.1.5); stable across future commits
 $manifestPriorHead = (Invoke-TestGit -RepoPath $Shelf rev-parse 'v1.1.4^{commit}')
@@ -892,6 +1759,22 @@ Assert-ExitCode "run-delta-audit allowed (no changes)" 0 {
         -AuditSlug $deltaDryRunSlug `
         -PriorHead $presentHead `
         -SkipShelfValidation
+}
+
+Assert-Pass "delta audit record captures latest CI section and machine evidence" {
+    $deltaPath = Join-Path $Shelf "audits\$deltaDryRunSlug\delta-audit-record.md"
+    $deltaText = Get-Content -LiteralPath $deltaPath -Raw
+    foreach ($pattern in @(
+            [regex]::Escape('### Latest CI Assessment (`R-02`)'),
+            [regex]::Escape('- selected workflow path: .github/workflows/ci.yml'),
+            [regex]::Escape('- workflow selection: explicit_ci_filename'),
+            [regex]::Escape('reviewer confirmation checklist when collector provisional assessment is `review`:'),
+            [regex]::Escape("=== Repository ===")
+        )) {
+        if ($deltaText -notmatch $pattern) {
+            throw "missing delta scaffold content: $pattern`n$deltaText"
+        }
+    }
 }
 
 Assert-ExitCode "run-delta-audit invalidates manifest change" 2 {
@@ -993,6 +1876,19 @@ Assert-Pass "fixture audit-report scaffolded" {
     }
 }
 
+Assert-Pass "full audit report captures latest CI section and machine evidence" {
+    $reportText = Get-Content -LiteralPath $fixtureReport -Raw
+    foreach ($pattern in @(
+            [regex]::Escape('### Latest CI Assessment (`R-02`)'),
+            [regex]::Escape('reviewer confirmation checklist when collector provisional assessment is `review`:'),
+            [regex]::Escape("=== Repository ===")
+        )) {
+        if ($reportText -notmatch $pattern) {
+            throw "missing audit report scaffold content: $pattern`n$reportText"
+        }
+    }
+}
+
 $blockedReport = Join-Path $Shelf "audits\$blockedFullAuditSlug\audit-report.md"
 if (Test-Path $blockedReport) { Remove-Item $blockedReport -Force }
 
@@ -1012,6 +1908,37 @@ Assert-Pass "run-full-audit preserves blocked machine evidence but exits 0" {
     }
 }
 
+Assert-Pass "run-full-audit prefers remote repository name for slug" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-remote-slug-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init remote slug fixture" | Out-Null
+    git -c "safe.directory=$tempRepo" remote add origin https://github.com/example/remote-slug-fixture.git
+    Pop-Location
+    try {
+        $out = & (Join-Path $Shelf "scripts\run-full-audit.ps1") `
+            -RepoPath $tempRepo `
+            -AuditMode public-prep `
+            -AuditPhase pre-public `
+            -SkipShelfValidation 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch [regex]::Escape("Audit slug: remote-slug-fixture")) {
+            throw "missing remote-derived slug in orchestrator output`n$out"
+        }
+        if (-not (Test-Path (Join-Path $Shelf "audits\$remoteSlugDryRunSlug\audit-report.md"))) {
+            throw "missing audits\$remoteSlugDryRunSlug\audit-report.md"
+        }
+    } finally {
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 # Use a dedicated dry-run slug - never delete audits/github-optimization/ (real dogfood output).
 $shelfDryRunReport = Join-Path $Shelf "audits\$shelfDryRunSlug\audit-report.md"
 if (Test-Path $shelfDryRunReport) { Remove-Item $shelfDryRunReport -Force }
@@ -1028,6 +1955,20 @@ Assert-Pass "shelf orchestrator dry-run report scaffolded" {
     if (-not (Test-Path $shelfDryRunReport)) {
         throw "missing $shelfDryRunReport"
     }
+}
+
+Assert-Pass "shelf audit report carries latest CI workflow summary" {
+    $reportText = Get-Content -LiteralPath $shelfDryRunReport -Raw
+    foreach ($pattern in @(
+            [regex]::Escape('- selected workflow path: .github/workflows/ci.yml'),
+            [regex]::Escape('- workflow selection: explicit_ci_filename')
+        )) {
+        if ($reportText -notmatch $pattern) {
+            throw "missing report latest-ci summary: $pattern`n$reportText"
+        }
+    }
+}
+
 }
 
 Remove-GeneratedTestArtifacts

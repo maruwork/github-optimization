@@ -23,7 +23,7 @@ jobs:
           go install github.com/zricethezav/gitleaks/v8@latest
           "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           & "$env:USERPROFILE\go\bin\gitleaks.exe" version
-      - name: Run regulation regression tests
+      - name: Run PowerShell regulation regression tests
         shell: pwsh
         run: ./scripts/tests/run-regulation-tests.ps1
 
@@ -38,7 +38,7 @@ jobs:
           go install github.com/zricethezav/gitleaks/v8@latest
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
           "$HOME/go/bin/gitleaks" version
-      - name: Run regulation regression tests
+      - name: Run bash regulation regression tests
         run: |
           chmod +x scripts/*.sh scripts/tests/*.sh
           ./scripts/tests/run-regulation-tests.sh

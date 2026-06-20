@@ -6,6 +6,10 @@
 
 version: 1
 
+# optional: override the workflow file treated as primary CI evidence for R-02
+# use a repository-relative path such as .github/workflows/release-gate.yml
+# primary_ci_workflow: .github/workflows/ci.yml
+
 # isolated: run in a fresh temp directory with the repository copied in
 # in-place: run from repository root
 workdir: isolated

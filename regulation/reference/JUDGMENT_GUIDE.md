@@ -29,11 +29,44 @@ Listing files is not the same as reading them.
 
 | Result | When |
 |---|---|
-| `pass` | latest default-branch run is success |
+| `pass` | latest default-branch CI evidence is scoped to `default_branch` and collector `r02_assessment` is `pass` |
 | `waived` | not applicable - CI failure cannot be waived in `release` or `strict-product` |
-| `blocked` | latest run failed and no accepted-risk record exists |
+| `blocked` | collector `r02_assessment` is `blocked` and no accepted-risk record exists |
 
 Accepted-risk record must name owner, reason, and fix deadline.
+
+Collector `r02_assessment=review` is not itself a gate result.
+It means the raw latest-CI status is insufficient to score `blocked` yet.
+Before scoring, confirm the run scope and failure type from the same transcript row:
+
+- `evidence_scope=default_branch` or explicit manual confirmation that the run is the relevant default-branch release signal
+- `selected_workflow_path` plus `workflow_selection` explains why this workflow was treated as the primary CI signal
+- `workflow_selection=hosted_workflow_inventory` requires a cited hosted workflow inventory row that names the selected workflow path
+- `workflow_selection=all_runs_fallback` requires a note explaining why no narrower workflow selection was available
+- `classification=branch_filter_candidate` means do not score `blocked` from status alone; confirm trigger filters and whether the run is a real default-branch CI failure
+- `classification=startup_failure_candidate` means confirm whether the failure is a real job failure or a zero-job / orchestration artifact before scoring
+- `classification=in_progress`, `non_blocking`, or `unknown` means `R-02` still needs explicit reviewer judgment and cannot be scored `pass` from the raw collector row alone
+
+Recommended scoring flow:
+
+1. If `r02_assessment=pass`, score `R-02` `pass` from the cited hosted transcript.
+2. If `r02_assessment=blocked`, score `R-02` `blocked` unless an accepted-risk record explicitly covers the failing run.
+3. If `r02_assessment=review`, do not score `blocked` yet. Confirm branch scope, workflow trigger filters, job count, and run URL first, then score `pass` or `blocked` with a note.
+
+Classification guardrails:
+
+1. `branch_filter_candidate`: keep `review` unless the note explicitly states that branch filters do not explain the run and the run still represents the intended release signal.
+2. `startup_failure_candidate`: keep `review` unless the note explicitly states that real jobs should have started and the failure is not a zero-job orchestration artifact.
+3. `all_runs_fallback`: do not score `pass` or `blocked` without a note explaining why fallback evidence is still representative.
+4. `hosted_workflow_inventory`: acceptable when the hosted workflow inventory transcript names the selected workflow and local selection was absent or insufficient.
+
+Minimum note content for a final `R-02` reviewer override:
+
+1. state whether the evaluated run is default-branch evidence or a recent-runs fallback
+2. state the selected workflow path and selection reason (`manifest_override`, `explicit_ci_filename`, `single_local_workflow`, `heuristic_local_workflow`, `hosted_workflow_inventory`, or `all_runs_fallback`)
+3. state whether workflow trigger filters explain the observed run
+4. state the cited job count and duration
+5. cite the run URL or ID used for the decision
 
 Write `audits/<repository-slug>/accepted-risk-record.md` from `templates/accepted-risk-record.md.template` and cite it in the audit report Evaluation section.
 

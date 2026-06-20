@@ -14,6 +14,8 @@ Output path default: `audits/<repository-slug>/accepted-risk-record.md`
 
 - gate ID: R-02
 - present state: CI failing on default branch
+- collector classification:
+- collector assessment:
 
 ## Risk Accepted
 
@@ -29,6 +31,8 @@ Date or release by which the risk expires:
 
 ## Evidence
 
+- selected workflow path:
+- workflow selection reason:
 - failing workflow run URL or ID:
 - failing job name:
 - error excerpt:

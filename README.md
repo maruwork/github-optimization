@@ -8,7 +8,7 @@ Shelf version: `1.2.12` (`regulation/shelf/SHELF_VERSION.md`)
 
 AI-run **GitHub publication optimization shelf**.
 
-The responsible AI reads this shelf, executes evidence against a target repository, scores 46 gates, and writes results under `audits/<repository-slug>/` on disk.
+The responsible AI reads this shelf, executes evidence against a target repository, gathers evidence for all 46 gates, and writes audit artifacts under `audits/<repository-slug>/` on disk.
 
 In one line:
 
@@ -27,7 +27,7 @@ This shelf answers those questions by turning them into one repeatable audit flo
 
 ## What It Does
 
-It turns eight publication concerns into AI-executed evidence and gate scoring:
+It turns eight publication concerns into AI-executed evidence collection plus explicit gate judgment:
 
 1. reduce pre-publication uncertainty
 2. find missing public files and GitHub settings
@@ -73,7 +73,7 @@ GO roles are the internal criteria behind the eight user-value axes:
 
 | Role | Action |
 |---|---|
-| Responsible AI | read regulation, run scripts, score gates, write audit artifacts |
+| Responsible AI | read regulation, run scripts, gather evidence, and write gate judgments into audit artifacts |
 | Human | optional publication approval; not default command execution |
 
 ## Toolset At A Glance
@@ -126,16 +126,28 @@ Script reference and usage examples: `scripts/README.md`
 `run-full-audit.*` and `run-delta-audit.*` do not mechanically complete the final audit verdict.
 They create or update audit artifacts, collect machine evidence, and then list the remaining agent judgment steps.
 The audit is complete only after the read log, transcripts, gate tables, waivers, and final label are filled.
+They now prefer the hosted repository name for `audits/<slug>/` resolution, which avoids worktree-directory slugs when a remote is configured.
+Latest CI evidence now prefers a selected primary CI workflow on the default branch. Selection order is: manifest override, explicit `ci.yml` / `ci.yaml`, heuristic local workflow candidate, hosted workflow inventory candidate, then overall runs fallback. The collector also emits `selected_workflow_path` and `workflow_selection` so candidate branch-filter / startup-failure runs stay distinguishable from hard failures during gate review.
 
 Regression tests after shelf edits:
 
 ```powershell
 .\scripts\tests\run-regulation-tests.ps1
+.\scripts\tests\run-regulation-tests-ci.ps1
+.\scripts\tests\run-regulation-tests-orchestrator.ps1
 ```
 
 ```bash
 ./scripts/tests/run-regulation-tests.sh
 ```
+
+```bash
+./scripts/tests/run-regulation-tests-ci.sh
+./scripts/tests/run-regulation-tests-orchestrator.sh
+```
+
+Use `run-regulation-tests.sh` for full bash coverage.
+Use `run-regulation-tests-ci.sh` when iterating on `R-02` workflow selection / classification logic.
 
 ## Audit Modes And Tiers
 
@@ -171,7 +183,7 @@ domain-option/                                        # copy templates only (exc
 
 ## Output Locations
 
-The responsible AI writes audit artifacts under `audits/<slug>/` in this shelf. Do not write scored audit reports into public product repositories.
+The responsible AI writes audit artifacts under `audits/<slug>/` in this shelf. Do not write completed audit reports into public product repositories.
 
 | Artifact | Path |
 |---|---|

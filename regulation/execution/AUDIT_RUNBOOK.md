@@ -165,6 +165,42 @@ Required when audit mode is `release` or `strict-product`.
 
 Walk `checklists/release-quality-checklist.md` and score `regulation/gates/RELEASE_QUALITY_GATE.md`.
 
+For `R-02`, start from the collector `Latest CI` row rather than the raw `conclusion` alone.
+Use these fields together:
+
+- `evidence_scope`
+- `default_branch`
+- `classification`
+- `r02_assessment`
+- `r02_reason`
+- `selected_workflow_path`
+- `workflow_selection`
+
+Scoring rule:
+
+- if `r02_assessment=pass`, score `R-02` `pass` after citing the hosted transcript row
+- if `r02_assessment=blocked`, score `R-02` `blocked` unless an accepted-risk record explicitly covers the failing run
+- if `r02_assessment=review`, do not score `blocked` from the raw row alone; confirm branch scope, trigger filters, job count, and run URL first, then score `pass` or `blocked` with a note
+
+Reviewer checklist for `r02_assessment=review`:
+
+- confirm the evaluated run is the intended default-branch release signal, or write why a recent-runs fallback still supports the gate call
+- record the selected workflow path and whether it came from `manifest_override`, `explicit_ci_filename`, `single_local_workflow`, `heuristic_local_workflow`, `hosted_workflow_inventory`, or `all_runs_fallback`
+- if `workflow_selection=manifest_override`, cite the matching `audit.manifest.yml` line in the report
+- if `workflow_selection=hosted_workflow_inventory`, cite the hosted workflow inventory transcript row that selected the workflow and note that local workflow selection was absent or insufficient
+- if `workflow_selection=all_runs_fallback`, write why no narrower workflow selection was available before treating the run as the release signal
+- record whether workflow branch filters explain a zero-job run before treating `startup_failure` as a real CI failure
+- record job count and duration from the same row so `0 jobs` / `<=10s` orchestration artifacts stay distinguishable from test failures
+- cite the run URL or run ID used for the final judgment
+- if `classification=branch_filter_candidate` or `startup_failure_candidate`, default to `review` until the above checks are written in the report
+
+Decision guardrails:
+
+- do not score `blocked` from `classification=branch_filter_candidate` unless the report explicitly states that workflow trigger filters do not explain the zero-job run and the cited run is still the intended default-branch release signal
+- do not score `blocked` from `classification=startup_failure_candidate` unless the report explicitly states that the run should have started real jobs and the failure is not a zero-job orchestration artifact
+- do not score `pass` from `workflow_selection=all_runs_fallback` unless the report explicitly states why the fallback run is still representative of the repository's release signal
+- `workflow_selection=hosted_workflow_inventory` is acceptable evidence only when the hosted transcript names the selected workflow path or filename
+
 If entire Tier 2 is deferred, write `audits/<repository-slug>/tier2-defer-record.md`.
 
 Whole Tier 2 defer is invalid for `strict-product`.

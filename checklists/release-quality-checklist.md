@@ -20,6 +20,9 @@ Skip only when Tier 2 is formally deferred in `audits/<repository-slug>/tier2-de
 - [ ] CI covers the primary supported platform(s) for the product claim (`R-03`)
 - [ ] hosted code scanning alerts are reviewed when code scanning is enabled (`R-04`)
 
+For `R-02`, use the collector `Latest CI` row.
+If `r02_assessment=review`, confirm branch scope, selected workflow path, and trigger filters before scoring `blocked`.
+
 ## Version And Release Alignment
 
 - [ ] runtime version source is explicit (`R-05`)

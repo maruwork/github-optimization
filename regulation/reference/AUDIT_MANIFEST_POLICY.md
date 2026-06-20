@@ -31,6 +31,7 @@ Optional manifest sections:
 |---|---|
 | `env` | environment variables applied to every quickstart command |
 | `assertions[].path_exists` | verify that a quickstart-created relative path exists before the run is scored `pass` |
+| `primary_ci_workflow` | repository-relative workflow path to treat as the primary CI signal for `R-02` when filename heuristics are insufficient |
 
 ## After First Audit
 

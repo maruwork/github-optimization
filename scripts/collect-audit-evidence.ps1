@@ -87,6 +87,7 @@ if ($bashCommand -and -not $isGitBashCollector -and (Test-Path -LiteralPath $bas
 $ErrorActionPreference = "Continue"
 Push-Location $RepoPath
 $script:CollectorBlocked = $false
+$script:PrimaryCiWorkflow = $null
 
 function Write-CollectorBlocked {
     param([string]$Reason)
@@ -344,6 +345,476 @@ function Get-RedactedPath {
     return $result
 }
 
+function Get-WorkflowRunDurationSeconds {
+    param([object]$Run)
+
+    $startText = if ($Run.run_started_at) { [string]$Run.run_started_at } elseif ($Run.created_at) { [string]$Run.created_at } else { "" }
+    $endText = if ($Run.updated_at) { [string]$Run.updated_at } elseif ($Run.completed_at) { [string]$Run.completed_at } else { "" }
+    if (-not $startText -or -not $endText) {
+        return $null
+    }
+
+    try {
+        $start = [datetimeoffset]::Parse($startText)
+        $end = [datetimeoffset]::Parse($endText)
+        return [int][math]::Max([math]::Round(($end - $start).TotalSeconds), 0)
+    } catch {
+        return $null
+    }
+}
+
+function Get-WorkflowRunLocalPath {
+    param([object]$Run)
+
+    $pathText = [string]$Run.path
+    if (-not $pathText) {
+        return ""
+    }
+
+    $normalized = (($pathText -split '@', 2)[0].Trim()).TrimStart('/', '\')
+    if (-not $normalized) {
+        return ""
+    }
+
+    return $normalized -replace '/', '\'
+}
+
+function Get-WorkflowSelectionScore {
+    param(
+        [string]$RelativePath,
+        [string]$WorkflowText
+    )
+
+    $normalizedPath = (($RelativePath -replace "\\", "/").TrimStart("/")).ToLowerInvariant()
+    if (-not $normalizedPath) {
+        return [int]::MinValue
+    }
+
+    $score = 0
+    switch -Regex ($normalizedPath) {
+        '^\.github/workflows/ci\.ya?ml$' { return 1000 }
+        '/ci\.ya?ml$' { $score += 900; break }
+        '/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$' { $score += 700; break }
+    }
+
+    if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
+        $score -= 800
+    }
+
+    if ($WorkflowText) {
+        $nameMatch = [regex]::Match($WorkflowText, '(?im)^\s*name\s*:\s*["'']?(?<name>[^"'']+?)["'']?\s*$')
+        if ($nameMatch.Success) {
+            $workflowName = $nameMatch.Groups["name"].Value.Trim()
+            if ($workflowName -match '(?i)\bci\b') {
+                $score += 500
+            } elseif ($workflowName -match '(?i)\b(test|build|verify|check|validate)\b') {
+                $score += 350
+            }
+
+            if ($workflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
+                $score -= 600
+            }
+        }
+
+        if ($WorkflowText -match '(?im)^\s*(push|pull_request)\s*:') {
+            $score += 100
+        }
+    }
+
+    return $score
+}
+
+function Get-ManifestScalarValue {
+    param(
+        [string]$ManifestPath,
+        [string]$Key
+    )
+
+    if (-not $ManifestPath -or -not $Key -or -not (Test-Path -LiteralPath $ManifestPath)) {
+        return ""
+    }
+
+    $match = Select-String -LiteralPath $ManifestPath -Pattern ("^(?m){0}:\s*(.+)$" -f [regex]::Escape($Key)) | Select-Object -First 1
+    if (-not $match) {
+        return ""
+    }
+
+    $value = $match.Matches[0].Groups[1].Value.Trim()
+    if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+        return $value.Substring(1, $value.Length - 2)
+    }
+
+    return $value
+}
+
+function Get-PrimaryCiWorkflowCandidate {
+    param([string]$RepoRoot)
+
+    $workflowDir = Join-Path $RepoRoot ".github\workflows"
+    if (-not (Test-Path -LiteralPath $workflowDir)) {
+        return $null
+    }
+
+    $manifestPath = Join-Path $RepoRoot "audit.manifest.yml"
+    $manifestOverride = Get-ManifestScalarValue -ManifestPath $manifestPath -Key "primary_ci_workflow"
+    if ($manifestOverride) {
+        $normalizedOverride = (($manifestOverride -replace "/", "\").TrimStart("\"))
+        $overridePath = Join-Path $RepoRoot $normalizedOverride
+        if (Test-Path -LiteralPath $overridePath) {
+            return [pscustomobject]@{
+                RelativePath = $normalizedOverride
+                ApiPath      = ($normalizedOverride -replace "\\", "/")
+                Reason       = "manifest_override"
+            }
+        }
+    }
+
+    $workflowFiles = @(Get-ChildItem -LiteralPath $workflowDir -File -ErrorAction SilentlyContinue | Where-Object {
+        $_.Extension -in @(".yml", ".yaml")
+    } | Sort-Object FullName)
+    if ($workflowFiles.Count -eq 0) {
+        return $null
+    }
+
+    $descriptors = @(
+        foreach ($file in $workflowFiles) {
+            $relativeFs = ".github\workflows\" + $file.Name
+            $workflowText = Get-Content -LiteralPath $file.FullName -Raw -ErrorAction SilentlyContinue
+            [pscustomobject]@{
+                RelativePath = $relativeFs
+                ApiPath      = ($relativeFs -replace "\\", "/")
+                Score        = Get-WorkflowSelectionScore -RelativePath $relativeFs -WorkflowText $workflowText
+            }
+        }
+    )
+
+    $exactCi = @($descriptors | Where-Object { $_.ApiPath -match '^\.github/workflows/ci\.ya?ml$' } | Select-Object -First 1)
+    if ($exactCi.Count -gt 0) {
+        return [pscustomobject]@{
+            RelativePath = $exactCi[0].RelativePath
+            ApiPath      = $exactCi[0].ApiPath
+            Reason       = "explicit_ci_filename"
+        }
+    }
+
+    $ranked = @($descriptors | Sort-Object @{ Expression = "Score"; Descending = $true }, @{ Expression = "ApiPath"; Descending = $false })
+    if (($ranked.Count -gt 0) -and ($ranked[0].Score -gt 0)) {
+        return [pscustomobject]@{
+            RelativePath = $ranked[0].RelativePath
+            ApiPath      = $ranked[0].ApiPath
+            Reason       = if ($descriptors.Count -eq 1) { "single_local_workflow" } else { "heuristic_local_workflow" }
+        }
+    }
+
+    return $null
+}
+
+function Get-HostedWorkflowSelectionScore {
+    param(
+        [string]$RelativePath,
+        [string]$WorkflowName,
+        [string]$State
+    )
+
+    $normalizedPath = (($RelativePath -replace "\\", "/").TrimStart("/")).ToLowerInvariant()
+    if (-not $normalizedPath) {
+        return [int]::MinValue
+    }
+
+    $score = 0
+    switch -Regex ($normalizedPath) {
+        '^\.github/workflows/ci\.ya?ml$' { $score += 1000; break }
+        '/ci\.ya?ml$' { $score += 900; break }
+        '/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$' { $score += 700; break }
+    }
+
+    if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
+        $score -= 800
+    }
+
+    if ($WorkflowName) {
+        if ($WorkflowName -match '(?i)\bci\b') {
+            $score += 500
+        } elseif ($WorkflowName -match '(?i)\b(test|build|verify|check|validate|pipeline)\b') {
+            $score += 350
+        }
+
+        if ($WorkflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
+            $score -= 600
+        }
+    }
+
+    if ($State -eq "active") {
+        $score += 25
+    }
+
+    return $score
+}
+
+function Get-HostedPrimaryCiWorkflowCandidate {
+    param([string]$HostedRepo)
+
+    if (-not $HostedRepo) {
+        return $null
+    }
+
+    $workflows = Invoke-PublicGitHubApi "repos/$HostedRepo/actions/workflows"
+    if (-not $workflows.Success) {
+        return $null
+    }
+
+    $descriptors = @(
+        foreach ($workflow in @($workflows.Value.workflows)) {
+            $path = [string]$workflow.path
+            if (-not $path) {
+                continue
+            }
+
+            $normalizedPath = (($path -split '@', 2)[0].Trim()).TrimStart('/', '\')
+            if (-not $normalizedPath) {
+                continue
+            }
+
+            [pscustomobject]@{
+                RelativePath = ($normalizedPath -replace '/', '\')
+                ApiPath      = ($normalizedPath -replace '\\', '/')
+                Score        = Get-HostedWorkflowSelectionScore -RelativePath $normalizedPath -WorkflowName ([string]$workflow.name) -State ([string]$workflow.state)
+            }
+        }
+    )
+
+    if ($descriptors.Count -eq 0) {
+        return $null
+    }
+
+    $ranked = @($descriptors | Sort-Object @{ Expression = "Score"; Descending = $true }, @{ Expression = "ApiPath"; Descending = $false })
+    if ($ranked[0].Score -gt 0) {
+        return [pscustomobject]@{
+            RelativePath = $ranked[0].RelativePath
+            ApiPath      = $ranked[0].ApiPath
+            Reason       = "hosted_workflow_inventory"
+        }
+    }
+
+    return $null
+}
+
+function Test-WorkflowRunHasBranchFilters {
+    param(
+        [string]$RepoRoot,
+        [object]$Run
+    )
+
+    $relativePath = Get-WorkflowRunLocalPath -Run $Run
+    if (-not $relativePath) {
+        return $false
+    }
+
+    $workflowPath = Join-Path $RepoRoot $relativePath
+    if (-not (Test-Path -LiteralPath $workflowPath)) {
+        return $false
+    }
+
+    $workflowText = Get-Content -LiteralPath $workflowPath -Raw -ErrorAction SilentlyContinue
+    if (-not $workflowText) {
+        return $false
+    }
+
+    return ($workflowText -match '(?m)^\s*branches(?:-ignore)?\s*:')
+}
+
+function Get-WorkflowRunJobsState {
+    param(
+        [string]$HostedRepo,
+        [object]$Run
+    )
+
+    $runId = [string]$Run.id
+    if (-not $HostedRepo -or -not $runId) {
+        return [pscustomobject]@{
+            JobsTotal = $null
+            Signal    = $null
+        }
+    }
+
+    $jobs = Invoke-PublicGitHubApi "repos/$HostedRepo/actions/runs/$runId/jobs?per_page=1"
+    if ($jobs.Success) {
+        $jobsTotal = $null
+        $totalCountProperty = $jobs.Value.PSObject.Properties["total_count"]
+        if ($totalCountProperty) {
+            $parsed = 0
+            if ([int]::TryParse([string]$totalCountProperty.Value, [ref]$parsed)) {
+                $jobsTotal = $parsed
+            }
+        }
+        return [pscustomobject]@{
+            JobsTotal = $jobsTotal
+            Signal    = $null
+        }
+    }
+
+    return [pscustomobject]@{
+        JobsTotal = $null
+        Signal    = "jobs_api_blocked"
+    }
+}
+
+function Get-WorkflowRunSignals {
+    param(
+        [object]$Run,
+        [object]$JobsState,
+        [Nullable[int]]$DurationSeconds,
+        [bool]$HasBranchFilters
+    )
+
+    $signals = New-Object System.Collections.Generic.List[string]
+
+    if ($null -ne $JobsState.JobsTotal -and $JobsState.JobsTotal -eq 0) {
+        $signals.Add("no_jobs_recorded") | Out-Null
+    }
+
+    if ([string]$Run.conclusion -eq "startup_failure") {
+        $signals.Add("startup_failure") | Out-Null
+    }
+
+    if (
+        ([string]$Run.conclusion -in @("failure", "startup_failure", "cancelled")) -and
+        ($null -ne $JobsState.JobsTotal) -and
+        ($JobsState.JobsTotal -eq 0)
+    ) {
+        $signals.Add("startup_failure_candidate") | Out-Null
+    }
+
+    if (
+        ($null -ne $DurationSeconds) -and
+        ($DurationSeconds -le 10) -and
+        ($null -ne $JobsState.JobsTotal) -and
+        ($JobsState.JobsTotal -eq 0)
+    ) {
+        $signals.Add("near_zero_duration") | Out-Null
+    }
+
+    if (
+        $HasBranchFilters -and
+        ($null -ne $JobsState.JobsTotal) -and
+        ($JobsState.JobsTotal -eq 0)
+    ) {
+        $signals.Add("branch_filter_candidate") | Out-Null
+    }
+
+    if ($JobsState.Signal) {
+        $signals.Add([string]$JobsState.Signal) | Out-Null
+    }
+
+    $uniqueSignals = @($signals | Select-Object -Unique)
+    if ($uniqueSignals.Count -eq 0) {
+        return $null
+    }
+
+    return $uniqueSignals
+}
+
+function Get-WorkflowRunClassification {
+    param(
+        [object]$Run,
+        [object]$JobsState,
+        [string[]]$Signals
+    )
+
+    $status = [string]$Run.status
+    $conclusion = [string]$Run.conclusion
+    $signalSet = @($Signals)
+
+    if ($JobsState.Signal -eq "jobs_api_blocked") {
+        return "unknown"
+    }
+
+    if (($signalSet -contains "branch_filter_candidate")) {
+        return "branch_filter_candidate"
+    }
+
+    if (($signalSet -contains "startup_failure_candidate")) {
+        return "startup_failure_candidate"
+    }
+
+    if ($status -and $status -ne "completed" -and -not $conclusion) {
+        return "in_progress"
+    }
+
+    if ($conclusion -eq "success") {
+        return "pass"
+    }
+
+    if ($conclusion -in @("neutral", "skipped")) {
+        return "non_blocking"
+    }
+
+    if ($conclusion) {
+        return "hard_failure"
+    }
+
+    return "unknown"
+}
+
+function Get-WorkflowRunR02State {
+    param(
+        [string]$Classification,
+        [string]$EvidenceScope
+    )
+
+    if ($EvidenceScope -ne "default_branch") {
+        return [pscustomobject]@{
+            Assessment = "review"
+            Reason     = "default_branch_scope_missing"
+        }
+    }
+
+    switch ($Classification) {
+        "pass" {
+            return [pscustomobject]@{
+                Assessment = "pass"
+                Reason     = "latest_default_branch_run_green"
+            }
+        }
+        "hard_failure" {
+            return [pscustomobject]@{
+                Assessment = "blocked"
+                Reason     = "latest_default_branch_run_failed"
+            }
+        }
+        "branch_filter_candidate" {
+            return [pscustomobject]@{
+                Assessment = "review"
+                Reason     = "branch_filter_candidate_requires_confirmation"
+            }
+        }
+        "startup_failure_candidate" {
+            return [pscustomobject]@{
+                Assessment = "review"
+                Reason     = "startup_failure_candidate_requires_confirmation"
+            }
+        }
+        "in_progress" {
+            return [pscustomobject]@{
+                Assessment = "review"
+                Reason     = "default_branch_run_in_progress"
+            }
+        }
+        "non_blocking" {
+            return [pscustomobject]@{
+                Assessment = "review"
+                Reason     = "default_branch_run_non_green_non_blocking"
+            }
+        }
+        default {
+            return [pscustomobject]@{
+                Assessment = "review"
+                Reason     = "insufficient_ci_evidence"
+            }
+        }
+    }
+}
+
 Write-Section "Repository"
 Write-Output "Repository: $RepoLabel"
 if ($HostedRepo) { Write-Output "Hosted: $HostedRepo" }
@@ -387,6 +858,11 @@ Write-Section "Root Files"
     Write-Output "$_`: $(Test-Path $_)"
 }
 
+$script:PrimaryCiWorkflow = Get-PrimaryCiWorkflowCandidate -RepoRoot $RepoPath
+if ((-not $script:PrimaryCiWorkflow) -and $HostedRepo) {
+    $script:PrimaryCiWorkflow = Get-HostedPrimaryCiWorkflowCandidate -HostedRepo $HostedRepo
+}
+
 Write-Section "GitHub Files"
 @(
     ".github/ISSUE_TEMPLATE/bug_report.md",
@@ -399,6 +875,8 @@ Write-Section "GitHub Files"
 ) | ForEach-Object {
     Write-Output "$_`: $(Test-Path $_)"
 }
+Write-Output ("primary_ci_workflow: " + $(if ($script:PrimaryCiWorkflow) { $script:PrimaryCiWorkflow.ApiPath } else { "none" }))
+Write-Output ("primary_ci_selection: " + $(if ($script:PrimaryCiWorkflow) { $script:PrimaryCiWorkflow.Reason } else { "all_runs_fallback" }))
 
 Write-Section "Gitleaks"
 $gitleaksCmd = Resolve-GitleaksCommand
@@ -453,6 +931,7 @@ if ($HostedRepo) {
             homepage    = $repo.Value.homepage
             visibility  = $repo.Value.visibility
             has_issues  = $repo.Value.has_issues
+            default_branch = $repo.Value.default_branch
         }
         Write-JsonCompact @{
             health_percentage = $community.Value.health_percentage
@@ -488,19 +967,71 @@ if ($HostedRepo) {
         }
     }
     Write-Section "Latest CI"
-    $runs = Invoke-PublicGitHubApi "repos/$HostedRepo/actions/runs?per_page=3"
+    $defaultBranch = if ($repo.Success) { [string]$repo.Value.default_branch } else { "" }
+    $encodedDefaultBranch = if ($defaultBranch) { [uri]::EscapeDataString($defaultBranch) } else { "" }
+    $selectedWorkflow = $script:PrimaryCiWorkflow
+    $selectedWorkflowId = if ($selectedWorkflow) { [System.IO.Path]::GetFileName($selectedWorkflow.ApiPath) } else { "" }
+    $runsPath = if ($selectedWorkflow) {
+        if ($encodedDefaultBranch) {
+            "repos/$HostedRepo/actions/workflows/$selectedWorkflowId/runs?branch=$encodedDefaultBranch"
+        } else {
+            "repos/$HostedRepo/actions/workflows/$selectedWorkflowId/runs?per_page=3"
+        }
+    } elseif ($encodedDefaultBranch) {
+        "repos/$HostedRepo/actions/runs?branch=$encodedDefaultBranch"
+    } else {
+        "repos/$HostedRepo/actions/runs?per_page=3"
+    }
+    $evidenceScope = if ($defaultBranch) { "default_branch" } else { "recent_runs" }
+    $runs = Invoke-PublicGitHubApi $runsPath
+    if ((-not $runs.Success) -and $selectedWorkflow) {
+        $fallbackRunsPath = if ($encodedDefaultBranch) {
+            "repos/$HostedRepo/actions/runs?branch=$encodedDefaultBranch"
+        } else {
+            "repos/$HostedRepo/actions/runs?per_page=3"
+        }
+        $runs = Invoke-PublicGitHubApi $fallbackRunsPath
+    }
     $workflowFilesPresent = (Get-ChildItem -LiteralPath (Join-Path $RepoPath ".github\workflows") -File -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
     if ($runs.Success) {
         $workflowRuns = @($runs.Value.workflow_runs)
+        if ($selectedWorkflow) {
+            $ciWorkflowRelativePath = $selectedWorkflow.RelativePath
+            $workflowRuns = @(
+                $workflowRuns | Where-Object {
+                    (Get-WorkflowRunLocalPath -Run $_) -ieq $ciWorkflowRelativePath
+                }
+            )
+        }
         if ($workflowRuns.Count -gt 0) {
             $projectedRuns = @($workflowRuns | Select-Object -First 3 | ForEach-Object {
+                $jobsState = Get-WorkflowRunJobsState -HostedRepo $HostedRepo -Run $_
+                $durationSeconds = Get-WorkflowRunDurationSeconds -Run $_
+                $hasBranchFilters = Test-WorkflowRunHasBranchFilters -RepoRoot $RepoPath -Run $_
+                $signals = Get-WorkflowRunSignals -Run $_ -JobsState $jobsState -DurationSeconds $durationSeconds -HasBranchFilters:$hasBranchFilters
+                $classification = Get-WorkflowRunClassification -Run $_ -JobsState $jobsState -Signals $signals
+                $r02State = Get-WorkflowRunR02State -Classification $classification -EvidenceScope $evidenceScope
                 [pscustomobject]@{
-                    name        = $_.name
-                    event       = $_.event
-                    status      = $_.status
-                    conclusion  = $_.conclusion
-                    head_branch = $_.head_branch
-                    html_url    = $_.html_url
+                    name             = $_.name
+                    event            = $_.event
+                    status           = $_.status
+                    conclusion       = $_.conclusion
+                    path             = $_.path
+                    run_attempt      = $_.run_attempt
+                    run_started_at   = $_.run_started_at
+                    updated_at       = $_.updated_at
+                    duration_seconds = $durationSeconds
+                    jobs_total       = $jobsState.JobsTotal
+                    evidence_scope   = $evidenceScope
+                    default_branch   = if ($defaultBranch) { $defaultBranch } else { $null }
+                    classification   = $classification
+                    r02_assessment   = $r02State.Assessment
+                    r02_reason       = $r02State.Reason
+                    signals          = $signals
+                    head_branch      = $_.head_branch
+                    html_url         = $_.html_url
+                    selected_workflow_path = if ($selectedWorkflow) { $selectedWorkflow.ApiPath } else { $null }
+                    workflow_selection = if ($selectedWorkflow) { $selectedWorkflow.Reason } else { "all_runs_fallback" }
                 }
             })
             Write-JsonCompact $projectedRuns

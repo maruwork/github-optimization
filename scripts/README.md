@@ -27,8 +27,12 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 | `collect-audit-evidence.sh` | Linux/macOS bash |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
 | `run-audit-quickstart.sh` | Linux/macOS bash |
-| `tests/run-regulation-tests.ps1` | Windows PowerShell - shelf regression tests |
-| `tests/run-regulation-tests.sh` | Linux/macOS bash - shelf regression tests |
+| `tests/run-regulation-tests.ps1` | Windows PowerShell - shelf regression tests (`-Suite all|ci-selection|orchestrator`) |
+| `tests/run-regulation-tests-ci.ps1` | Windows PowerShell - focused latest-CI workflow selection / classification regression tests |
+| `tests/run-regulation-tests-orchestrator.ps1` | Windows PowerShell - delta/full-audit / quickstart orchestrator regression tests |
+| `tests/run-regulation-tests.sh` | Linux/macOS bash - full shelf regression tests (`--suite all|ci-selection|orchestrator`) |
+| `tests/run-regulation-tests-ci.sh` | Linux/macOS bash - focused latest-CI workflow selection / classification regression tests |
+| `tests/run-regulation-tests-orchestrator.sh` | Linux/macOS bash - delta/full-audit / quickstart orchestrator regression tests |
 
 ## Exit Code Contract
 
@@ -77,7 +81,7 @@ If hosted metadata still reports `API_BLOCKED` inside a managed sandbox, rerun t
 - gitignore consistency (`git ls-files -ci --exclude-standard`)
 - HEAD and describe
 - root/github file presence
-- latest CI run summary when `gh` is available
+- latest CI workflow summary when `gh` is available, preferring the selected primary CI workflow on the default branch (manifest override, `ci.yml` / `ci.yaml`, heuristic local candidate, hosted workflow inventory candidate, then overall-runs fallback) and including timing, job count, coarse classification, `R-02` provisional assessment, `selected_workflow_path`, `workflow_selection`, and candidate signals when available
 - hosted metadata and Community Profile when `gh` is available
 - security feature state when `gh` is available
 - Gitleaks result when `gitleaks` is available; Windows Git Bash may emit `SKIPPED` and defer `G-01` scoring to PowerShell or a direct transcript
@@ -104,6 +108,13 @@ Run after shelf edits:
 
 ```powershell
 .\tests\run-regulation-tests.ps1
+.\tests\run-regulation-tests-ci.ps1
+.\tests\run-regulation-tests-orchestrator.ps1
+```
+
+```bash
+./tests/run-regulation-tests-ci.sh
+./tests/run-regulation-tests-orchestrator.sh
 ```
 
 Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
@@ -112,10 +123,12 @@ Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
 
 Scripts do not replace full-file read review or gate scoring.
 They replace human-operated evidence gathering and shelf self-validation.
+When a repository remote is configured, the orchestrators prefer the hosted repository name for `audits/<slug>/` output instead of the current worktree directory name.
 
 `collect-audit-evidence.*` can leave a gate in a visibly blocked state when a required tool is unavailable on the authoritative route.
 When that happens, it exits non-zero after preserving the full transcript.
 Windows Git Bash is not the authoritative route for `G-01`; it records `SKIPPED` for Windows-only Gitleaks path issues.
+For `R-02`, treat collector `r02_assessment=review` as a follow-up requirement, not as an automatic Blocker.
 
 `run-full-audit.*` captures the raw machine evidence bundle into the scaffolded report.
 The agent still must complete read coverage, per-claim transcript rows, and gate scoring before closing the audit.

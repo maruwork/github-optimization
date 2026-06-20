@@ -65,6 +65,26 @@ Use one subsection per executed local check. Keep the exact command, working dir
 
 Use one subsection per hosted-settings claim bundle. Store the exact `gh api`, `gh run`, or equivalent command and the hosted output excerpt used for scoring.
 
+### Latest CI Assessment (`R-02`)
+
+- evidence scope: `default_branch` | `recent_runs`
+- default branch:
+- selected workflow path:
+- workflow selection: `manifest_override` | `explicit_ci_filename` | `single_local_workflow` | `heuristic_local_workflow` | `hosted_workflow_inventory` | `all_runs_fallback`
+- latest evaluated run URL or ID:
+- collector classification:
+- collector provisional assessment: `pass` | `review` | `blocked`
+- collector reason:
+- reviewer confirmation checklist when collector provisional assessment is `review`:
+  - default-branch release signal confirmed:
+  - selected workflow confirmed:
+  - hosted inventory / fallback rationale recorded:
+  - workflow trigger filters reviewed:
+  - jobs count / duration reviewed:
+  - run URL transcript cited:
+- scorer decision: `pass` | `blocked`
+- scorer note:
+
 ### Hosted Transcript 1
 
 - claim area:

@@ -26,11 +26,66 @@ if ($env:GITHUB_OPTIMIZATION_ROOT) {
 
 $RepoPath = (Resolve-Path -LiteralPath $RepoPath).Path
 
-if ($AuditSlug) {
-    $slug = $AuditSlug.ToLower()
-} else {
-    $slug = (Split-Path $RepoPath -Leaf).ToLower()
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GitArgs
+    )
+    & git -C $RepoPath -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
 }
+
+function Get-RepoNameFromRemoteUrl {
+    param([string]$RemoteUrl)
+
+    if (-not $RemoteUrl) {
+        return ""
+    }
+
+    $normalized = ($RemoteUrl.Trim().TrimEnd('/') -replace '\\', '/') -replace '\.git$', ''
+    $normalized = $normalized -replace ':', '/'
+    $segments = @($normalized -split '/')
+    if ($segments.Count -eq 0) {
+        return ""
+    }
+
+    return [string]$segments[-1]
+}
+
+function Resolve-AuditSlug {
+    param(
+        [string]$ExplicitSlug,
+        [string]$ResolvedRepoPath
+    )
+
+    if ($ExplicitSlug) {
+        return $ExplicitSlug.ToLowerInvariant()
+    }
+
+    $remoteCandidates = New-Object System.Collections.Generic.List[string]
+    $remoteCandidates.Add("origin") | Out-Null
+    foreach ($remoteName in @(Invoke-Git remote 2>$null)) {
+        if ($remoteName) {
+            $remoteCandidates.Add([string]$remoteName) | Out-Null
+        }
+    }
+
+    foreach ($remoteName in $remoteCandidates | Select-Object -Unique) {
+        $remoteUrl = [string]((Invoke-Git remote get-url $remoteName 2>$null | Select-Object -First 1))
+        $remoteRepo = Get-RepoNameFromRemoteUrl -RemoteUrl $remoteUrl
+        if ($remoteRepo) {
+            return $remoteRepo.ToLowerInvariant()
+        }
+    }
+
+    $topLevel = [string]((Invoke-Git rev-parse --show-toplevel 2>$null | Select-Object -First 1))
+    if ($topLevel) {
+        return (Split-Path $topLevel.Trim() -Leaf).ToLowerInvariant()
+    }
+
+    return (Split-Path $ResolvedRepoPath -Leaf).ToLowerInvariant()
+}
+
+$slug = Resolve-AuditSlug -ExplicitSlug $AuditSlug -ResolvedRepoPath $RepoPath
 
 if ($slug -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$' -or $slug.Contains("..")) {
     [Console]::Error.WriteLine("Invalid audit slug: $slug")
@@ -45,12 +100,117 @@ $reportRel = "audits/$slug/audit-report.md"
 $shelfLabel = Split-Path $Shelf -Leaf
 $repoLabel = Split-Path $RepoPath -Leaf
 
-function Invoke-Git {
+function Set-ReportMachineEvidence {
     param(
-        [Parameter(ValueFromRemainingArguments = $true)]
-        [string[]]$GitArgs
+        [string]$Path,
+        [string]$EvidenceText
     )
-    & git -c "core.excludesFile=NUL" -c "safe.directory=$RepoPath" @GitArgs
+
+    $raw = Get-Content -LiteralPath $Path -Raw
+    $replacement = "<!-- GO_MACHINE_EVIDENCE_START -->`r`n" + '```text' + "`r`n$EvidenceText`r`n" + '```' + "`r`n<!-- GO_MACHINE_EVIDENCE_END -->"
+    $updated = [regex]::Replace(
+        $raw,
+        '(?s)<!-- GO_MACHINE_EVIDENCE_START -->.*?<!-- GO_MACHINE_EVIDENCE_END -->',
+        [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $replacement }
+    )
+    Set-Content -LiteralPath $Path -Value $updated -NoNewline
+}
+
+function ConvertFrom-JsonCompat {
+    param([string]$Json)
+
+    $command = Get-Command ConvertFrom-Json -ErrorAction Stop
+    if ($command.Parameters.ContainsKey("Depth")) {
+        return $Json | ConvertFrom-Json -Depth 50
+    }
+    return $Json | ConvertFrom-Json
+}
+
+function Set-ReportLatestCiSummary {
+    param(
+        [string]$Path,
+        [string]$EvidenceText
+    )
+
+    $summary = [ordered]@{
+        "evidence scope"              = ""
+        "default branch"              = ""
+        "selected workflow path"      = ""
+        "workflow selection"          = ""
+        "latest evaluated run URL or ID" = ""
+        "collector classification"    = ""
+        "collector provisional assessment" = ""
+        "collector reason"            = ""
+    }
+
+    $primaryCiWorkflow = ""
+    $primaryCiSelection = ""
+    $latestCiRow = $null
+
+    foreach ($line in ($EvidenceText -split "`r?`n")) {
+        if ($line -match '^primary_ci_workflow:\s*(.+)$') {
+            $primaryCiWorkflow = $Matches[1].Trim()
+            continue
+        }
+        if ($line -match '^primary_ci_selection:\s*(.+)$') {
+            $primaryCiSelection = $Matches[1].Trim()
+            continue
+        }
+        $trimmed = $line.Trim()
+        if (-not $trimmed.StartsWith("{") -and -not $trimmed.StartsWith("[")) {
+            continue
+        }
+        try {
+            $parsed = ConvertFrom-JsonCompat -Json $trimmed
+        } catch {
+            continue
+        }
+        if ($parsed -is [System.Array] -and $parsed.Count -gt 0 -and $parsed[0].PSObject.Properties["r02_assessment"]) {
+            $latestCiRow = $parsed[0]
+            break
+        }
+        if ($parsed.PSObject.Properties["r02_assessment"]) {
+            $latestCiRow = $parsed
+            break
+        }
+    }
+
+    if ($latestCiRow) {
+        $summary["evidence scope"] = [string]$latestCiRow.evidence_scope
+        $summary["default branch"] = [string]$latestCiRow.default_branch
+        $summary["selected workflow path"] = [string]$latestCiRow.selected_workflow_path
+        $summary["workflow selection"] = [string]$latestCiRow.workflow_selection
+        $summary["latest evaluated run URL or ID"] = if ($latestCiRow.html_url) { [string]$latestCiRow.html_url } else { [string]$latestCiRow.id }
+        $summary["collector classification"] = [string]$latestCiRow.classification
+        $summary["collector provisional assessment"] = [string]$latestCiRow.r02_assessment
+        $summary["collector reason"] = [string]$latestCiRow.r02_reason
+    } else {
+        if ($primaryCiWorkflow -and $primaryCiWorkflow -ne "none") {
+            $summary["selected workflow path"] = $primaryCiWorkflow
+        }
+        if ($primaryCiSelection) {
+            $summary["workflow selection"] = $primaryCiSelection
+        }
+    }
+
+    $hasAnySummary = $false
+    foreach ($value in $summary.Values) {
+        if ($value) {
+            $hasAnySummary = $true
+            break
+        }
+    }
+    if (-not $hasAnySummary) {
+        return
+    }
+
+    $raw = Get-Content -LiteralPath $Path -Raw
+    foreach ($key in $summary.Keys) {
+        $replacement = "- {0}: {1}" -f $key, $summary[$key]
+        $pattern = "(?m)^- " + [regex]::Escape($key) + ":[`t ]*.*$"
+        $raw = [regex]::Replace($raw, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $replacement })
+    }
+    Set-Content -LiteralPath $Path -Value $raw -NoNewline
 }
 
 function Get-PriorHeadFromReport([string]$text) {
@@ -164,8 +324,14 @@ try {
     $evidenceScript = Join-Path $Shelf "scripts\collect-audit-evidence.ps1"
     Write-Output ""
     Write-Output "=== Machine Evidence ==="
-    & $evidenceScript -RepoPath $RepoPath -HostedRepo $HostedRepo
+    $evidenceOutput = & $evidenceScript -RepoPath $RepoPath -HostedRepo $HostedRepo 2>&1
     $evidenceExit = $LASTEXITCODE
+    $evidenceOutput | ForEach-Object { Write-Output $_ }
+    $evidenceText = ($evidenceOutput | ForEach-Object { [string]$_ }) -join "`r`n"
+    if (Test-Path -LiteralPath $deltaPath) {
+        Set-ReportMachineEvidence -Path $deltaPath -EvidenceText $evidenceText
+        Set-ReportLatestCiSummary -Path $deltaPath -EvidenceText $evidenceText
+    }
 
     Write-Output ""
     Write-Output "=== Agent Steps Remaining ==="
@@ -175,7 +341,7 @@ try {
         Write-Output "1. Read regulation/execution/RE_AUDIT_POLICY.md delta rules"
         Write-Output "2. G-21 full read only changed paths + dependency cone listed above"
         Write-Output "3. Rescore gates affected by the change set; carry forward others only when allowed"
-        Write-Output "4. Update $reportRel and fill $deltaRel"
+        Write-Output "4. Update $reportRel and fill $deltaRel, including Latest CI Assessment (R-02)"
     }
     Write-Output "5. Refresh R-02, R-09 when audit mode is release or strict-product"
     if ($evidenceExit -ne 0) {

@@ -33,7 +33,7 @@ Formal deferral of the whole Tier 2 is allowed only in the audit report with own
 | ID | Requirement | Evidence |
 |---|---|---|
 | R-01 | default-branch CI workflow exists | `.github/workflows/*` path |
-| R-02 | latest default-branch CI is green | `gh run list` / run id |
+| R-02 | latest default-branch CI is green | collector `Latest CI` row (`evidence_scope`, `classification`, `r02_assessment`) + hosted run id/url |
 | R-03 | CI covers primary claimed platform(s) | workflow runner matrix note |
 | R-04 | code scanning alerts reviewed when code scanning is enabled | alert count + disposition |
 | R-05 | runtime version source is explicit | version file/command path |
