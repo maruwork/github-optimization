@@ -6,17 +6,23 @@
 
 Status: Active
 
-Shelf version: `1.2.15` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.2.16` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
-AI-run **GitHub publication optimization shelf**.
+Use this repository to turn GitHub publication uncertainty into a repeatable, evidence-backed audit with clear fix targets and reusable records.
 
-The responsible AI reads this shelf, executes evidence against a target repository, gathers evidence for all 46 gates, and writes audit artifacts under `audits/<repository-slug>/` on disk.
+It is an AI-run **GitHub publication optimization shelf**. The responsible AI reads this shelf, executes evidence against a target repository, gathers evidence for all 46 gates, and writes audit artifacts under `audits/<repository-slug>/` on disk.
 
 In one line:
 
-- make it easier to put a repository on GitHub in a publishable state without doing the whole review manually
+- turn "Can we publish this repo on GitHub?" into an audit report, a fix list, and a reusable decision trail
+
+When you run it, you get:
+
+- a structured audit report under `audits/<slug>/audit-report.md`
+- clear fix targets instead of vague publication anxiety
+- reusable evidence and judgment records for re-audits
 
 ## Who This Is For
 

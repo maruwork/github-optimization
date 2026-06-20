@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.16 - 2026-06-21
+
+### Changed
+
+- The README landing now states the concrete user outcome first: the shelf turns publication uncertainty into an evidence-backed audit report, clear fix targets, and reusable records.
+
 ## 1.2.15 - 2026-06-21
 
 ### Changed

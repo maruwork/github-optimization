@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.16] - 2026-06-21
+
+### Changed
+
+- README opening now leads with the user outcome of using the shelf: an evidence-backed audit report, clear fix targets, and reusable decision records, instead of only describing the shelf itself.
+
 ## [1.2.15] - 2026-06-21
 
 ### Changed
