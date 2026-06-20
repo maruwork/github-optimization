@@ -16,6 +16,7 @@ This file defines review timing and the automated self-check that guards the reg
 | external tool major version change | review matrix row and evidence commands |
 | calendar quarterly review | re-read `regulation/reference/TOOL_VERIFICATION_MATRIX.md` and `regulation/reference/EVIDENCE_COMMANDS.md` |
 | GitHub feature policy change | review hosted feature rows in matrix |
+| `R-02` workflow-selection or classification rule change | rerun `scripts/run-public-corpus.*` and review public-corpus expectation drift |
 
 Record the latest review date in `regulation/reference/TOOL_VERIFICATION_MATRIX.md` header.
 

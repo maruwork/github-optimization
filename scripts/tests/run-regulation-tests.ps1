@@ -702,6 +702,204 @@ Assert-Pass "collect-audit-evidence prefers the heuristic primary workflow over 
     }
 }
 
+Assert-Pass "collect-audit-evidence prefers run-tests over typecheck in heuristic selection" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-run-tests-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-run-tests-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\run-tests.yml") -Value @(
+        "name: Tests",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  tests:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo tests"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\typecheck.yml") -Value @(
+        "name: Type Check",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  typecheck:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo typecheck"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/run-tests.yml .github/workflows/typecheck.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init run-tests selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/run-tests-selection/actions/runs/935/jobs"" >nul && goto runtestsjobs",
+        "echo %target% | findstr /C:""repos/example/run-tests-selection/actions/runs/936/jobs"" >nul && goto typecheckjobs",
+        "if /I ""%target%""==""repos/example/run-tests-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/run-tests-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/run-tests-selection/actions/workflows/run-tests.yml/runs?branch=main"" goto runtestsworkflow",
+        "if /I ""%target%""==""repos/example/run-tests-selection/actions/workflows/typecheck.yml/runs?branch=main"" goto typecheckworkflow",
+        "if /I ""%target%""==""repos/example/run-tests-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""run tests selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":runtestsworkflow",
+        "echo {""workflow_runs"":[{""id"":935,""name"":""Tests"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/run-tests.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":typecheckworkflow",
+        "echo {""workflow_runs"":[{""id"":936,""name"":""Type Check"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/typecheck.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/936""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":936,""name"":""Type Check"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/typecheck.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/936""},{""id"":935,""name"":""Tests"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/run-tests.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/935""}]}",
+        "exit /b 0",
+        ":runtestsjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0",
+        ":typecheckjobs",
+        "echo {""total_count"":2}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/run-tests-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Tests")(?=.*"selected_workflow_path":"\.github/workflows/run-tests\.yml")(?=.*"workflow_selection":"heuristic_local_workflow").*\}') {
+            throw "collector did not prefer run-tests workflow over typecheck`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Assert-Pass "collect-audit-evidence prefers go test workflow over govulncheck in heuristic selection" {
+    $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-go-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-go-selection-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tempRepo | Out-Null
+    New-Item -ItemType Directory -Path $fakeDir | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $tempRepo ".github\workflows") -Force | Out-Null
+    Set-Content -Path (Join-Path $tempRepo "README.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "LICENSE") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo "SECURITY.md") -Value "fixture"
+    Set-Content -Path (Join-Path $tempRepo ".gitignore") -Value ""
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\go.yml") -Value @(
+        "name: Unit and Integration Tests",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  test:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo test"
+    )
+    Set-Content -Path (Join-Path $tempRepo ".github\workflows\govulncheck.yml") -Value @(
+        "name: Go Vulnerability Check",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  govulncheck:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - run: echo govulncheck"
+    )
+    Push-Location $tempRepo
+    git -c "safe.directory=$tempRepo" init | Out-Null
+    git -c "safe.directory=$tempRepo" add README.md LICENSE SECURITY.md .gitignore .github/workflows/go.yml .github/workflows/govulncheck.yml
+    git -c "safe.directory=$tempRepo" -c user.email="fixture@test" -c user.name="fixture" commit -m "init go selection fixture" | Out-Null
+    Pop-Location
+
+    $fakeGh = Join-Path $fakeDir "gh.cmd"
+    Set-Content -Path $fakeGh -Value @(
+        "@echo off",
+        "if /I not ""%~1""==""api"" exit /b 1",
+        "set ""target=%~2""",
+        "echo %target% | findstr /C:""repos/example/go-selection/actions/runs/945/jobs"" >nul && goto gojobs",
+        "echo %target% | findstr /C:""repos/example/go-selection/actions/runs/946/jobs"" >nul && goto vulnjobs",
+        "if /I ""%target%""==""repos/example/go-selection"" goto repo",
+        "if /I ""%target%""==""repos/example/go-selection/community/profile"" goto community",
+        "if /I ""%target%""==""repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md"" goto missing",
+        "if /I ""%target%""==""repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md"" goto missing",
+        "if /I ""%target%""==""repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/config.yml"" goto missing",
+        "if /I ""%target%""==""repos/example/go-selection/actions/workflows/go.yml/runs?branch=main"" goto goworkflow",
+        "if /I ""%target%""==""repos/example/go-selection/actions/workflows/govulncheck.yml/runs?branch=main"" goto vulnworkflow",
+        "if /I ""%target%""==""repos/example/go-selection/actions/runs?branch=main"" goto allruns",
+        "goto allruns",
+        ":repo",
+        "echo {""description"":""go selection fixture"",""topics"":[],""homepage"":"""",""visibility"":""public"",""has_issues"":true,""default_branch"":""main"",""security_and_analysis"":{""secret_scanning"":{""status"":""enabled""}}}",
+        "exit /b 0",
+        ":community",
+        "echo {""health_percentage"":90,""files"":{""issue_template"":null}}",
+        "exit /b 0",
+        ":missing",
+        "echo {""message"":""Not Found"",""status"":""404""}",
+        "exit /b 4",
+        ":goworkflow",
+        "echo {""workflow_runs"":[{""id"":945,""name"":""Unit and Integration Tests"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/go.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/945""}]}",
+        "exit /b 0",
+        ":vulnworkflow",
+        "echo {""workflow_runs"":[{""id"":946,""name"":""Go Vulnerability Check"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/govulncheck.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/946""}]}",
+        "exit /b 0",
+        ":allruns",
+        "echo {""workflow_runs"":[{""id"":946,""name"":""Go Vulnerability Check"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/govulncheck.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:03:00Z"",""updated_at"":""2026-06-20T10:04:00Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/946""},{""id"":945,""name"":""Unit and Integration Tests"",""event"":""push"",""status"":""completed"",""conclusion"":""success"",""path"":""/.github/workflows/go.yml"",""run_attempt"":1,""run_started_at"":""2026-06-20T10:00:00Z"",""updated_at"":""2026-06-20T10:02:30Z"",""head_branch"":""main"",""html_url"":""https://example.test/runs/945""}]}",
+        "exit /b 0",
+        ":gojobs",
+        "echo {""total_count"":2}",
+        "exit /b 0",
+        ":vulnjobs",
+        "echo {""total_count"":1}",
+        "exit /b 0"
+    )
+    $previousPath = $env:PATH
+    $previousDisableCurlFallback = $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK
+    try {
+        $env:PATH = "$fakeDir;$previousPath"
+        $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = "1"
+        $out = & (Join-Path $Shelf "scripts\collect-audit-evidence.ps1") -RepoPath $tempRepo -HostedRepo "example/go-selection" 2>&1 | Out-String
+        if ($LASTEXITCODE -ne 0) { throw "expected exit 0, got $LASTEXITCODE`n$out" }
+        if ($out -notmatch '(?s)\{(?=.*"name":"Unit and Integration Tests")(?=.*"selected_workflow_path":"\.github/workflows/go\.yml")(?=.*"workflow_selection":"heuristic_local_workflow").*\}') {
+            throw "collector did not prefer go test workflow over govulncheck`n$out"
+        }
+    } finally {
+        $env:PATH = $previousPath
+        if ($null -ne $previousDisableCurlFallback) {
+            $env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK = $previousDisableCurlFallback
+        } else {
+            Remove-Item Env:GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $fakeDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempRepo -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Assert-Pass "collect-audit-evidence honors audit manifest primary_ci_workflow override" {
     $tempRepo = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))
     $fakeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("github-optimization-fake-gh-manifest-selection-" + [System.Guid]::NewGuid().ToString("N"))

@@ -149,6 +149,18 @@ Regression tests after shelf edits:
 Use `run-regulation-tests.sh` for full bash coverage.
 Use `run-regulation-tests-ci.sh` when iterating on `R-02` workflow selection / classification logic.
 
+When `R-02` heuristics change, run the public GitHub corpus as an external-validity check:
+
+```powershell
+.\scripts\run-public-corpus.ps1
+```
+
+```bash
+./scripts/run-public-corpus.sh
+```
+
+This corpus uses `scripts/corpus/public-r02-corpus.json` and is expected to require network access.
+
 ## Audit Modes And Tiers
 
 | Tier | Gate file | Count | When required |

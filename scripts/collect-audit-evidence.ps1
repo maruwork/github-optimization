@@ -394,11 +394,16 @@ function Get-WorkflowSelectionScore {
     switch -Regex ($normalizedPath) {
         '^\.github/workflows/ci\.ya?ml$' { return 1000 }
         '/ci\.ya?ml$' { $score += 900; break }
-        '/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$' { $score += 700; break }
+        '/(run[-_])?tests?\.ya?ml$' { $score += 850; break }
+        '/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$' { $score += 800; break }
+        '/(build|verify|checks?|validate|pipeline|go)\.ya?ml$' { $score += 700; break }
     }
 
     if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
         $score -= 800
+    }
+    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$') {
+        $score -= 500
     }
 
     if ($WorkflowText) {
@@ -407,12 +412,17 @@ function Get-WorkflowSelectionScore {
             $workflowName = $nameMatch.Groups["name"].Value.Trim()
             if ($workflowName -match '(?i)\bci\b') {
                 $score += 500
-            } elseif ($workflowName -match '(?i)\b(test|build|verify|check|validate)\b') {
+            } elseif ($workflowName -match '(?i)\btests?\b') {
+                $score += 450
+            } elseif ($workflowName -match '(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b') {
                 $score += 350
             }
 
             if ($workflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
                 $score -= 600
+            }
+            if ($workflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b') {
+                $score -= 450
             }
         }
 
@@ -525,22 +535,32 @@ function Get-HostedWorkflowSelectionScore {
     switch -Regex ($normalizedPath) {
         '^\.github/workflows/ci\.ya?ml$' { $score += 1000; break }
         '/ci\.ya?ml$' { $score += 900; break }
-        '/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$' { $score += 700; break }
+        '/(run[-_])?tests?\.ya?ml$' { $score += 850; break }
+        '/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$' { $score += 800; break }
+        '/(build|verify|checks?|validate|pipeline|go)\.ya?ml$' { $score += 700; break }
     }
 
     if ($normalizedPath -match '(?i)(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$') {
         $score -= 800
     }
+    if ($normalizedPath -match '(?i)(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$') {
+        $score -= 500
+    }
 
     if ($WorkflowName) {
         if ($WorkflowName -match '(?i)\bci\b') {
             $score += 500
-        } elseif ($WorkflowName -match '(?i)\b(test|build|verify|check|validate|pipeline)\b') {
+        } elseif ($WorkflowName -match '(?i)\btests?\b') {
+            $score += 450
+        } elseif ($WorkflowName -match '(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b') {
             $score += 350
         }
 
         if ($WorkflowName -match '(?i)\b(codeql|dependabot|scorecards|pages)\b') {
             $score -= 600
+        }
+        if ($WorkflowName -match '(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b') {
+            $score -= 450
         }
     }
 

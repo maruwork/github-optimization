@@ -25,6 +25,8 @@ They gather repeatable audit evidence across docs, quickstart, CI, metadata, and
 | `run-delta-audit.sh` | Linux/macOS bash - delta re-audit orchestrator |
 | `collect-audit-evidence.ps1` | Windows PowerShell native collector |
 | `collect-audit-evidence.sh` | Linux/macOS bash |
+| `run-public-corpus.ps1` | Windows PowerShell - public GitHub external-validation corpus runner |
+| `run-public-corpus.sh` | Linux/macOS bash - public GitHub external-validation corpus runner |
 | `run-audit-quickstart.ps1` | Windows PowerShell |
 | `run-audit-quickstart.sh` | Linux/macOS bash |
 | `tests/run-regulation-tests.ps1` | Windows PowerShell - shelf regression tests (`-Suite all|ci-selection|orchestrator`) |
@@ -68,6 +70,14 @@ Those target findings stay in the report as raw machine evidence; the agent stil
 ./collect-audit-evidence.sh /path/to/repo owner/repo
 ```
 
+```powershell
+.\run-public-corpus.ps1
+```
+
+```bash
+./run-public-corpus.sh
+```
+
 Use `collect-audit-evidence.ps1` as the authoritative Windows evidence path.
 Use `collect-audit-evidence.sh` for Linux/macOS bash evidence.
 Windows Git Bash may report `Gitleaks` as `SKIPPED`; score `G-01` from the Windows PowerShell collector or a direct `gitleaks detect --source . --no-banner` transcript.
@@ -89,6 +99,7 @@ If hosted metadata still reports `API_BLOCKED` inside a managed sandbox, rerun t
 - large tracked files over 512KB (`G-22`)
 - pytest result when `pytest` is available (`R-12` baseline)
 - hosted issue-template contents when issues are enabled and GitHub Community Profile omits the template entry
+- external-validation corpus replay against selected public GitHub repositories via `scripts/corpus/public-r02-corpus.json`
 
 ## Quickstart Contract
 
@@ -118,6 +129,17 @@ Run after shelf edits:
 ```
 
 Read: `regulation/reference/TOOL_REVIEW_CADENCE.md`
+
+## Public Corpus
+
+Use `run-public-corpus.*` when `R-02` workflow-selection heuristics or classification rules change.
+It shallow-clones the public repositories listed in `scripts/corpus/public-r02-corpus.json`, runs the native collector, and checks whether `workflow_selection` plus `selected_workflow_path` match the curated expectation set.
+
+This corpus is intentionally narrower than the no-network regression suite:
+
+- it validates behavior against live public GitHub repository data
+- it is expected to require network access
+- it focuses on external validity of `R-02`, not on full audit pass/fail status of those repositories
 
 ## Limitation
 

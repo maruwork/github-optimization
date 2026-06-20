@@ -329,20 +329,30 @@ def score_candidate(relative_path: str, text: str) -> int:
         return 1000
     if re.search(r"/ci\.ya?ml$", normalized):
         score += 900
-    elif re.search(r"/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$", normalized):
+    elif re.search(r"/(run[-_])?tests?\.ya?ml$", normalized):
+        score += 850
+    elif re.search(r"/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$", normalized):
+        score += 800
+    elif re.search(r"/(build|verify|checks?|validate|pipeline|go)\.ya?ml$", normalized):
         score += 700
     if re.search(r"(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$", normalized):
         score -= 800
+    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$", normalized):
+        score -= 500
 
     name_match = re.search(r'(?im)^\s*name\s*:\s*["\']?(?P<name>[^"\']+?)["\']?\s*$', text or "")
     if name_match:
         workflow_name = name_match.group("name").strip()
         if re.search(r"(?i)\bci\b", workflow_name):
             score += 500
-        elif re.search(r"(?i)\b(test|build|verify|check|validate)\b", workflow_name):
+        elif re.search(r"(?i)\btests?\b", workflow_name):
+            score += 450
+        elif re.search(r"(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b", workflow_name):
             score += 350
         if re.search(r"(?i)\b(codeql|dependabot|scorecards|pages)\b", workflow_name):
             score -= 600
+        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b", workflow_name):
+            score -= 450
 
     if re.search(r"(?im)^\s*(push|pull_request)\s*:", text or ""):
         score += 100
@@ -398,18 +408,28 @@ def score_candidate(relative_path: str, workflow_name: str, state: str) -> int:
         score += 1000
     elif re.search(r"/ci\.ya?ml$", normalized):
         score += 900
-    elif re.search(r"/(tests?|build|verify|checks?|validate|pipeline)\.ya?ml$", normalized):
+    elif re.search(r"/(run[-_])?tests?\.ya?ml$", normalized):
+        score += 850
+    elif re.search(r"/(unit|integration|smoke|e2e)[-_]?tests?\.ya?ml$", normalized):
+        score += 800
+    elif re.search(r"/(build|verify|checks?|validate|pipeline|go)\.ya?ml$", normalized):
         score += 700
     if re.search(r"(^|/)(codeql|dependabot|scorecards|pages)\.ya?ml$", normalized):
         score -= 800
+    if re.search(r"(^|/).*(govulncheck|typecheck|type-check|lint|coverage|docs?|policy|telemetry|security|vuln|benchmark|codspeed).*\.ya?ml$", normalized):
+        score -= 500
 
     if workflow_name:
         if re.search(r"(?i)\bci\b", workflow_name):
             score += 500
-        elif re.search(r"(?i)\b(test|build|verify|check|validate|pipeline)\b", workflow_name):
+        elif re.search(r"(?i)\btests?\b", workflow_name):
+            score += 450
+        elif re.search(r"(?i)\b(unit|integration|smoke|e2e|build|verify|check|validate|pipeline)\b", workflow_name):
             score += 350
         if re.search(r"(?i)\b(codeql|dependabot|scorecards|pages)\b", workflow_name):
             score -= 600
+        if re.search(r"(?i)\b(type\s*check|lint|coverage|docs?|documentation|vulnerability|vuln|security|policy|telemetry|benchmark|codspeed)\b", workflow_name):
+            score -= 450
 
     if (state or "").lower() == "active":
         score += 25

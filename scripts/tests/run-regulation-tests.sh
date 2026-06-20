@@ -604,6 +604,167 @@ else
   printf '%s\n' "$heuristic_selection_out"
   failures=$((failures + 1))
 fi
+echo "TEST: collect-audit-evidence prefers run-tests over typecheck in heuristic selection"
+run_tests_selection_fixture="$(mktemp -d)"
+fake_gh_dir="$(mktemp -d)"
+mkdir -p "$run_tests_selection_fixture/.github/workflows"
+printf '%s\n' "fixture" >"$run_tests_selection_fixture/README.md"
+printf '%s\n' "fixture" >"$run_tests_selection_fixture/LICENSE"
+printf '%s\n' "fixture" >"$run_tests_selection_fixture/SECURITY.md"
+printf '' >"$run_tests_selection_fixture/.gitignore"
+cat >"$run_tests_selection_fixture/.github/workflows/run-tests.yml" <<'EOF'
+name: Tests
+on:
+  push:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo tests
+EOF
+cat >"$run_tests_selection_fixture/.github/workflows/typecheck.yml" <<'EOF'
+name: Type Check
+on:
+  push:
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo typecheck
+EOF
+fixture_git "$run_tests_selection_fixture" init >/dev/null
+fixture_git "$run_tests_selection_fixture" add README.md LICENSE SECURITY.md .gitignore .github/workflows/run-tests.yml .github/workflows/typecheck.yml
+fixture_git "$run_tests_selection_fixture" -c user.email=fixture@test -c user.name=fixture commit -m "init run-tests selection fixture" >/dev/null
+cat >"$fake_gh_dir/gh" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" != "api" ]]; then
+  exit 1
+fi
+case "${2:-}" in
+  repos/example/run-tests-selection)
+    printf '%s\n' '{"description":"run tests selection fixture","topics":[],"homepage":"","visibility":"public","has_issues":true,"default_branch":"main","security_and_analysis":{"secret_scanning":{"status":"enabled"}}}'
+    ;;
+  repos/example/run-tests-selection/community/profile)
+    printf '%s\n' '{"health_percentage":90,"files":{"issue_template":null}}'
+    ;;
+  repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md|repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md|repos/example/run-tests-selection/contents/.github/ISSUE_TEMPLATE/config.yml)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
+    exit 4
+    ;;
+  repos/example/run-tests-selection/actions/workflows/run-tests.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":935,"name":"Tests","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/run-tests.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/935"}]}'
+    ;;
+  repos/example/run-tests-selection/actions/workflows/typecheck.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":936,"name":"Type Check","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/typecheck.yml","run_attempt":1,"run_started_at":"2026-06-20T10:03:00Z","updated_at":"2026-06-20T10:04:00Z","head_branch":"main","html_url":"https://example.test/runs/936"}]}'
+    ;;
+  repos/example/run-tests-selection/actions/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":936,"name":"Type Check","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/typecheck.yml","run_attempt":1,"run_started_at":"2026-06-20T10:03:00Z","updated_at":"2026-06-20T10:04:00Z","head_branch":"main","html_url":"https://example.test/runs/936"},{"id":935,"name":"Tests","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/run-tests.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/935"}]}'
+    ;;
+  repos/example/run-tests-selection/actions/runs/935/jobs?per_page=1|repos/example/run-tests-selection/actions/runs/936/jobs?per_page=1)
+    printf '%s\n' '{"total_count":2}'
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+EOF
+chmod +x "$fake_gh_dir/gh"
+set +e
+run_tests_selection_out="$(PATH="$fake_gh_dir:$PATH" GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK=1 bash "$SHELF/scripts/collect-audit-evidence.sh" "$run_tests_selection_fixture" example/run-tests-selection 2>&1)"
+run_tests_selection_code=$?
+set -e
+rm -rf "$run_tests_selection_fixture" "$fake_gh_dir"
+if [[ "$run_tests_selection_code" -eq 0 ]] \
+  && echo "$run_tests_selection_out" | grep -Fq '"name":"Tests"' \
+  && echo "$run_tests_selection_out" | grep -Fq '"selected_workflow_path":".github/workflows/run-tests.yml","workflow_selection":"heuristic_local_workflow"'; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected run-tests workflow selection"
+  printf '%s\n' "$run_tests_selection_out"
+  failures=$((failures + 1))
+fi
+echo "TEST: collect-audit-evidence prefers go test workflow over govulncheck in heuristic selection"
+go_selection_fixture="$(mktemp -d)"
+fake_gh_dir="$(mktemp -d)"
+mkdir -p "$go_selection_fixture/.github/workflows"
+printf '%s\n' "fixture" >"$go_selection_fixture/README.md"
+printf '%s\n' "fixture" >"$go_selection_fixture/LICENSE"
+printf '%s\n' "fixture" >"$go_selection_fixture/SECURITY.md"
+printf '' >"$go_selection_fixture/.gitignore"
+cat >"$go_selection_fixture/.github/workflows/go.yml" <<'EOF'
+name: Unit and Integration Tests
+on:
+  push:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test
+EOF
+cat >"$go_selection_fixture/.github/workflows/govulncheck.yml" <<'EOF'
+name: Go Vulnerability Check
+on:
+  push:
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo govulncheck
+EOF
+fixture_git "$go_selection_fixture" init >/dev/null
+fixture_git "$go_selection_fixture" add README.md LICENSE SECURITY.md .gitignore .github/workflows/go.yml .github/workflows/govulncheck.yml
+fixture_git "$go_selection_fixture" -c user.email=fixture@test -c user.name=fixture commit -m "init go selection fixture" >/dev/null
+cat >"$fake_gh_dir/gh" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" != "api" ]]; then
+  exit 1
+fi
+case "${2:-}" in
+  repos/example/go-selection)
+    printf '%s\n' '{"description":"go selection fixture","topics":[],"homepage":"","visibility":"public","has_issues":true,"default_branch":"main","security_and_analysis":{"secret_scanning":{"status":"enabled"}}}'
+    ;;
+  repos/example/go-selection/community/profile)
+    printf '%s\n' '{"health_percentage":90,"files":{"issue_template":null}}'
+    ;;
+  repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/bug_report.md|repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/feature_request.md|repos/example/go-selection/contents/.github/ISSUE_TEMPLATE/config.yml)
+    printf '%s\n' '{"message":"Not Found","status":"404"}'
+    exit 4
+    ;;
+  repos/example/go-selection/actions/workflows/go.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":945,"name":"Unit and Integration Tests","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/go.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/945"}]}'
+    ;;
+  repos/example/go-selection/actions/workflows/govulncheck.yml/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":946,"name":"Go Vulnerability Check","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/govulncheck.yml","run_attempt":1,"run_started_at":"2026-06-20T10:03:00Z","updated_at":"2026-06-20T10:04:00Z","head_branch":"main","html_url":"https://example.test/runs/946"}]}'
+    ;;
+  repos/example/go-selection/actions/runs?branch=main)
+    printf '%s\n' '{"workflow_runs":[{"id":946,"name":"Go Vulnerability Check","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/govulncheck.yml","run_attempt":1,"run_started_at":"2026-06-20T10:03:00Z","updated_at":"2026-06-20T10:04:00Z","head_branch":"main","html_url":"https://example.test/runs/946"},{"id":945,"name":"Unit and Integration Tests","event":"push","status":"completed","conclusion":"success","path":"/.github/workflows/go.yml","run_attempt":1,"run_started_at":"2026-06-20T10:00:00Z","updated_at":"2026-06-20T10:02:30Z","head_branch":"main","html_url":"https://example.test/runs/945"}]}'
+    ;;
+  repos/example/go-selection/actions/runs/945/jobs?per_page=1)
+    printf '%s\n' '{"total_count":2}'
+    ;;
+  repos/example/go-selection/actions/runs/946/jobs?per_page=1)
+    printf '%s\n' '{"total_count":1}'
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+EOF
+chmod +x "$fake_gh_dir/gh"
+set +e
+go_selection_out="$(PATH="$fake_gh_dir:$PATH" GITHUB_OPTIMIZATION_DISABLE_CURL_FALLBACK=1 bash "$SHELF/scripts/collect-audit-evidence.sh" "$go_selection_fixture" example/go-selection 2>&1)"
+go_selection_code=$?
+set -e
+rm -rf "$go_selection_fixture" "$fake_gh_dir"
+if [[ "$go_selection_code" -eq 0 ]] \
+  && echo "$go_selection_out" | grep -Fq '"name":"Unit and Integration Tests"' \
+  && echo "$go_selection_out" | grep -Fq '"selected_workflow_path":".github/workflows/go.yml","workflow_selection":"heuristic_local_workflow"'; then
+  echo "  PASS"
+else
+  echo "  FAIL: expected go.yml workflow selection"
+  printf '%s\n' "$go_selection_out"
+  failures=$((failures + 1))
+fi
 echo "TEST: collect-audit-evidence honors audit manifest primary_ci_workflow override"
 manifest_selection_fixture="$(mktemp -d)"
 fake_gh_dir="$(mktemp -d)"

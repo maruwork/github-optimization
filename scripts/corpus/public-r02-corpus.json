@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "pydantic",
+      "repo": "pydantic/pydantic",
+      "expected_workflow_selection": "explicit_ci_filename",
+      "expected_selected_workflow_path": ".github/workflows/ci.yml",
+      "notes": "Explicit ci.yml should win over other active workflows."
+    },
+    {
+      "id": "cli",
+      "repo": "cli/cli",
+      "expected_workflow_selection": "heuristic_local_workflow",
+      "expected_selected_workflow_path": ".github/workflows/go.yml",
+      "notes": "No ci.yml is present; heuristic selection should prefer the primary Go test workflow."
+    },
+    {
+      "id": "requests",
+      "repo": "psf/requests",
+      "expected_workflow_selection": "heuristic_local_workflow",
+      "expected_selected_workflow_path": ".github/workflows/run-tests.yml",
+      "notes": "No ci.yml is present; heuristic selection should prefer the named tests workflow."
+    }
+  ]
+}
