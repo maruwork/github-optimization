@@ -14,6 +14,54 @@ In one line:
 
 - make it easier to put a repository on GitHub in a publishable state without doing the whole review manually
 
+## Who This Is For
+
+- people preparing a repository for GitHub publication and wanting one repeatable audit route
+- people re-running a prior publication audit without rebuilding the checklist from scratch
+- an AI executor that needs explicit rules, evidence paths, and output records instead of ad hoc judgment
+
+## 60-Second Quickstart
+
+If you want to use this repository right now, start here.
+
+1. Put `github-optimization` next to the target repository, or set `GITHUB_OPTIMIZATION_ROOT` to this shelf path.
+2. Run the full-audit orchestrator against the target repository.
+3. Open the generated report under `audits/<slug>/`.
+4. Finish the final judgment using the cited transcripts and gate tables.
+
+Windows PowerShell:
+
+```powershell
+$Shelf = if ($env:GITHUB_OPTIMIZATION_ROOT) { $env:GITHUB_OPTIMIZATION_ROOT } elseif (Test-Path "..\github-optimization") { (Resolve-Path "..\github-optimization").Path } else { throw "Set GITHUB_OPTIMIZATION_ROOT or clone github-optimization next to the target repo" }
+& "$Shelf\scripts\run-full-audit.ps1" -RepoPath (Get-Location) -HostedRepo owner/repo -AuditMode release -AuditPhase pre-public
+```
+
+Linux/macOS bash:
+
+```bash
+SHELF="${GITHUB_OPTIMIZATION_ROOT:-../github-optimization}"
+"$SHELF/scripts/run-full-audit.sh" . owner/repo release pre-public
+```
+
+Result location:
+
+- `audits/<repository-slug>/audit-report.md`
+
+Important:
+
+- `run-full-audit.*` is the fastest way to start the audit
+- `run-full-audit.*` is not the final scorer
+- the audit is only complete when the required records and judgments are closed under `regulation/reference/AUDIT_COMPLETION_DEFINITION.md`
+
+## Most Common Use
+
+For most users, the practical flow is:
+
+1. run `scripts/run-full-audit.*`
+2. inspect `audits/<slug>/audit-report.md`
+3. fill read coverage, transcript mapping, gate scoring, waivers if needed, and final label
+4. treat remaining repository defects as fix work, not as unfinished audit work
+
 ## What Problem It Solves
 
 Users usually get stuck on the same questions before publishing:
@@ -133,7 +181,7 @@ GO roles are the internal criteria behind the eight user-value axes:
 | copying this folder into public product repos | unless the product documents shared governance |
 | filled records under `docs/governance/` | pointer only; canonical path is `audits/<slug>/` |
 
-## Start Here
+## Regulation Start Here
 
 1. `regulation/REGULATION_SELF_CHECK.md` - assignment to the responsible AI
 2. `regulation/REGULATION_INDEX.md` - required regulation files
