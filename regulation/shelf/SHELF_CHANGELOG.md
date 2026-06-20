@@ -1,5 +1,11 @@
 # Shelf Changelog
 
+## 1.2.14 - 2026-06-20
+
+### Fixed
+
+- Bash collector now respects `audit.manifest.yml` `primary_ci_workflow` overrides on Linux runners instead of falling back to all workflow runs because of path-separator normalization.
+
 ## 1.2.13 - 2026-06-20
 
 ### Changed

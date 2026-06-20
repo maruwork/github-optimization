@@ -4,6 +4,12 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.14] - 2026-06-20
+
+### Fixed
+
+- Bash collector now honors `audit.manifest.yml` `primary_ci_workflow` overrides on Linux runners instead of dropping into all-runs fallback because of Windows-style path normalization.
+
 ## [1.2.13] - 2026-06-20
 
 ### Changed

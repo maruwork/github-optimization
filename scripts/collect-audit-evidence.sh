@@ -310,9 +310,11 @@ if manifest_path.is_file():
     override_match = re.search(r"(?m)^primary_ci_workflow:\s*(.+)$", manifest_text)
     if override_match:
         override_value = override_match.group(1).strip().strip('"').strip("'").strip()
-        normalized_override = override_value.replace("/", "\\").lstrip("\\")
-        if normalized_override and (repo / normalized_override).is_file():
-            print(f'{normalized_override.replace("\\", "/")}|manifest_override')
+        override_parts = [part for part in re.split(r"[\\/]+", override_value) if part]
+        normalized_override = "/".join(override_parts)
+        override_path = repo.joinpath(*override_parts) if override_parts else None
+        if normalized_override and override_path and override_path.is_file():
+            print(f"{normalized_override}|manifest_override")
             raise SystemExit(0)
 
 workflow_files = sorted(
