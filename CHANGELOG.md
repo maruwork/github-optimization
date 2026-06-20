@@ -4,6 +4,16 @@ All notable changes to this regulation shelf are documented here.
 
 The detailed shelf changelog lives in `regulation/shelf/SHELF_CHANGELOG.md`.
 
+## [1.2.13] - 2026-06-20
+
+### Changed
+
+- The public README landing section now makes the first-use path explicit on GitHub itself, including prerequisites, exact quickstart commands, the `owner/repo` replacement point, result location, and repo-top status badges.
+
+### Fixed
+
+- Shelf version metadata now matches the current default-branch public surface changes so the next GitHub release can point at the same behavior users see in the repository landing page.
+
 ## [1.2.12] - 2026-06-19
 
 ### Fixed

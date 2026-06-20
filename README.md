@@ -1,8 +1,12 @@
 # GitHub Optimization
 
+[![CI](https://github.com/maruwork/github-optimization/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/maruwork/github-optimization/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/maruwork/github-optimization/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/maruwork/github-optimization/actions/workflows/codeql.yml)
+[![Latest Release](https://img.shields.io/github/v/release/maruwork/github-optimization)](https://github.com/maruwork/github-optimization/releases)
+
 Status: Active
 
-Shelf version: `1.2.12` (`regulation/shelf/SHELF_VERSION.md`)
+Shelf version: `1.2.13` (`regulation/shelf/SHELF_VERSION.md`)
 
 ## What This Repository Is
 
@@ -23,6 +27,18 @@ In one line:
 ## 60-Second Quickstart
 
 If you want to use this repository right now, start here.
+
+Prerequisites:
+
+- Git
+- GitHub CLI (`gh`) if you want hosted GitHub evidence in the report
+- PowerShell on Windows, or bash on Linux/macOS
+
+Before you run the command:
+
+- replace `owner/repo` with the GitHub repository you are auditing
+- run the command from the target repository root
+- expect the generated audit records to land under `github-optimization/audits/<slug>/`
 
 1. Put `github-optimization` next to the target repository, or set `GITHUB_OPTIMIZATION_ROOT` to this shelf path.
 2. Run the full-audit orchestrator against the target repository.

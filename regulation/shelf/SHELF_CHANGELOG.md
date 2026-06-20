@@ -1,5 +1,15 @@
 # Shelf Changelog
 
+## 1.2.13 - 2026-06-20
+
+### Changed
+
+- The GitHub landing page now shows first-use prerequisites, exact quickstart commands, the `owner/repo` replacement point, result location, and repo-top status badges before deeper regulation material.
+
+### Fixed
+
+- Shelf version metadata now matches the current default-branch public-surface updates so release packaging no longer lags the README users actually see.
+
 ## 1.2.12 - 2026-06-19
 
 ### Fixed
