@@ -1,16 +1,15 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Design methodology ops check 窶・achievable layer beyond \"zero bugs\".
+"""Design methodology ops check.
 
-Runs the operational stack that *is* possible:
+Implements mechanical slices for Gate-0..3 and Gate-R, plus Seams + Residual.
 
-1. Gate-0  窶・known basic slots not silent (delegates to gate0_registry_check)
-2. Gate-1  窶・thin mechanical slice (evidence + oracle assignment shape)
-3. Seams   窶・known failure modes named and reviewed (artifact present)
-4. Residual窶・honest \"not proof of absence\" declaration
-5. Gate-R  窶・closed findings recirculated into registry when marked basic
+PASS is not zero defects. Also distinguishes:
+- format/gate structure
+- substance (rejects bootstrap stub registries)
 
-Does **not** claim perfect design or zero defects.
+Canonical methodology docs live in:
+  common/pj-design_metho/design_methodology_seams.md
 """
 from __future__ import annotations
 
@@ -43,12 +42,11 @@ DEFAULT_RESIDUALS = Path("docs/design_residuals.yaml")
 DEFAULT_GATE_R = Path("docs/design_gate_r_log.yaml")
 
 REQUIRED_SEAMS = ("S1", "S2", "S3", "S4", "S5")
+# Defined in design_methodology_seams.md (Seam review status vocabulary).
 SEAM_STATUSES = frozenset(
     {"open", "mitigated", "residual", "na", "monitored", "accepted"}
 )
 
-# Gate-1: oracle text must assign at least one machine path and one human path,
-# or explicitly state all-machine / all-human with that word.
 _ORACLE_MACHINE = re.compile(
     r"\b(machine|mechanized|auto(?:mated)?|native|external-analyzer|test|ci)\b",
     re.I,
@@ -57,6 +55,89 @@ _ORACLE_HUMAN = re.compile(
     r"\b(human|manual|sign-?off|review-required|judgment|owner)\b",
     re.I,
 )
+_MONITOR = re.compile(
+    r"\b(monitor|canary|alert|metric|rum|observ|watch|threshold|sla|slo)\b",
+    re.I,
+)
+_AMPLIFY = re.compile(
+    r"\b(amplif|self-?train|retrain|feedback loop|endogenous|online learn)\b",
+    re.I,
+)
+
+# Phrases emitted by bootstrap_project.write_artifacts — not project substance.
+_BOOTSTRAP_PHRASES = (
+    "design truth owners must not be silently duplicated",
+    "machine checks where tests/ci exist; human judgment for design quality and product sign-off",
+    "composition of modules/docs is project-specific; interaction range is not claimed exhaustive",
+    "runtime and dependency assumptions live in project docs and tooling configs where present",
+    "unknown slots remain until gate-r promotion",
+    "operators and implementers of this repository; see authority docs if present",
+    "bootstrap_stub",
+)
+
+
+def _has_test_surface(repo_root: Path) -> bool:
+    if (repo_root / "shared" / "tests").is_dir():
+        return True
+    if (repo_root / "tests").is_dir():
+        return True
+    for p in repo_root.rglob("test_*.py"):
+        # skip vendor/node_modules
+        parts = set(p.parts)
+        if parts & {"node_modules", ".venv", "venv", "site-packages", "__pycache__"}:
+            continue
+        return True
+    for p in repo_root.rglob("*_test.py"):
+        parts = set(p.parts)
+        if parts & {"node_modules", ".venv", "venv", "site-packages", "__pycache__"}:
+            continue
+        return True
+    return False
+
+
+def _has_ci_surface(repo_root: Path) -> bool:
+    wf = repo_root / ".github" / "workflows"
+    if not wf.is_dir():
+        return False
+    return any(wf.glob("*.yml")) or any(wf.glob("*.yaml"))
+
+
+def check_bootstrap_substance(registry_data: dict[str, Any]) -> list[str]:
+    """Fail substance when registry is still a bootstrap stub."""
+    errors: list[str] = []
+    meta = registry_data.get("meta")
+    if isinstance(meta, dict):
+        if meta.get("bootstrap") not in (None, "", False, "false", "False"):
+            errors.append(
+                "Substance: meta.bootstrap is set — registry is a bootstrap stub, "
+                "not project-specific substance (remove bootstrap and rewrite slots)"
+            )
+        if str(meta.get("quality", "")).strip().lower() == "format-only":
+            errors.append(
+                "Substance: meta.quality=format-only — not substance-pass"
+            )
+
+    categories = registry_data.get("categories")
+    if not isinstance(categories, dict):
+        return errors
+
+    hits = 0
+    for cat_id, entry in categories.items():
+        if not isinstance(entry, dict):
+            continue
+        blob = " ".join(
+            str(entry.get(k, "")) for k in ("value", "evidence", "reason")
+        ).lower()
+        for phrase in _BOOTSTRAP_PHRASES:
+            if phrase in blob:
+                hits += 1
+                break
+    if hits >= 3:
+        errors.append(
+            f"Substance: {hits} categories still use bootstrap generic wording "
+            "(rewrite with project-specific design content)"
+        )
+    return errors
 
 
 def check_gate1(registry_data: dict[str, Any], repo_root: Path) -> list[str]:
@@ -79,7 +160,6 @@ def check_gate1(registry_data: dict[str, Any], repo_root: Path) -> list[str]:
                 target = (repo_root / rel).resolve()
                 if target.exists():
                     continue
-                # evidence may be prose; only fail when it looks like a path
                 errors.append(f"Gate-1 {cat_id}: evidence path missing: {rel}")
 
     oracle = categories.get("G.oracle")
@@ -91,20 +171,20 @@ def check_gate1(registry_data: dict[str, Any], repo_root: Path) -> list[str]:
             errors.append(
                 "Gate-1 G.oracle: value must mention machine and/or human judgment assignment"
             )
-        elif has_m and not has_h and not re.search(r"\ball[- ]machine\b", value, re.I):
-            # Allow machine-only if explicit; otherwise prefer both named
-            if "human" not in value.lower() and "sign" not in value.lower():
-                # soft: require human keyword OR explicit all-machine
-                if not re.search(r"only\s+machine|machine\s+only|no human", value, re.I):
-                    errors.append(
-                        "Gate-1 G.oracle: name human-judgment path or state machine-only explicitly"
-                    )
-        elif has_h and not has_m and not re.search(
-            r"\ball[- ]human\b|human\s+only|only\s+human", value, re.I
-        ):
-            errors.append(
-                "Gate-1 G.oracle: name machine path or state human-only explicitly"
-            )
+        elif has_m and not has_h:
+            if not re.search(
+                r"only\s+machine|machine\s+only|no human|all[- ]machine", value, re.I
+            ):
+                errors.append(
+                    "Gate-1 G.oracle: name human-judgment path or state machine-only explicitly"
+                )
+        elif has_h and not has_m:
+            if not re.search(
+                r"\ball[- ]human\b|human\s+only|only\s+human", value, re.I
+            ):
+                errors.append(
+                    "Gate-1 G.oracle: name machine path or state human-only explicitly"
+                )
 
     for need in ("G.invariant", "G.compose"):
         entry = categories.get(need)
@@ -112,10 +192,125 @@ def check_gate1(registry_data: dict[str, Any], repo_root: Path) -> list[str]:
             errors.append(f"Gate-1 {need}: missing")
             continue
         if str(entry.get("state", "")).strip() != "filled":
-            # na/deferred ok if reason present (Gate-0 already checked)
             continue
         if not str(entry.get("value", "")).strip():
             errors.append(f"Gate-1 {need}: filled value empty")
+
+    return errors
+
+
+def check_gate2(registry_data: dict[str, Any], repo_root: Path) -> list[str]:
+    """Gate-2: merge-ready verification surface for invariant/compose/env.
+
+    Mechanical slice only:
+    - G.invariant / G.compose / G.env are present and not silent keys
+    - repo has tests and/or CI workflows, OR each filled slot declares verification:
+    """
+    errors: list[str] = []
+    categories = registry_data.get("categories")
+    if not isinstance(categories, dict):
+        return ["Gate-2: categories missing"]
+
+    for cat in ("G.invariant", "G.compose", "G.env"):
+        entry = categories.get(cat)
+        if not isinstance(entry, dict):
+            errors.append(f"Gate-2 {cat}: missing (required for merge gate)")
+            continue
+        state = str(entry.get("state", "")).strip()
+        if state not in gate0.ALLOWED_STATES:
+            errors.append(f"Gate-2 {cat}: invalid state {state!r}")
+
+    has_tests = _has_test_surface(repo_root)
+    has_ci = _has_ci_surface(repo_root)
+    surface_ok = has_tests or has_ci
+
+    # Per-slot explicit verification override when no global surface
+    explicit = 0
+    for cat in ("G.invariant", "G.compose"):
+        entry = categories.get(cat)
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("state", "")).strip() != "filled":
+            continue
+        ver = entry.get("verification") or entry.get("verification_means")
+        if ver is not None and str(ver).strip() != "":
+            explicit += 1
+
+    if not surface_ok and explicit < 2:
+        errors.append(
+            "Gate-2: no test surface (tests/ or test_*.py) and no CI workflows "
+            "(.github/workflows), and G.invariant/G.compose lack verification: fields"
+        )
+
+    # G.env must be artifacted (filled with value, or na/deferred with reason)
+    env = categories.get("G.env")
+    if isinstance(env, dict) and str(env.get("state", "")).strip() == "filled":
+        if not str(env.get("value", "")).strip():
+            errors.append("Gate-2 G.env: filled requires value (env contract artifact)")
+
+    return errors
+
+
+def check_gate3(registry_data: dict[str, Any], repo_root: Path, *, today: date) -> list[str]:
+    """Gate-3: release readiness mechanical slice.
+
+    - no expired deferred (also Gate-0)
+    - G.env / G.feedback / G.ops present
+    - if feedback is amplifying, require monitoring language
+    """
+    errors: list[str] = []
+    categories = registry_data.get("categories")
+    if not isinstance(categories, dict):
+        return ["Gate-3: categories missing"]
+
+    for cat in ("G.env", "G.feedback", "G.ops"):
+        entry = categories.get(cat)
+        if not isinstance(entry, dict):
+            errors.append(f"Gate-3 {cat}: missing")
+            continue
+        state = str(entry.get("state", "")).strip()
+        if state not in gate0.ALLOWED_STATES:
+            errors.append(f"Gate-3 {cat}: invalid state {state!r}")
+        if state == "deferred":
+            due = gate0._parse_due(str(entry.get("due", "")))
+            if due is not None and due < today:
+                errors.append(f"Gate-3 {cat}: deferred due expired ({due.isoformat()})")
+
+    fb = categories.get("G.feedback")
+    if isinstance(fb, dict) and str(fb.get("state", "")).strip() == "filled":
+        value = str(fb.get("value", ""))
+        if not value.strip():
+            errors.append("Gate-3 G.feedback: filled value empty")
+        else:
+            # Affirmed amplifying loop (not "none" / "no … amplifying") requires monitoring.
+            negated = re.search(
+                r"\b(none|no|without|not)\b.{0,60}\b(amplif|endogenous|self-?train|retrain|feedback)",
+                value,
+                re.I,
+            )
+            if (
+                not negated
+                and _AMPLIFY.search(value)
+                and not _MONITOR.search(value)
+            ):
+                errors.append(
+                    "Gate-3 G.feedback: amplifying/feedback loop declared but no "
+                    "monitoring/canary/metric language"
+                )
+
+    # promoted deferred slots also must not be expired (gate0 covers; double-check promoted)
+    promoted = registry_data.get("promoted_slots")
+    if isinstance(promoted, dict):
+        for sid, entry in promoted.items():
+            if not isinstance(entry, dict):
+                continue
+            if str(entry.get("state", "")).strip() != "deferred":
+                continue
+            due = gate0._parse_due(str(entry.get("due", "")))
+            if due is not None and due < today:
+                errors.append(
+                    f"Gate-3 promoted_slots.{sid}: deferred due expired ({due.isoformat()})"
+                )
 
     return errors
 
@@ -149,8 +344,6 @@ def check_seams(seams_path: Path) -> list[str]:
         note = entry.get("note") or entry.get("evidence")
         if note is None or str(note).strip() == "":
             errors.append(f"Seams {sid}: note (or evidence) required")
-        if sid == "S5" and status not in {"na", "monitored", "residual", "open", "accepted", "mitigated"}:
-            errors.append(f"Seams S5: invalid status {status!r}")
 
     return errors
 
@@ -179,17 +372,16 @@ def check_residuals(residuals_path: Path, repo_root: Path) -> list[str]:
 
     see = data.get("see") or data.get("evidence")
     if see is None or str(see).strip() == "":
-        errors.append("Residual: see/evidence path to known-limits or disclosure required")
+        errors.append("Residual: see/evidence path required")
     else:
         raw = str(see).strip()
-        # Accept "see a; b", bare "a; b", or a single path.
-        paths = gate0.extract_paths(raw if re.search(r"\bsee\b", raw, re.I) else f"see {raw}")
+        paths = gate0.extract_paths(
+            raw if re.search(r"\bsee\b", raw, re.I) else f"see {raw}"
+        )
         if not paths:
-            # single path or non-indexed prose: require at least one existing segment
             segments = [s.strip() for s in raw.replace("see ", "").split(";") if s.strip()]
             ok_any = False
             for seg in segments:
-                # first path-looking token in segment
                 token = seg.split()[0].strip()
                 if (repo_root / token).exists():
                     ok_any = True
@@ -208,12 +400,11 @@ def check_gate_r(
     gate_r_path: Path,
     registry_data: dict[str, Any],
 ) -> list[str]:
-    """Validate recirculation log. Empty log is OK; closed+promote must bind slots."""
     errors: list[str] = []
     if not gate_r_path.is_file():
         return [
             f"Gate-R: missing log {gate_r_path} "
-            "(create with entries: {} if no recirculations yet)"
+            "(create with entries: {{}} if no recirculations yet)"
         ]
 
     try:
@@ -255,7 +446,6 @@ def check_gate_r(
         if status != "closed":
             continue
 
-        # Closed records must finish recirculation decision.
         if basic_raw in {"yes", "true"}:
             slot_id = rec.get("promoted_slot")
             if slot_id is None or str(slot_id).strip() == "":
@@ -272,7 +462,6 @@ def check_gate_r(
             if example is None or str(example).strip() == "":
                 errors.append(f"{prefix}: closed+basic requires fill_example")
         else:
-            # not basic: must say why not promoted
             if rec.get("not_basic_reason") is None or str(
                 rec.get("not_basic_reason")
             ).strip() == "":
@@ -291,7 +480,13 @@ def run_all(
     residuals_rel: Path = DEFAULT_RESIDUALS,
     gate_r_rel: Path = DEFAULT_GATE_R,
     today: date | None = None,
+    require_substance: bool = False,
 ) -> tuple[bool, list[str], list[str]]:
+    """Return (ok, errors, notes).
+
+    Default ok = format/gates only. Substance (bootstrap/project-specific wording)
+    is optional via require_substance=True — project-owned, not methodology CI.
+    """
     today = today or date.today()
     errors: list[str] = []
     notes: list[str] = []
@@ -309,7 +504,7 @@ def run_all(
             registry_data = gate0.load_simple_yaml_mapping(registry_path)
         except ValueError as exc:
             registry_data = {}
-            errors.append(f"registry parse for Gate-1/R: {exc}")
+            errors.append(f"registry parse: {exc}")
     else:
         registry_data = {}
 
@@ -317,7 +512,19 @@ def run_all(
     if g1:
         errors.extend(g1)
     else:
-        notes.append("Gate-1 PASS (thin mechanical slice)")
+        notes.append("Gate-1 PASS")
+
+    g2 = check_gate2(registry_data, root)
+    if g2:
+        errors.extend(g2)
+    else:
+        notes.append("Gate-2 PASS")
+
+    g3 = check_gate3(registry_data, root, today=today)
+    if g3:
+        errors.extend(g3)
+    else:
+        notes.append("Gate-3 PASS")
 
     s_err = check_seams(root / seams_rel)
     if s_err:
@@ -337,14 +544,24 @@ def run_all(
     else:
         notes.append("Gate-R PASS")
 
+    if require_substance:
+        sub = check_bootstrap_substance(registry_data)
+        if sub:
+            errors.extend(sub)
+        else:
+            notes.append("Substance PASS (optional check; not methodology default)")
+    else:
+        notes.append("Substance not required (project-specific; methodology default is format/gates)")
+
     return (len(errors) == 0, errors, notes)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Achievable design methodology checks "
-            "(Gate-0/1, seams, residual honesty, Gate-R). Not a zero-bug guarantee."
+            "Design methodology gates 0-3 + R, seams, residual. "
+            "Default = format/gates only. Substance is optional (--require-substance). "
+            "Not a zero-bug guarantee."
         )
     )
     parser.add_argument("--root", type=Path, default=Path("."))
@@ -353,10 +570,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--residuals", type=Path, default=DEFAULT_RESIDUALS)
     parser.add_argument("--gate-r", type=Path, default=DEFAULT_GATE_R)
     parser.add_argument("--as-of", type=str, default=None)
+    parser.add_argument(
+        "--require-substance",
+        action="store_true",
+        help="also fail on bootstrap stubs / generic wording (project-specific; off by default)",
+    )
+    parser.add_argument(
+        "--format-only",
+        action="store_true",
+        help="deprecated alias: same as default (substance off). Kept for old CI scripts.",
+    )
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
     as_of = date.fromisoformat(args.as_of) if args.as_of else None
+    # Default: format/gates. Substance only if explicitly requested.
+    require_substance = bool(args.require_substance) and not bool(args.format_only)
     ok, errors, notes = run_all(
         root,
         registry_rel=args.registry,
@@ -364,14 +593,16 @@ def main(argv: list[str] | None = None) -> int:
         residuals_rel=args.residuals,
         gate_r_rel=args.gate_r,
         today=as_of,
+        require_substance=require_substance,
     )
 
     for n in notes:
         print(n)
     if ok:
+        mode = "format+substance" if require_substance else "format/gates"
         print(
-            "Design methodology ops PASS "
-            "(known basics + named seams + residual honesty + recirculation log)"
+            f"Design methodology ops PASS ({mode}: "
+            "Gate-0/1/2/3 + Seams + Residual + Gate-R)"
         )
         print("Not claimed: perfect design, zero bugs, exhaustive discovery.")
         return 0
@@ -384,4 +615,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

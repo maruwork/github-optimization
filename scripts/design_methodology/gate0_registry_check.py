@@ -317,7 +317,8 @@ def check_slot_entry(
     elif state == "deferred":
         owner = entry.get("owner")
         due_raw = entry.get("due")
-        reason = entry.get("reason") or entry.get("exit")
+        reason = entry.get("reason")
+        exit_cond = entry.get("exit")
         if owner is None or str(owner).strip() == "":
             errors.append(f"{prefix}: deferred requires owner")
         if due_raw is None or str(due_raw).strip() == "":
@@ -332,9 +333,12 @@ def check_slot_entry(
                 errors.append(
                     f"{prefix}: deferred due expired ({due.isoformat()} < {today.isoformat()})"
                 )
+        # reason and exit are distinct fields (methodology A3); both required.
         if reason is None or str(reason).strip() == "":
+            errors.append(f"{prefix}: deferred requires reason (why deferred)")
+        if exit_cond is None or str(exit_cond).strip() == "":
             errors.append(
-                f"{prefix}: deferred requires reason or exit (unblock condition)"
+                f"{prefix}: deferred requires exit (unblock condition; distinct from reason)"
             )
 
     return errors
