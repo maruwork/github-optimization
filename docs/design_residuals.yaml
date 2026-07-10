@@ -1,0 +1,9 @@
+meta:
+  subject: github-optimization
+  as_of: "2026-07-10"
+
+claimed_complete: false
+
+statement: "Methodology ops PASS means known basics are not silent and residuals are declared; it is not proof of zero defects."
+
+see: "see README.md; CHANGELOG.md; CONTRIBUTING.md"

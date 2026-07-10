@@ -1,0 +1,20 @@
+meta:
+  subject: github-optimization
+  as_of: "2026-07-10"
+
+seams:
+  S1:
+    status: residual
+    note: "Known basics indexed in design_base_registry; unregistered norms remain residual"
+  S2:
+    status: mitigated
+    note: "Machine vs human assignment recorded under G.oracle; subjective quality stays human"
+  S3:
+    status: monitored
+    note: "Composition not claimed exhaustive"
+  S4:
+    status: monitored
+    note: "Environment remains open-world outside contracted assumptions"
+  S5:
+    status: na
+    note: "No endogenous amplifying feedback declared by default"

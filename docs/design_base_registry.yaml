@@ -1,0 +1,56 @@
+meta:
+  subject: github-optimization
+  revision: 1
+  bootstrap: design-methodology
+
+categories:
+  G.goal:
+    state: filled
+    value: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+    evidence: "see CHANGELOG.md; CONTRIBUTING.md"
+  G.actor:
+    state: filled
+    value: "operators and implementers of this repository; see authority docs if present"
+    evidence: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+  G.io:
+    state: filled
+    value: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+    evidence: "see CHANGELOG.md; CONTRIBUTING.md"
+  G.behavior:
+    state: filled
+    value: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+    evidence: "see CHANGELOG.md; CONTRIBUTING.md"
+  G.data:
+    state: filled
+    value: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+    evidence: "see CHANGELOG.md; CONTRIBUTING.md"
+  G.oracle:
+    state: filled
+    value: "machine checks where tests/CI exist; human judgment for design quality and product sign-off"
+    evidence: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+  G.invariant:
+    state: filled
+    value: "design truth owners must not be silently duplicated; update named owners instead of residue paths"
+    evidence: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+  G.compose:
+    state: filled
+    value: "composition of modules/docs is project-specific; interaction range is not claimed exhaustive"
+    evidence: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+  G.env:
+    state: filled
+    value: "runtime and dependency assumptions live in project docs and tooling configs where present"
+    evidence: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+  G.feedback:
+    state: filled
+    value: "none (single-shot product/docs unless a project explicitly adds amplifying self-training)"
+    evidence: "default topology"
+  G.ops:
+    state: filled
+    value: "see README.md; CHANGELOG.md; CONTRIBUTING.md"
+    evidence: "see CHANGELOG.md; CONTRIBUTING.md"
+  G.open:
+    state: filled
+    value: "unknown slots remain until Gate-R promotion; claimed_complete is false in residuals"
+    evidence: "docs/design_residuals.yaml"
+
+promoted_slots: {}
